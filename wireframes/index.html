@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>DropTrack — Wireframes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css" />
+<style>
+  body {
+    background:
+      radial-gradient(1000px circle at 10% 0%, rgba(79,70,229,.08), transparent 50%),
+      radial-gradient(800px circle at 90% 20%, rgba(163,230,53,.08), transparent 50%),
+      var(--bg-base);
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 80px 32px; }
+  .hero { margin-bottom: 64px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 999px;
+    background: rgba(79,70,229,.08); border: 1px solid rgba(79,70,229,.15);
+    color: var(--primary); font-size: 12px; font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .eyebrow span { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 12px rgba(163,230,53,.8); }
+  h1.hero-title { font-size: 56px; line-height: 1.05; letter-spacing: -0.035em; font-weight: 800; margin: 0 0 16px; max-width: 760px; }
+  .sub { color: var(--text-secondary); font-size: 17px; max-width: 560px; line-height: 1.55; margin: 0; }
+  .stack-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 28px; }
+  .stack-pills .pill { padding: 6px 12px; background: #fff; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+
+  .section { margin-bottom: 56px; }
+  .section-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 20px; }
+  .section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .14em; color: var(--text-muted); font-weight: 700; margin: 0; }
+  .section h2 span { margin-left: 10px; color: var(--text-primary); font-size: 17px; text-transform: none; letter-spacing: -0.015em; font-weight: 700; }
+  .section-count { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .tile {
+    padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column;
+    transition: all .25s cubic-bezier(.4,.2,.2,1);
+    position: relative; overflow: hidden;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 20px; box-shadow: var(--shadow-sm);
+    min-height: 142px;
+  }
+  .tile::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(360px circle at var(--mx,50%) var(--my,50%), rgba(79,70,229,.07), transparent 40%);
+    opacity: 0; transition: opacity .3s; pointer-events: none;
+  }
+  .tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: rgba(79,70,229,.25); }
+  .tile:hover::after { opacity: 1; }
+  .tile-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 20px; }
+  .num { font-size: 11px; color: var(--text-muted); font-weight: 700; letter-spacing: .15em; font-variant-numeric: tabular-nums; }
+  .chip { background: var(--primary-50); color: var(--primary); padding: 4px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .chip-mobile { background: #FEF3C7; color: #92400E; }
+  .ttl { font-size: 17px; font-weight: 700; letter-spacing: -0.015em; margin-top: auto; }
+  .desc { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+
+  footer { margin-top: 80px; padding-top: 32px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 13px; }
+</style>
+<script>
+  document.addEventListener('mousemove', e => {
+    document.querySelectorAll('.tile').forEach(t => {
+      const r = t.getBoundingClientRect();
+      t.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      t.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow"><span></span> AI-powered · Australia</div>
+    <h1 class="hero-title">DropTrack — <span class="gradient-text">verified leaflet</span> distribution, end&nbsp;to&nbsp;end.</h1>
+    <p class="sub">A 15-screen wireframe set spanning Client, Admin and Dropper experiences. Built on the locked indigo + lime system with seven MVP AI surfaces.</p>
+    <div class="stack-pills">
+      <span class="pill">AI Fraud Shield</span>
+      <span class="pill">AI Smart Zones</span>
+      <span class="pill">AI Route Planner</span>
+      <span class="pill">AI Campaign Report</span>
+      <span class="pill">AI Job Creator</span>
+      <span class="pill">AI Assistant</span>
+      <span class="pill">AI Dropper Match</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><h2>Client / Agent<span>web app</span></h2><span class="section-count">6 screens</span></div>
+    <div class="grid">
+      <a class="tile" href="client/login.html"><div class="tile-head"><span class="num">01</span><span class="chip">Web</span></div><div class="ttl">Login / Signup</div><div class="desc">Email + OTP, role select</div></a>
+      <a class="tile" href="client/dashboard.html"><div class="tile-head"><span class="num">02</span><span class="chip">Web</span></div><div class="ttl">Dashboard</div><div class="desc">Jobs, KPIs, AI insight</div></a>
+      <a class="tile" href="client/create-1.html"><div class="tile-head"><span class="num">03</span><span class="chip">Web</span></div><div class="ttl">Create Job · Details</div><div class="desc">AI Job Creator + form</div></a>
+      <a class="tile" href="client/create-2.html"><div class="tile-head"><span class="num">04</span><span class="chip">Web</span></div><div class="ttl">Create Job · Zone</div><div class="desc">Map + AI Smart Zones</div></a>
+      <a class="tile" href="client/create-3.html"><div class="tile-head"><span class="num">05</span><span class="chip">Web</span></div><div class="ttl">Review &amp; Pay</div><div class="desc">Stripe + cancellation policy</div></a>
+      <a class="tile" href="client/tracking.html"><div class="tile-head"><span class="num">06</span><span class="chip">Web</span></div><div class="ttl">Live Tracking</div><div class="desc">Map + AI campaign report</div></a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><h2>Super Admin<span>operations console</span></h2><span class="section-count">4 screens</span></div>
+    <div class="grid">
+      <a class="tile" href="admin/dashboard.html"><div class="tile-head"><span class="num">07</span><span class="chip">Web</span></div><div class="ttl">Operations Dashboard</div><div class="desc">KPIs + unassigned queue</div></a>
+      <a class="tile" href="admin/assign.html"><div class="tile-head"><span class="num">08</span><span class="chip">Web</span></div><div class="ttl">Assign Job</div><div class="desc">Split zone + AI Match</div></a>
+      <a class="tile" href="admin/master-map.html"><div class="tile-head"><span class="num">09</span><span class="chip">Web</span></div><div class="ttl">Master Map</div><div class="desc">All active droppers live</div></a>
+      <a class="tile" href="admin/droppers.html"><div class="tile-head"><span class="num">10</span><span class="chip">Web</span></div><div class="ttl">Droppers</div><div class="desc">Employee directory</div></a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><h2>Dropper App<span>mobile</span></h2><span class="section-count">5 screens</span></div>
+    <div class="grid">
+      <a class="tile" href="dropper/login.html"><div class="tile-head"><span class="num">11</span><span class="chip chip-mobile">Mobile</span></div><div class="ttl">Login &amp; Onboarding</div><div class="desc">TFN, super, contract</div></a>
+      <a class="tile" href="dropper/jobs.html"><div class="tile-head"><span class="num">12</span><span class="chip chip-mobile">Mobile</span></div><div class="ttl">My Jobs</div><div class="desc">Assigned today</div></a>
+      <a class="tile" href="dropper/job-detail.html"><div class="tile-head"><span class="num">13</span><span class="chip chip-mobile">Mobile</span></div><div class="ttl">Job Detail</div><div class="desc">Zone + leaflet + route</div></a>
+      <a class="tile" href="dropper/active.html"><div class="tile-head"><span class="num">14</span><span class="chip chip-mobile">Mobile</span></div><div class="ttl">Active Drop</div><div class="desc">Start, pause, SOS</div></a>
+      <a class="tile" href="dropper/summary.html"><div class="tile-head"><span class="num">15</span><span class="chip chip-mobile">Mobile</span></div><div class="ttl">Job Summary</div><div class="desc">Route replay + insights</div></a>
+    </div>
+  </div>
+
+  <footer>
+    <div>© 2026 DropTrack · Indigo + Lime design system v0.1</div>
+    <div>Inter · Lucide icons · Privacy Act 1988 compliant</div>
+  </footer>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

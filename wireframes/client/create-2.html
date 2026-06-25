@@ -1,0 +1,92 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Create Job · Zone</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css"></head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack</div>
+
+  <div class="nav-label">Workspace</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="tracking.html" ><i data-lucide="map-pin"></i> Live Tracking <span class="count">2</span></a>
+  <a href="campaigns.html"><i data-lucide="folder-clock"></i> Campaigns</a>
+
+  <div class="nav-label">Create</div>
+  <a href="create-1.html" class="active"><i data-lucide="plus"></i> New Campaign</a>
+  <a href="ai-assistant.html"><i data-lucide="sparkles"></i> AI Assistant <span class="dot-new"></span></a>
+
+  <div class="nav-label">Account</div>
+  <a href="billing.html"><i data-lucide="credit-card"></i> Billing</a>
+  
+  <a class="user-card" href="profile.html">
+    <div class="avatar">SN</div>
+    <div class="info">
+      <div class="name">Sarah Nguyen</div>
+      <div class="role">Belle Property — Bondi</div>
+    </div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <h1>Select Drop Zone</h1>
+    <a href="dashboard.html" class="btn-ghost"><i data-lucide="x" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Cancel</a>
+  </div>
+  <div class="step-bar">
+    <div class="step done"></div>
+    <div class="step active"></div>
+    <div class="step"></div>
+  </div>
+  <p style="color:var(--text-muted); font-size:13px; margin-top:-16px; margin-bottom:24px;">Step 2 of 3 · Define the area for delivery</p>
+
+  <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px;">
+    <div class="card" style="padding: 0; overflow:hidden;">
+      <div style="padding: 14px 18px; border-bottom: 1px solid var(--border); display:flex; gap:8px; align-items:center;">
+        <input class="input" placeholder="<i data-lucide="search" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Search suburb (e.g. Bondi Junction NSW)" style="flex:1;">
+        <button class="btn-ghost" style="font-size:12px;">Draw polygon</button>
+        <button class="btn-ghost" style="font-size:12px;">◯ Radius</button>
+      </div>
+      <div class="map-placeholder" style="height: 500px; border-radius: 0;">
+        <div class="zone-poly" style="top:80px; left:120px; width:380px; height:300px;"></div>
+        <div style="position:absolute; top:200px; left:230px; background:#fff; padding:10px 14px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,.12); font-size:13px;">
+          <strong>Bondi Junction</strong><br>
+          <span style="color:var(--text-muted); font-size:11px;">Polygon selected</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="padding: 20px; margin-bottom: 16px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <div class="ai-icon" style="width:28px; height:28px; font-size:14px;"><i data-lucide="map-pin" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i></div>
+          <strong style="font-size:15px;">AI Smart Zones</strong>
+          <span class="badge badge-ai" style="margin-left:auto;">AI</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);"><span style="color:var(--text-secondary); font-size:13px;">Estimated letterboxes</span><strong>2,512</strong></div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);"><span style="color:var(--text-secondary); font-size:13px;">Houses</span><strong>1,840</strong></div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);"><span style="color:var(--text-secondary); font-size:13px;">Apartments</span><strong>672</strong></div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);"><span style="color:var(--text-secondary); font-size:13px;">Walking distance</span><strong>14.2 km</strong></div>
+        <div style="display:flex; justify-content:space-between; padding:10px 0;"><span style="color:var(--text-secondary); font-size:13px;">Estimated time</span><strong>~ 9 hrs</strong></div>
+        <div style="background: #ECFDF5; border:1px solid #A7F3D0; padding: 12px; border-radius:10px; margin-top:8px; font-size:12px; color:#065F46;">
+           Zone is well-sized. Suggested 2 droppers for 2-day completion.
+        </div>
+      </div>
+
+      <div class="card" style="padding: 20px;">
+        <strong style="font-size:14px;"><i data-lucide="wallet" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Suggested Price</strong>
+        <div style="font-size:36px; font-weight:800; margin: 8px 0; color: var(--primary);">$565</div>
+        <div style="font-size:12px; color:var(--text-muted);">$0.22 / leaflet · incl. GST</div>
+        <div style="background: var(--bg-muted); padding:10px; border-radius:8px; margin-top:12px; font-size:12px; color:var(--text-secondary);">
+          AI-calculated from zone size, distance &amp; current dropper availability.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; margin-top: 24px;">
+    <a href="create-1.html" class="btn-ghost">← Back</a>
+    <a href="create-3.html" class="btn-primary">Next: Review &amp; Pay →</a>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script>lucide.createIcons();</script>
+</body></html>

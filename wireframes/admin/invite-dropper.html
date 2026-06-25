@@ -1,0 +1,122 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Invite dropper</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; max-width: 920px; }
+  .back { color:var(--text-muted); font-size:13px; text-decoration:none; display:inline-flex; align-items:center; gap:6px; margin-bottom: 8px;}
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 22px; gap:24px; flex-wrap:wrap; }
+  .greeting h1 { font-size: 32px; letter-spacing:-0.025em; margin:0; line-height: 1.15; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .greeting .meta { color: var(--text-muted); font-size: 13px; margin-top:6px; }
+
+  .section { padding: 26px; background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow-sm); margin-bottom: 14px; }
+  .section h3 { margin: 0 0 4px; font-size: 16px; letter-spacing:-0.015em; }
+  .section .sub { color: var(--text-muted); font-size: 13px; margin: 0 0 18px; }
+  .row2 { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .row3 { display:grid; grid-template-columns: 2fr 1fr 1fr; gap:14px; }
+
+  .step-list { display:flex; flex-direction:column; gap:10px; }
+  .step-list .item { display:flex; gap:14px; align-items:flex-start; }
+  .step-list .item .num { width:26px; height:26px; border-radius:50%; background:var(--primary-50); color:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex-shrink:0; }
+  .step-list .item .body strong { font-size: 14px; font-weight: 600; }
+  .step-list .item .body p { font-size: 13px; color: var(--text-muted); margin: 2px 0 0; line-height:1.5; }
+
+  .preview { background: linear-gradient(135deg, #FFFFFF, #FAFBFF); border: 1px dashed rgba(79,70,229,.25); border-radius:16px; padding: 22px; font-size:13.5px; line-height: 1.6; color: var(--text-secondary); }
+  .preview .from { font-size:12px; color:var(--text-muted); margin-bottom: 10px; }
+  .preview .subj { font-weight:600; color:var(--text-primary); margin-bottom: 8px; }
+  .preview .body { white-space: pre-line; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html"><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html"><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html"><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" class="active"><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html"><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html"><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html"><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html"><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <a href="droppers.html" class="back"><i data-lucide="arrow-left"></i> Droppers</a>
+  <div class="greeting">
+    <div>
+      <h1>Invite a new dropper <span class="serif">— start their onboarding.</span></h1>
+      <div class="meta">They'll receive an email with a secure invite link. The link is valid for 7 days.</div>
+    </div>
+    <div style="display:flex; gap:8px;"><a href="droppers.html" class="btn-ghost">Cancel</a><button class="btn-primary"><i data-lucide="send"></i> Send invite</button></div>
+  </div>
+
+  <div class="section">
+    <h3>Basic details</h3>
+    <p class="sub">The minimum we need to email them. The rest is collected during onboarding.</p>
+    <div class="row2">
+      <div><label class="label">First name</label><input class="input" placeholder="Lin"></div>
+      <div><label class="label">Last name</label><input class="input" placeholder="Chen"></div>
+    </div>
+    <div class="row2" style="margin-top:14px;">
+      <div><label class="label">Personal email</label><input class="input" type="email" placeholder="lin@example.com"></div>
+      <div><label class="label">Mobile</label><input class="input" placeholder="04xx xxx xxx"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Role &amp; zone</h3>
+    <p class="sub">Used by AI Dropper Match when you assign jobs later.</p>
+    <div class="row3">
+      <div><label class="label">Primary zone</label>
+        <select class="input"><option>Bondi / Eastern Suburbs</option><option>Inner West</option><option>Inner City</option><option>North Shore</option><option>Northern Beaches</option></select>
+      </div>
+      <div><label class="label">Start date</label><input class="input" type="date"></div>
+      <div><label class="label">Employment</label>
+        <select class="input"><option>Casual employee</option><option>Part-time</option><option>Full-time</option></select>
+      </div>
+    </div>
+    <div style="margin-top: 14px; display:flex; gap:14px; flex-wrap:wrap;">
+      <label style="display:flex; gap:8px; align-items:center; font-size:13px;"><input type="checkbox"> Working With Children Check required (political / school work)</label>
+      <label style="display:flex; gap:8px; align-items:center; font-size:13px;"><input type="checkbox" checked> Send equipment kit (hi-vis + tote bag)</label>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>What happens next</h3>
+    <p class="sub" style="margin-bottom:0;">Lin receives an email with a secure link. After signing up, they fill out their profile (personal details, TFN, super, bank, contract). When everything is uploaded their status changes to <strong style="color:var(--success);">Complete</strong> and you can assign jobs to them. Until then they show as <strong style="color:var(--warning);">Partial</strong>.</p>
+  </div>
+
+  <div class="section">
+    <h3>Email preview</h3>
+    <p class="sub">This is what Lin will see in their inbox.</p>
+    <div class="preview">
+      <div class="from"><strong>From:</strong> DropTrack &lt;welcome@droptrack.au&gt; &nbsp;·&nbsp; <strong>To:</strong> lin@example.com</div>
+      <div class="subj">Subject: You're invited to join DropTrack as a dropper</div>
+      <div class="body">Hi Lin,
+
+Welcome to the team. To finish setting up your DropTrack account, click the secure link below. It expires in 7 days.
+
+  → Accept your invite
+
+You'll need about 15 minutes to complete the steps: personal details, TFN, super, bank account, sign your contract, and a short safety quiz.
+
+If you have any questions, reply to this email — a real human will get back to you.
+
+— The DropTrack team
+Sydney, Australia</div>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

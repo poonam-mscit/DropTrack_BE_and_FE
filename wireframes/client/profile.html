@@ -1,0 +1,218 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Profile &amp; settings · DropTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; max-width: 1100px; }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 28px; gap:24px; flex-wrap:wrap; }
+  .greeting h1 { font-size: 34px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .greeting .meta { color: var(--text-muted); font-size: 13px; margin-top:6px; }
+  .layout { display:grid; grid-template-columns: 220px 1fr; gap: 28px; align-items:flex-start; }
+  .submenu { position: sticky; top: 24px; display:flex; flex-direction:column; gap:2px; }
+  .submenu .submenu-label { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); padding: 14px 14px 6px; }
+  .submenu .submenu-label:first-child { padding-top: 4px; }
+  .submenu a { padding:9px 14px; border-radius:10px; color:var(--text-secondary); text-decoration:none; font-size:13.5px; font-weight:500; display:flex; align-items:center; gap:10px; transition: all .12s; }
+  .submenu a:hover { background: var(--bg-muted); color: var(--text-primary); }
+  .submenu a.active { background: var(--primary-50); color: var(--primary); font-weight: 600; }
+  .submenu a i { width:14px; height:14px; }
+  .section { padding: 26px; background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow-sm); margin-bottom:14px; scroll-margin-top: 24px; }
+  .section h3 { margin: 0 0 4px; font-size:16px; letter-spacing:-0.015em; }
+  .section .sub { color: var(--text-muted); font-size:13px; margin: 0 0 18px; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .row3 { display:grid; grid-template-columns:2fr 1fr 1fr; gap:14px; }
+  .avatar-lg { width:72px; height:72px; border-radius:18px; background:linear-gradient(135deg,#4F46E5,#7C3AED 50%,#A3E635); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:28px; box-shadow:0 8px 24px -8px rgba(124,58,237,.4); flex-shrink: 0; }
+  .upload-zone { border: 1.5px dashed var(--border-strong); border-radius: 14px; padding: 18px; background: var(--bg-muted); display:flex; align-items:center; gap:14px; cursor:pointer; transition: all .15s; }
+  .upload-zone:hover { border-color: var(--primary); background: var(--primary-50); }
+  .upload-zone .ico { width:44px; height:44px; border-radius:12px; background:#fff; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--primary); flex-shrink:0; }
+  .field-row { display:flex; justify-content:space-between; align-items:center; padding: 14px 0; border-top: 1px solid var(--border); gap: 20px; }
+  .field-row:first-of-type { border-top: none; padding-top: 4px; }
+  .field-row .name { font-size: 14px; font-weight: 500; }
+  .field-row .desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; max-width: 480px; }
+  .toggle { width: 40px; height: 22px; background: var(--border); border-radius: 999px; position: relative; cursor: pointer; transition: background .15s; flex-shrink:0; }
+  .toggle::after { content:''; position:absolute; top:2px; left:2px; width: 18px; height: 18px; background: #fff; border-radius: 50%; box-shadow: var(--shadow-xs); transition: left .15s; }
+  .toggle.on { background: var(--primary); }
+  .toggle.on::after { left: 20px; }
+  .danger-zone { border-color: rgba(239,68,68,.25); background: linear-gradient(180deg, #FFF7F7 0%, #FFFFFF 100%); }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack</div>
+  <div class="nav-label">Workspace</div>
+  <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="tracking.html"><i data-lucide="map-pin"></i> Live Tracking <span class="count">2</span></a>
+  <a href="campaigns.html"><i data-lucide="folder-clock"></i> Campaigns</a>
+  <div class="nav-label">Create</div>
+  <a href="create-1.html"><i data-lucide="plus"></i> New Campaign</a>
+  <a href="ai-assistant.html"><i data-lucide="sparkles"></i> AI Assistant <span class="dot-new"></span></a>
+  <div class="nav-label">Account</div>
+  <a href="billing.html"><i data-lucide="credit-card"></i> Billing</a>
+  <a href="profile.html" class="active"><i data-lucide="user-cog"></i> Profile &amp; settings</a>
+  <a class="user-card" href="profile.html">
+    <div class="avatar">SN</div>
+    <div class="info"><div class="name">Sarah Nguyen</div><div class="role">Belle Property — Bondi</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>Profile &amp; settings <span class="serif">— everything about you.</span></h1>
+      <div class="meta">Changes are saved automatically.</div>
+    </div>
+    <button class="btn-primary">Save changes</button>
+  </div>
+
+  <div class="layout">
+    <nav class="submenu">
+      <div class="submenu-label">Profile</div>
+      <a href="#business" class="active"><i data-lucide="building-2"></i> Business</a>
+      <a href="#contact"><i data-lucide="at-sign"></i> Contact</a>
+      <a href="#address"><i data-lucide="map-pin"></i> Billing address</a>
+      <a href="#branding"><i data-lucide="image"></i> Branding</a>
+      <div class="submenu-label">Preferences</div>
+      <a href="#notifications"><i data-lucide="bell"></i> Notifications</a>
+      <a href="#region"><i data-lucide="globe"></i> Region &amp; language</a>
+      <div class="submenu-label">Security</div>
+      <a href="#security"><i data-lucide="key-round"></i> Password &amp; 2FA</a>
+      <a href="#sessions"><i data-lucide="monitor-smartphone"></i> Active sessions</a>
+      <div class="submenu-label">Team</div>
+      <a href="#team"><i data-lucide="users"></i> Members</a>
+      <a href="#integrations"><i data-lucide="plug"></i> Integrations</a>
+      <div class="submenu-label">Data</div>
+      <a href="#privacy"><i data-lucide="file-text"></i> Privacy &amp; data</a>
+      <a href="#danger"><i data-lucide="triangle-alert"></i> Danger zone</a>
+    </nav>
+
+    <div>
+      <div class="section" id="business">
+        <div style="display:flex; gap:20px; align-items:center; margin-bottom: 22px;">
+          <div class="avatar-lg">B</div>
+          <div style="flex:1;">
+            <div style="font-size:18px; font-weight:700; letter-spacing:-0.015em;">Belle Property — Bondi</div>
+            <div style="font-size:13px; color:var(--text-muted);">sarah@belleproperty.com.au · Member since May 2026</div>
+          </div>
+          <button class="btn-ghost">Change logo</button>
+        </div>
+        <h3>Business details</h3>
+        <p class="sub">Used for invoicing &amp; GST.</p>
+        <div><label class="label">Business name</label><input class="input" value="Belle Property — Bondi"></div>
+        <div class="row2" style="margin-top:14px;">
+          <div><label class="label">Industry</label><select class="input"><option>Real Estate</option><option>Medical / Clinic</option><option>Political Campaign</option><option>Food &amp; Restaurant</option><option>Retail</option><option>Other</option></select></div>
+          <div><label class="label">Business size</label><select class="input"><option>1 — Solo</option><option>2–10</option><option>11–50</option><option>50+</option></select></div>
+        </div>
+        <div class="row2" style="margin-top:14px;">
+          <div><label class="label">ABN <span style="color:var(--text-muted); font-weight:400;">(optional)</span></label><input class="input" placeholder="11 222 333 444"></div>
+          <div><label class="label">GST registered</label><select class="input"><option>Yes</option><option>No</option></select></div>
+        </div>
+      </div>
+
+      <div class="section" id="contact">
+        <h3>Contact</h3>
+        <p class="sub">How we reach you for support &amp; campaign updates.</p>
+        <div class="row2">
+          <div><label class="label">Email</label><input class="input" value="sarah@belleproperty.com.au"></div>
+          <div><label class="label">Mobile</label><input class="input" value="04xx xxx xxx"></div>
+        </div>
+      </div>
+
+      <div class="section" id="address">
+        <h3>Billing address</h3>
+        <p class="sub">Where invoices &amp; receipts will be sent.</p>
+        <div><label class="label">Street address</label><input class="input" placeholder="123 Oxford Street"></div>
+        <div class="row3" style="margin-top:14px;">
+          <div><label class="label">Suburb</label><input class="input" placeholder="Bondi Junction"></div>
+          <div><label class="label">State</label><select class="input"><option>NSW</option><option>VIC</option><option>QLD</option><option>WA</option><option>SA</option><option>TAS</option><option>ACT</option><option>NT</option></select></div>
+          <div><label class="label">Postcode</label><input class="input" placeholder="2022"></div>
+        </div>
+      </div>
+
+      <div class="section" id="branding">
+        <h3>Branding <span style="color:var(--text-muted); font-weight:400; font-size:13px;">(optional)</span></h3>
+        <p class="sub">Added to your AI Campaign Reports.</p>
+        <div class="upload-zone">
+          <div class="ico"><i data-lucide="image-up" style="width:20px;height:20px;"></i></div>
+          <div><strong style="display:block; font-size:14px; margin-bottom:2px;">Upload your logo</strong><span style="font-size:13px; color:var(--text-muted);">PNG or SVG · max 5MB</span></div>
+        </div>
+      </div>
+
+      <div class="section" id="notifications">
+        <h3>Notifications</h3>
+        <p class="sub">Choose what you'd like to hear about and where.</p>
+        <div class="field-row"><div><div class="name">Campaign milestones</div><div class="desc">Notify me when a campaign reaches 50%, 90% or completion.</div></div><div class="toggle on"></div></div>
+        <div class="field-row"><div><div class="name">AI Insights weekly digest</div><div class="desc">Friday summary of your top-performing campaigns &amp; suggestions.</div></div><div class="toggle on"></div></div>
+        <div class="field-row"><div><div class="name">Coverage warnings</div><div class="desc">Alert me if a job is falling below the AI-predicted coverage.</div></div><div class="toggle on"></div></div>
+        <div class="field-row"><div><div class="name">Marketing &amp; product updates</div><div class="desc">New features, case studies and AU industry news.</div></div><div class="toggle"></div></div>
+        <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border);">
+          <div style="font-size:13px; font-weight:600; margin-bottom:10px;">Delivery channels</div>
+          <div class="field-row" style="padding-top:0;"><div><div class="name">Email</div><div class="desc">sarah@belleproperty.com.au</div></div><div class="toggle on"></div></div>
+          <div class="field-row"><div><div class="name">SMS</div><div class="desc">04xx xxx xxx · urgent only</div></div><div class="toggle on"></div></div>
+          <div class="field-row"><div><div class="name">In-app push</div><div class="desc">All browsers you've signed in on.</div></div><div class="toggle"></div></div>
+        </div>
+      </div>
+
+      <div class="section" id="region">
+        <h3>Region &amp; language</h3>
+        <p class="sub">Affects timezones, currency formatting and dates.</p>
+        <div class="row2">
+          <div><label class="label">Timezone</label><select class="input"><option>Australia/Sydney (AEST/AEDT)</option><option>Australia/Melbourne</option><option>Australia/Brisbane</option><option>Australia/Perth</option></select></div>
+          <div><label class="label">Language</label><select class="input"><option>English (Australia)</option></select></div>
+        </div>
+        <div class="row2" style="margin-top:14px;">
+          <div><label class="label">Date format</label><select class="input"><option>DD MMM YYYY (12 May 2026)</option><option>DD/MM/YYYY</option></select></div>
+          <div><label class="label">Currency</label><select class="input"><option>AUD ($)</option></select></div>
+        </div>
+      </div>
+
+      <div class="section" id="security">
+        <h3>Password &amp; 2FA</h3>
+        <p class="sub">Keep your account secure.</p>
+        <div class="field-row" style="padding-top:0;"><div><div class="name">Password</div><div class="desc">Last changed 14 days ago</div></div><button class="btn-ghost" style="font-size:13px;">Change</button></div>
+        <div class="field-row"><div><div class="name">Two-factor authentication</div><div class="desc">Authenticator app required at sign-in</div></div><div class="toggle on"></div></div>
+        <div class="field-row"><div><div class="name">Backup codes</div><div class="desc">8 of 10 codes remaining</div></div><button class="btn-ghost" style="font-size:13px;">Regenerate</button></div>
+      </div>
+
+      <div class="section" id="sessions">
+        <h3>Active sessions</h3>
+        <p class="sub">Devices currently signed in to your account.</p>
+        <div class="field-row" style="padding-top:0;"><div><div class="name">MacBook Pro · Sydney</div><div class="desc">Chrome 124 · this session · active now</div></div><span class="badge badge-active">Current</span></div>
+        <div class="field-row"><div><div class="name">iPhone 15</div><div class="desc">Safari · Sydney · 2 days ago</div></div><button class="btn-ghost" style="font-size:13px;">Sign out</button></div>
+      </div>
+
+      <div class="section" id="team">
+        <h3>Team members</h3>
+        <p class="sub">Invite colleagues to view or run campaigns on your account.</p>
+        <div class="field-row" style="padding-top:0;"><div style="display:flex; gap:10px; align-items:center;"><div style="width:34px; height:34px; border-radius:10px; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">SN</div><div><div class="name">Sarah Nguyen <span class="badge badge-active" style="margin-left:6px;">Owner</span></div><div class="desc">sarah@belleproperty.com.au</div></div></div></div>
+        <div class="field-row"><div style="display:flex; gap:10px; align-items:center;"><div style="width:34px; height:34px; border-radius:10px; background:var(--success); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">RC</div><div><div class="name">Ryan Carter</div><div class="desc">ryan@belleproperty.com.au · Editor</div></div></div><button class="btn-ghost" style="font-size:13px;">Remove</button></div>
+        <button class="btn-soft" style="margin-top:14px;"><i data-lucide="user-plus"></i> Invite member</button>
+      </div>
+
+      <div class="section" id="integrations">
+        <h3>Integrations</h3>
+        <p class="sub">Connect DropTrack to the rest of your stack.</p>
+        <div class="field-row" style="padding-top:0;"><div><div class="name">Stripe</div><div class="desc">Connected · all campaign payments processed via Stripe</div></div><span class="badge badge-active">Active</span></div>
+        <div class="field-row"><div><div class="name">Xero</div><div class="desc">Push invoices &amp; GST to your Xero account</div></div><button class="btn-ghost" style="font-size:13px;">Connect</button></div>
+        <div class="field-row"><div><div class="name">Slack</div><div class="desc">Campaign alerts &amp; AI insights in a channel</div></div><button class="btn-ghost" style="font-size:13px;">Connect</button></div>
+      </div>
+
+      <div class="section" id="privacy">
+        <h3>Privacy &amp; data</h3>
+        <p class="sub">DropTrack owns all GPS &amp; tracking data per our <a href="#">Privacy Policy</a>. You own all campaign content.</p>
+        <div class="field-row" style="padding-top:0;"><div><div class="name">Personalised AI insights</div><div class="desc">Allow your campaign history to be used to tailor AI suggestions to you.</div></div><div class="toggle on"></div></div>
+        <div class="field-row"><div><div class="name">Anonymous usage analytics</div><div class="desc">Helps us improve DropTrack. Never shared with third parties.</div></div><div class="toggle on"></div></div>
+      </div>
+
+      <div class="section danger-zone" id="danger">
+        <h3 style="color:var(--danger);">Danger zone</h3>
+        <p class="sub">Irreversible actions.</p>
+        <div class="field-row" style="padding-top:0;"><div><div class="name">Export all data</div><div class="desc">A copy of your campaigns, invoices and AI reports as a ZIP.</div></div><button class="btn-ghost" style="font-size:13px;">Request export</button></div>
+        <div class="field-row"><div><div class="name">Delete account</div><div class="desc">Permanently removes your account and all campaign data.</div></div><button class="btn-ghost" style="font-size:13px; color:var(--danger); border-color: rgba(239,68,68,.3);">Delete</button></div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

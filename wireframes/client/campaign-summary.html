@@ -1,0 +1,344 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Campaign summary · DropTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 28px 36px 60px; max-width: 1180px; }
+  .back { color:var(--text-muted); font-size:13px; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+
+  .hero {
+    margin-top: 12px; border-radius: 28px; overflow: hidden;
+    background:
+      radial-gradient(800px circle at 100% 0%, rgba(124,58,237,.45), transparent 50%),
+      radial-gradient(700px circle at 0% 100%, rgba(163,230,53,.2), transparent 55%),
+      linear-gradient(160deg, #1A1B36 0%, #0F1029 100%);
+    color: #fff; padding: 36px; position: relative; box-shadow: 0 30px 60px -20px rgba(15,16,41,.45);
+  }
+  .hero .completed-badge { display:inline-flex; align-items:center; gap:8px; font-size: 11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#A3E635; }
+  .hero .completed-badge::before { content:''; width:8px; height:8px; background:#A3E635; border-radius:50%; box-shadow:0 0 12px rgba(163,230,53,.8); }
+  .hero h1 { font-size: 48px; line-height: 1.05; letter-spacing:-0.035em; margin: 14px 0 6px; font-weight: 800; }
+  .hero h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: rgba(255,255,255,.6); }
+  .hero .meta { display:flex; gap: 18px; align-items:center; color: rgba(255,255,255,.7); font-size:14px; flex-wrap:wrap; }
+  .hero .meta .sep { color: rgba(255,255,255,.25); }
+  .hero .actions { display:flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+  .pill-btn { background: rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15); color:#fff; padding: 10px 16px; border-radius: 999px; font-size: 13px; font-weight:600; text-decoration:none; backdrop-filter: blur(10px); display:inline-flex; align-items:center; gap:8px; }
+  .pill-btn:hover { background: rgba(255,255,255,.18); }
+  .pill-btn.solid { background: #A3E635; color: #0a0a0a; border-color: #A3E635; }
+
+  .big-stats { display:grid; grid-template-columns: repeat(5, 1fr); gap: 18px; padding-top: 30px; margin-top: 30px; border-top: 1px solid rgba(255,255,255,.1); }
+  .big-stats .item { }
+  .big-stats .item .lbl { font-size: 11px; color: rgba(255,255,255,.55); letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+  .big-stats .item .val { font-size: 36px; font-weight: 800; letter-spacing: -0.025em; margin-top: 6px; line-height: 1; }
+  .big-stats .item .val.green { color: #A3E635; }
+  .big-stats .item .sub { font-size: 12px; color: rgba(255,255,255,.45); margin-top: 6px; }
+
+  /* Map card */
+  .map-card { background: #fff; border:1px solid var(--border); border-radius:24px; overflow:hidden; box-shadow: var(--shadow-md); margin: 16px 0; }
+  .map-toolbar { padding: 14px 18px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .map-toolbar h3 { margin:0; font-size: 16px; letter-spacing:-0.015em; }
+  .map-toolbar .seg { display:flex; gap:2px; background: var(--bg-muted); padding:4px; border-radius:10px; }
+  .map-toolbar .seg button { background:transparent; border:none; padding: 6px 12px; border-radius:7px; font-size:12px; font-weight:600; color: var(--text-muted); cursor:pointer; }
+  .map-toolbar .seg button.active { background:#fff; color: var(--text-primary); box-shadow: var(--shadow-xs); }
+  .map-canvas { height: 460px; position:relative; }
+  .map-canvas .map-placeholder { height: 100%; border-radius: 0; }
+  .legend-card { position:absolute; bottom:16px; left:16px; background:#fff; padding: 12px 16px; border-radius:14px; box-shadow: var(--shadow-md); font-size:12px; display:flex; flex-direction:column; gap:6px; }
+  .legend-card strong { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+  .legend-card span { display:inline-flex; align-items:center; gap:8px; }
+  .legend-card .dot { width:10px; height:10px; border-radius:50%; }
+  .pip { position: absolute; top: 16px; right: 16px; background:#fff; padding: 12px 16px; border-radius: 14px; box-shadow: var(--shadow-md); font-size:13px; display:flex; gap:18px; }
+  .pip .item .lbl { font-size:10px; color:var(--text-muted); letter-spacing:.06em; text-transform:uppercase; font-weight:600; }
+  .pip .item .val { font-size:18px; font-weight:700; letter-spacing:-0.02em; margin-top:2px; font-variant-numeric: tabular-nums; }
+
+  /* AI Report card */
+  .ai-report {
+    background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFF 100%);
+    border: 1px solid rgba(124,58,237,.18);
+    border-radius: 24px; padding: 28px; margin-bottom: 14px;
+    display: grid; grid-template-columns: 1fr 240px; gap: 28px; align-items: center;
+    position: relative; overflow: hidden;
+  }
+  .ai-report::before { content:''; position:absolute; right:-60px; top:-60px; width:240px; height:240px; background: radial-gradient(circle, rgba(124,58,237,.12), transparent 70%); pointer-events:none; }
+  .ai-report .eyebrow { display: inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color: var(--primary); margin-bottom: 8px; }
+  .ai-report .eyebrow .mark { width:24px; height:24px; border-radius:7px; background: linear-gradient(135deg,#4F46E5,#7C3AED 50%,#A3E635); color:#fff; display:flex; align-items:center; justify-content:center; }
+  .ai-report h2 { font-size: 22px; margin: 0 0 12px; letter-spacing:-0.02em; }
+  .ai-report .narrative { font-size: 14.5px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 18px; max-width: 640px; }
+  .ai-report .narrative strong { color: var(--text-primary); }
+  .ai-report .pdf-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 16px; text-align: center; position: relative; }
+  .ai-report .pdf-card .pdf-icon { font-size: 36px; width: 56px; height: 70px; background: linear-gradient(180deg, #fff, #F8FAFC); border: 1px solid var(--border); border-radius: 8px; margin: 0 auto 12px; display:flex; align-items:center; justify-content:center; color: var(--danger); position: relative; }
+  .ai-report .pdf-card .pdf-icon::after { content:'PDF'; position:absolute; bottom:6px; font-size:9px; font-weight:800; color: var(--danger); letter-spacing:.04em; }
+  .ai-report .pdf-card .name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+  .ai-report .pdf-card .size { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Two-col grid */
+  .grid-2 { display:grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-sm); padding: 22px; }
+  .panel-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 14px; }
+  .panel-head h3 { margin:0; font-size: 16px; letter-spacing:-0.015em; }
+  .panel-head a { font-size: 12px; color: var(--text-muted); text-decoration:none; }
+
+  /* Top streets */
+  .street { display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); align-items: center; }
+  .street:first-of-type { border-top: none; padding-top: 2px; }
+  .street .rank { font-family: 'Instrument Serif', serif; font-size: 22px; font-style: italic; color: var(--text-muted); font-weight: 400; }
+  .street .name { font-size: 14px; font-weight: 600; }
+  .street .meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .street .num { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 13.5px; }
+
+  /* Dropper splits */
+  .splits { }
+  .split { padding: 12px 0; border-top: 1px solid var(--border); display: grid; grid-template-columns: 40px 1fr auto auto; gap: 14px; align-items: center; }
+  .split:first-of-type { border-top: none; padding-top: 0; }
+  .split .av { width:36px; height:36px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight: 700; font-size: 12px; }
+  .split .info .name { font-size: 14px; font-weight: 600; }
+  .split .info .meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .split .pct { font-size: 13px; font-weight: 600; color: var(--success); font-variant-numeric: tabular-nums; }
+  .split .stars { font-size: 12px; color: var(--warning); }
+
+  /* Coverage breakdown */
+  .breakdown-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .breakdown { padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: #FAFBFF; }
+  .breakdown .head { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted); margin-bottom: 6px; }
+  .breakdown .val { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+  .breakdown .sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+  .bar { height: 6px; background: var(--bg-muted); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  .bar > div { height: 100%; background: linear-gradient(90deg, #4F46E5, #A3E635); border-radius: 999px; }
+
+  /* Compare card */
+  .compare { background: linear-gradient(135deg, #FFFFFF, #FAFBFF); border: 1px solid var(--border); border-radius: 20px; padding: 22px; box-shadow: var(--shadow-sm); margin-bottom: 14px; }
+  .compare-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 14px; }
+  .compare-head h3 { margin:0; font-size: 16px; letter-spacing:-0.015em; }
+  .compare-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+  .compare-row .col .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); font-weight: 600; }
+  .compare-row .col .val { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-top: 6px; line-height: 1; }
+  .compare-row .col .delta { font-size: 12px; font-weight: 600; margin-top: 6px; }
+  .compare-row .col .delta.up { color: var(--success); }
+  .compare-row .col .delta.down { color: var(--danger); }
+
+  /* CTA Banner */
+  .rerun {
+    background:
+      radial-gradient(600px circle at 0% 0%, rgba(163,230,53,.15), transparent 50%),
+      radial-gradient(500px circle at 100% 100%, rgba(124,58,237,.12), transparent 50%),
+      linear-gradient(160deg, #18181B 0%, #0a0a0a 100%);
+    color:#fff; border-radius:24px; padding: 28px 32px; display:flex; gap:24px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+  }
+  .rerun h3 { margin:0 0 6px; font-size: 22px; letter-spacing:-0.02em; }
+  .rerun p { margin:0; color: rgba(255,255,255,.65); font-size: 14px; line-height: 1.55; max-width: 540px; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack</div>
+  <div class="nav-label">Workspace</div>
+  <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="tracking.html"><i data-lucide="map-pin"></i> Live Tracking <span class="count">2</span></a>
+  <a href="campaigns.html" class="active"><i data-lucide="folder-clock"></i> Campaigns</a>
+  <div class="nav-label">Create</div>
+  <a href="create-1.html"><i data-lucide="plus"></i> New Campaign</a>
+  <a href="ai-assistant.html"><i data-lucide="sparkles"></i> AI Assistant <span class="dot-new"></span></a>
+  <div class="nav-label">Account</div>
+  <a href="billing.html"><i data-lucide="credit-card"></i> Billing</a>
+  <a href="profile.html"><i data-lucide="user-cog"></i> Profile &amp; settings</a>
+  <a class="user-card" href="profile.html">
+    <div class="avatar">SN</div>
+    <div class="info"><div class="name">Sarah Nguyen</div><div class="role">Belle Property — Bondi</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <a href="campaigns.html" class="back"><i data-lucide="arrow-left"></i> Back to campaigns</a>
+
+  <div class="hero">
+    <div class="completed-badge">Campaign complete</div>
+    <h1>Spring Listings — Bondi <span class="serif">— a strong run.</span></h1>
+    <div class="meta">
+      <span>Real Estate · Belle Property</span><span class="sep">·</span>
+      <span>Bondi Junction NSW 2022</span><span class="sep">·</span>
+      <span>8 — 11 May 2026 · 3 days</span><span class="sep">·</span>
+      <span>2 droppers</span>
+    </div>
+
+    <div class="actions">
+      <a href="#" class="pill-btn solid"><i data-lucide="file-text" style="width:14px;height:14px;"></i> Download AI Report</a>
+      <a href="#" class="pill-btn"><i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i> Re-run campaign</a>
+      <a href="#" class="pill-btn"><i data-lucide="share-2" style="width:14px;height:14px;"></i> Share</a>
+      <a href="#" class="pill-btn"><i data-lucide="download" style="width:14px;height:14px;"></i> Export GPX</a>
+    </div>
+
+    <div class="big-stats">
+      <div class="item"><div class="lbl">Leaflets dropped</div><div class="val">2,500</div><div class="sub">of 2,500 ordered</div></div>
+      <div class="item"><div class="lbl">Coverage</div><div class="val green">96<span style="font-size:18px; color: rgba(255,255,255,.5); margin-left:2px;">%</span></div><div class="sub">target was 92%</div></div>
+      <div class="item"><div class="lbl">Distance walked</div><div class="val">17.8 <span style="font-size:18px; color: rgba(255,255,255,.5); margin-left:2px;">km</span></div><div class="sub">across 2 droppers</div></div>
+      <div class="item"><div class="lbl">Time on the ground</div><div class="val">11h 42m</div><div class="sub">8 May–11 May</div></div>
+      <div class="item"><div class="lbl">Houses reached</div><div class="val">2,412</div><div class="sub">88 skipped (No Junk Mail)</div></div>
+    </div>
+  </div>
+
+  <div class="map-card">
+    <div class="map-toolbar">
+      <h3>Walked route &amp; drops</h3>
+      <div class="seg">
+        <button class="active">Routes</button>
+        <button>Coverage heatmap</button>
+        <button>Drops only</button>
+      </div>
+    </div>
+    <div class="map-canvas">
+      <div class="map-placeholder">
+        <div class="zone-poly" style="top:50px; left:60px; width:380px; height:330px;"></div>
+        <div class="zone-poly" style="top:50px; left:450px; width:380px; height:330px; background:rgba(16,185,129,.12); border-color: var(--success); border-radius: 40% 35% 50% 30%;"></div>
+        <svg style="position:absolute; inset:0; width:100%; height:100%;">
+          <path d="M 90 360 L 130 320 L 170 320 L 170 270 L 240 270 L 240 220 L 310 220 L 310 180 L 380 180 L 380 130 L 420 90" stroke="#A3E635" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="8 6" filter="drop-shadow(0 2px 4px rgba(163,230,53,.4))"/>
+          <path d="M 480 360 L 520 320 L 560 320 L 560 270 L 620 270 L 620 220 L 690 220 L 690 170 L 760 170 L 760 110" stroke="#10B981" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="8 6" filter="drop-shadow(0 2px 4px rgba(16,185,129,.4))"/>
+        </svg>
+        <div class="drop-pin" style="top:360px; left:95px;"></div>
+        <div class="drop-pin" style="top:320px; left:135px;"></div>
+        <div class="drop-pin" style="top:320px; left:175px;"></div>
+        <div class="drop-pin" style="top:270px; left:245px;"></div>
+        <div class="drop-pin" style="top:220px; left:315px;"></div>
+        <div class="drop-pin" style="top:180px; left:385px;"></div>
+        <div class="drop-pin" style="top:130px; left:425px;"></div>
+        <div class="drop-pin" style="background: var(--primary); box-shadow: 0 2px 6px rgba(79,70,229,.5); top:360px; left:485px;"></div>
+        <div class="drop-pin" style="background: var(--primary); box-shadow: 0 2px 6px rgba(79,70,229,.5); top:320px; left:525px;"></div>
+        <div class="drop-pin" style="background: var(--primary); box-shadow: 0 2px 6px rgba(79,70,229,.5); top:270px; left:625px;"></div>
+        <div class="drop-pin" style="background: var(--primary); box-shadow: 0 2px 6px rgba(79,70,229,.5); top:220px; left:695px;"></div>
+        <div class="drop-pin" style="background: var(--primary); box-shadow: 0 2px 6px rgba(79,70,229,.5); top:170px; left:765px;"></div>
+
+        <div class="pip">
+          <div class="item"><div class="lbl">Drops</div><div class="val">2,500</div></div>
+          <div class="item"><div class="lbl">Coverage</div><div class="val" style="color: var(--success);">96%</div></div>
+          <div class="item"><div class="lbl">Distance</div><div class="val">17.8 km</div></div>
+        </div>
+
+        <div class="legend-card">
+          <strong>Legend</strong>
+          <span><span class="dot" style="background: rgba(79,70,229,.7);"></span> Zone A · James K.</span>
+          <span><span class="dot" style="background: rgba(16,185,129,.8);"></span> Zone B · Maya R.</span>
+          <span><span class="dot" style="background:#A3E635;"></span> Walked path</span>
+          <span><span class="dot" style="background:var(--success);"></span> Drop locations</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-report">
+    <div>
+      <div class="eyebrow"><span class="mark"><i data-lucide="sparkles" style="width:13px;height:13px;"></i></span> AI Campaign Report</div>
+      <h2>"Your strongest run in Bondi Junction yet."</h2>
+      <p class="narrative">Your campaign delivered <strong>2,500 leaflets across 2,412 homes</strong> over 3 days — 4 points above your six-month coverage average. <strong>Bronte Rd, Hollywood Ave and Oxford St</strong> drove most of the impact, hitting 100% of letterboxes. The 88 skipped houses were all "No Junk Mail" — exactly what you'd want. James and Maya walked at a steady 148 drops/hr and finished half a day ahead of schedule.<br><br><strong>Suggestion:</strong> repeat in 3 weeks for compound recall; expect a 22% uplift in enquiries.</p>
+      <div style="display:flex; gap:10px;">
+        <a href="#" class="btn-primary"><i data-lucide="file-down"></i> Download full PDF</a>
+        <a href="#" class="btn-ghost"><i data-lucide="share-2"></i> Share with my team</a>
+      </div>
+    </div>
+    <div class="pdf-card">
+      <div class="pdf-icon"></div>
+      <div class="name">spring-listings-report.pdf</div>
+      <div class="size">8 pages · 2.4 MB</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-head"><h3>Top streets by coverage</h3><a href="#">All streets →</a></div>
+      <div class="street"><div class="rank">1</div><div><div class="name">Bronte Rd</div><div class="meta">142 letterboxes · 100% covered</div></div><div class="num">142</div></div>
+      <div class="street"><div class="rank">2</div><div><div class="name">Hollywood Ave</div><div class="meta">98 letterboxes · 100% covered</div></div><div class="num">98</div></div>
+      <div class="street"><div class="rank">3</div><div><div class="name">Oxford St</div><div class="meta">112 letterboxes · 100% covered</div></div><div class="num">112</div></div>
+      <div class="street"><div class="rank">4</div><div><div class="name">Spring St</div><div class="meta">76 letterboxes · 96% covered</div></div><div class="num">73</div></div>
+      <div class="street"><div class="rank">5</div><div><div class="name">Bondi Rd</div><div class="meta">204 letterboxes · 92% covered</div></div><div class="num">188</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Dropper splits</h3><a href="#">View profiles →</a></div>
+      <div class="splits">
+        <div class="split">
+          <div class="av" style="background: var(--primary);">JK</div>
+          <div class="info"><div class="name">James Kowalski</div><div class="meta">1,260 drops · 8.4 km · 6h 12m</div></div>
+          <div class="pct">+22% pace</div>
+          <div class="stars">★ 4.9</div>
+        </div>
+        <div class="split">
+          <div class="av" style="background: var(--success);">MR</div>
+          <div class="info"><div class="name">Maya Reddy</div><div class="meta">1,240 drops · 9.4 km · 5h 30m</div></div>
+          <div class="pct">on target</div>
+          <div class="stars">★ 4.8</div>
+        </div>
+      </div>
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-secondary);">
+        <strong>Combined pace:</strong> 148 drops/hr · 22% above the AU average
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-head"><h3>Coverage breakdown</h3></div>
+      <div class="breakdown-grid">
+        <div class="breakdown">
+          <div class="head">Houses</div>
+          <div class="val">1,820</div>
+          <div class="bar"><div style="width: 98%;"></div></div>
+          <div class="sub">98% covered · 36 No-Junk-Mail skipped</div>
+        </div>
+        <div class="breakdown">
+          <div class="head">Apartments</div>
+          <div class="val">592</div>
+          <div class="bar"><div style="width: 88%;"></div></div>
+          <div class="sub">88% covered · 52 locked-building skipped</div>
+        </div>
+        <div class="breakdown">
+          <div class="head">Walking distance</div>
+          <div class="val">17.8 km</div>
+          <div class="bar"><div style="width: 100%;"></div></div>
+          <div class="sub">Combined across 2 droppers</div>
+        </div>
+        <div class="breakdown">
+          <div class="head">Elapsed time</div>
+          <div class="val">3 days</div>
+          <div class="bar"><div style="width: 75%;"></div></div>
+          <div class="sub">Half a day ahead of schedule</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Fraud Shield audit</h3></div>
+      <div style="display:flex; align-items:center; gap: 14px; margin-bottom: 14px;">
+        <div style="width:56px; height:56px; border-radius:14px; background: linear-gradient(135deg,#A3E635, #10B981); color:#0a2e1f; display:flex; align-items:center; justify-content:center;"><i data-lucide="shield-check" style="width:24px;height:24px;"></i></div>
+        <div>
+          <div style="font-size: 16px; font-weight: 700;">All 2,500 drops verified</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">100% GPS integrity · 3 anomalies auto-cleared</div>
+        </div>
+      </div>
+      <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.55;">No spoofing detected. AI reviewed every drop in real time. The 3 anomalies were a cluster (apartment block · cleared), a 2-min stationary window (pedestrian crossing · cleared) and a pace spike (cleared). Audit trail attached to the PDF report.</div>
+    </div>
+  </div>
+
+  <div class="compare">
+    <div class="compare-head">
+      <h3>How this stacks up</h3>
+      <a href="#" style="color:var(--text-muted); font-size:12px;">vs. your last 3 Real Estate campaigns</a>
+    </div>
+    <div class="compare-row">
+      <div class="col"><div class="lbl">Coverage</div><div class="val">96%</div><div class="delta up">▲ 7 pts vs. avg</div></div>
+      <div class="col"><div class="lbl">Pace</div><div class="val">148 <span style="font-size:11px; font-weight: 500; color: var(--text-muted);">/hr</span></div><div class="delta up">▲ 22% vs. avg</div></div>
+      <div class="col"><div class="lbl">Duration</div><div class="val">3 <span style="font-size:11px; font-weight:500; color: var(--text-muted);">days</span></div><div class="delta up">▼ 2 days vs. avg</div></div>
+      <div class="col"><div class="lbl">Cost per drop</div><div class="val">$0.23</div><div class="delta down">▲ $0.01 vs. avg</div></div>
+    </div>
+  </div>
+
+  <div class="rerun">
+    <div>
+      <h3>Like this campaign? Re-run it in 3 weeks.</h3>
+      <p>Same zone, same droppers, AI-priced from this run. <strong style="color:#A3E635;">22% uplift</strong> projected from compound exposure on similar repeat campaigns.</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <a href="create-1.html" class="pill-btn solid">Re-run on 2 Jun <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></a>
+      <a href="#" class="pill-btn">Schedule later</a>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

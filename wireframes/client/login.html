@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Login · DropTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+.split { display:grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+.left { padding: 60px; background: linear-gradient(135deg, #4F46E5 0%, #3730A3 50%, #1E1B4B 100%); color:#fff; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;}
+.left::after { content:""; position:absolute; right:-100px; bottom:-100px; width:400px; height:400px; background: radial-gradient(circle, rgba(163,230,53,.3), transparent 70%); }
+.right { padding: 60px; display:flex; flex-direction:column; justify-content:center; max-width: 480px; margin: 0 auto; width: 100%; }
+.logo-lg { font-size:28px; font-weight:800; display:flex; align-items:center; gap:12px; }
+.logo-lg .dot { width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg,#A3E635,#10B981); display:flex; align-items:center; justify-content:center; color:#1E1B4B; font-weight:900; }
+.tagline { font-size: 38px; line-height: 1.15; font-weight: 700; margin-top: 80px; max-width: 440px; }
+.tagline span { background: linear-gradient(90deg, #A3E635, #FFFFFF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:24px; max-width:440px; }
+.pill { background: rgba(255,255,255,.1); padding: 6px 14px; border-radius:999px; font-size:13px; backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,.15); }
+.role-tabs { display:flex; gap:8px; background: var(--bg-muted); padding:4px; border-radius:12px; margin-bottom: 24px; }
+.role-tabs button { flex:1; padding:10px; border:none; background: transparent; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; color: var(--text-secondary); }
+.role-tabs button.active { background: #fff; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+</style></head>
+<body>
+<div class="split">
+  <div class="left">
+    <div class="logo-lg"><div class="dot">D</div> DropTrack</div>
+    <div>
+      <div class="tagline">Australia's first <span>AI-powered</span> leaflet distribution platform.</div>
+      <div class="pills">
+        <span class="pill"><i data-lucide="shield-check" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> AI Fraud Shield</span>
+        <span class="pill"><i data-lucide="map" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> AI Route Planner</span>
+        <span class="pill"><i data-lucide="bar-chart-3" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> AI Insights</span>
+        <span class="pill"><i data-lucide="message-square" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> AI Job Creator</span>
+      </div>
+    </div>
+    <div style="font-size:12px; opacity:.6;">© 2026 DropTrack · Privacy Act 1988 compliant · AU data residency</div>
+  </div>
+  <div class="right">
+    <h2 style="font-size:26px; margin:0 0 6px;">Welcome back</h2>
+    <p style="color:var(--text-muted); margin:0 0 28px;">Sign in to your DropTrack account</p>
+    <div style="display:none;" class="role-tabs">
+      <button class="active">Client / Agent</button>
+      <button>Dropper</button>
+      <button>Admin</button>
+    </div>
+    <label class="label">Email or mobile</label>
+    <input class="input" placeholder="agent@realestate.com.au" style="margin-bottom:16px;">
+    <label class="label">Password</label>
+    <input class="input" type="password" placeholder="••••••••" style="margin-bottom:8px;">
+    <div style="text-align:right; margin-bottom:24px;"><a href="#" style="font-size:13px; color:var(--primary); text-decoration:none; font-weight:600;">Forgot password?</a></div>
+    <a href="dashboard.html" class="btn-primary" style="justify-content:center; padding:14px;">Sign in</a>
+    <div style="text-align:center; margin: 20px 0; color:var(--text-muted); font-size:13px;">or</div>
+    <a href="login-otp.html" class="btn-ghost" style="justify-content:center; width:100%;"><i data-lucide="mail" style="width:16px;height:16px;"></i> Email me a one-time code</a>
+    <p style="text-align:center; margin-top: 28px; color:var(--text-muted); font-size:13px;">New to DropTrack? <a href="signup.html" style="color:var(--primary); font-weight:600; text-decoration:none;">Create account</a></p>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script>lucide.createIcons();</script>
+</body></html>

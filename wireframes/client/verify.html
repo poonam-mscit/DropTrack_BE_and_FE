@@ -1,0 +1,60 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Verify email · DropTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+body { min-height:100vh; display:flex; align-items:center; justify-content:center; padding: 40px 20px;
+  background:
+    radial-gradient(800px circle at 20% 10%, rgba(79,70,229,.1), transparent 50%),
+    radial-gradient(700px circle at 80% 90%, rgba(163,230,53,.1), transparent 50%),
+    var(--bg-base);
+}
+.card-wrap { max-width: 460px; width:100%; padding: 40px; text-align:center; }
+.logo-mark { width:56px; height:56px; border-radius:16px; background:linear-gradient(135deg,#4F46E5,#7C3AED 50%,#A3E635); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:24px; box-shadow: 0 10px 30px -8px rgba(124,58,237,.5); margin-bottom: 22px; }
+h2 { font-size:26px; letter-spacing:-0.025em; margin: 0 0 8px; }
+.sub { color: var(--text-secondary); font-size: 14px; line-height: 1.55; margin: 0 0 28px; }
+.email { color: var(--text-primary); font-weight: 600; }
+.code-input { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; }
+.code-input input {
+  width: 52px; height: 60px; text-align: center; font-size: 24px; font-weight: 700;
+  border: 1.5px solid var(--border); border-radius: 14px; background: #fff;
+  letter-spacing: -0.01em; transition: all .15s; box-shadow: var(--shadow-xs); font-family: inherit;
+}
+.code-input input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79,70,229,.12); }
+.code-input input:not(:placeholder-shown) { border-color: var(--primary); background: var(--primary-50); color: var(--primary); }
+.resend { color: var(--text-muted); font-size: 13px; margin-top: 18px; }
+.resend a { color: var(--primary); font-weight: 600; }
+</style></head>
+<body>
+<div class="card card-wrap">
+  <div class="logo-mark"><i data-lucide="mail-check" style="width:26px;height:26px;"></i></div>
+  <h2>Check your email</h2>
+  <p class="sub">We sent a 6-digit verification code to<br><span class="email">sarah@belleproperty.com.au</span></p>
+
+  <div class="code-input">
+    <input maxlength="1" placeholder="0">
+    <input maxlength="1" placeholder="0">
+    <input maxlength="1" placeholder="0">
+    <input maxlength="1" placeholder="0">
+    <input maxlength="1" placeholder="0">
+    <input maxlength="1" placeholder="0">
+  </div>
+
+  <a href="login.html" class="btn-primary" style="width:100%; justify-content:center; padding:14px; font-size:15px;">Verify &amp; sign in <i data-lucide="arrow-right" style="width:16px;height:16px;"></i></a>
+
+  <div class="resend">Didn't receive it? <a href="#">Resend code</a> · <a href="signup.html">Use different email</a></div>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  const inputs = document.querySelectorAll('.code-input input');
+  inputs.forEach((el, i) => {
+    el.addEventListener('input', () => {
+      if (el.value && i < inputs.length - 1) inputs[i+1].focus();
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !el.value && i > 0) inputs[i-1].focus();
+    });
+  });
+</script>
+</body></html>

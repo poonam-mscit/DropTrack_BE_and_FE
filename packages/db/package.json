@@ -1,0 +1,48 @@
+{
+  "name": "@droptrack/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js",
+      "default": "./dist/schema.js"
+    }
+  },
+  "files": [
+    "dist",
+    "migrations"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "push": "drizzle-kit push",
+    "studio": "drizzle-kit studio --port 4983",
+    "generate": "drizzle-kit generate && pnpm fix-geo",
+    "fix-geo": "find drizzle -name '*.sql' -exec sed -i '' -e 's/\"geography(Point, 4326)\"/geography(Point, 4326)/g' -e 's/\"geography(Polygon, 4326)\"/geography(Polygon, 4326)/g' {} +",
+    "migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/0000_init.sql && psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f drizzle/0000_init.sql && psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/0001_spatial_indexes.sql",
+    "init": "pnpm generate && pnpm migrate",
+    "seed": "tsx src/seed.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.36.0",
+    "pg": "^8.13.0",
+    "postgres": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "drizzle-kit": "^0.28.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

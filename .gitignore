@@ -1,0 +1,38 @@
+node_modules/
+dist/
+build/
+out/
+.next/
+.turbo/
+coverage/
+.tsbuildinfo
+*.tsbuildinfo
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# drizzle generated
+drizzle/
+
+# expo / native
+.expo/
+ios/Pods/
+android/.gradle/
+android/build/

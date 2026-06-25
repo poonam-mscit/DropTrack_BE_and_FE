@@ -1,0 +1,103 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Campaigns · DropTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; }
+  .greeting h1 { font-size: 34px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 28px; gap:24px; flex-wrap: wrap; }
+  .filter-bar { display:flex; gap: 8px; padding: 14px; background: #fff; border:1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-sm); margin-bottom: 16px; align-items:center; }
+  .filter-bar input { flex:1; }
+  .seg { display: flex; gap: 2px; background: var(--bg-muted); padding: 4px; border-radius: 10px; }
+  .seg button { background: transparent; border: none; padding: 6px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+  .seg button.active { background: #fff; color: var(--text-primary); box-shadow: var(--shadow-xs); }
+  .cmp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .cmp { padding: 18px; border: 1px solid var(--border); border-radius: 16px; background: #fff; box-shadow: var(--shadow-sm); transition: all .2s; cursor: pointer; text-decoration: none; color: inherit; }
+  .cmp:hover { border-color: rgba(79,70,229,.3); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .cmp-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 14px; gap: 12px; }
+  .cmp .ttl { font-size: 15px; font-weight: 600; letter-spacing:-0.015em; }
+  .cmp .zone { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .progress { height: 6px; background: var(--bg-muted); border-radius: 999px; overflow:hidden; margin: 12px 0 10px; }
+  .progress > div { height: 100%; background: linear-gradient(90deg, #4F46E5, #A3E635); border-radius: 999px; }
+  .cmp-meta { display:flex; justify-content:space-between; align-items:center; font-size: 12px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack</div>
+  <div class="nav-label">Workspace</div>
+  <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="tracking.html"><i data-lucide="map-pin"></i> Live Tracking <span class="count">2</span></a>
+  <a href="campaigns.html" class="active"><i data-lucide="folder-clock"></i> Campaigns</a>
+  <div class="nav-label">Create</div>
+  <a href="create-1.html"><i data-lucide="plus"></i> New Campaign</a>
+  <a href="ai-assistant.html"><i data-lucide="sparkles"></i> AI Assistant <span class="dot-new"></span></a>
+  <div class="nav-label">Account</div>
+  <a href="billing.html"><i data-lucide="credit-card"></i> Billing</a>
+    <a class="user-card" href="profile.html">
+    <div class="avatar">SN</div>
+    <div class="info"><div class="name">Sarah Nguyen</div><div class="role">Belle Property — Bondi</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>Campaigns <span class="serif">— everything you've run.</span></h1>
+      <div style="color:var(--text-muted); font-size:13px; margin-top:6px;">14 campaigns · 38,420 leaflets dropped lifetime</div>
+    </div>
+    <a href="create-1.html" class="btn-primary"><i data-lucide="plus"></i> New campaign</a>
+  </div>
+
+  <div class="filter-bar">
+    <input class="input" placeholder="Search by name, suburb or month" style="border:none; box-shadow:none;">
+    <div class="seg">
+      <button class="active">All</button><button>Active</button><button>Draft</button><button>Completed</button>
+    </div>
+    <button class="btn-ghost"><i data-lucide="sliders-horizontal"></i> Filters</button>
+  </div>
+
+  <div class="cmp-grid">
+    <a href="tracking.html" class="cmp">
+      <div class="cmp-head"><div><div class="ttl">Spring Listings — Bondi</div><div class="zone">Real Estate · Bondi Junction</div></div><span class="badge badge-active">Live</span></div>
+      <div style="font-size:13px; font-weight:600;">2,156 <span style="color:var(--text-muted); font-weight:400;">/ 2,500 dropped</span></div>
+      <div class="progress"><div style="width:86%;"></div></div>
+      <div class="cmp-meta"><span>Day 3 of 4</span><span>96% coverage</span></div>
+    </a>
+    <a href="tracking.html" class="cmp">
+      <div class="cmp-head"><div><div class="ttl">Open House Flyers</div><div class="zone">Real Estate · Surry Hills</div></div><span class="badge badge-active">Live</span></div>
+      <div style="font-size:13px; font-weight:600;">1,408 <span style="color:var(--text-muted); font-weight:400;">/ 1,800 dropped</span></div>
+      <div class="progress"><div style="width:78%;"></div></div>
+      <div class="cmp-meta"><span>Day 2 of 3</span><span>78% coverage</span></div>
+    </a>
+    <a href="create-1.html" class="cmp">
+      <div class="cmp-head"><div><div class="ttl">Clinic Reopening</div><div class="zone">Medical · Paddington</div></div><span class="badge badge-draft">Draft</span></div>
+      <div style="font-size:13px; font-weight:600; color:var(--text-muted);">3,000 leaflets · awaiting payment</div>
+      <div class="progress"><div style="width:0%;"></div></div>
+      <div class="cmp-meta"><span>Created 2hr ago</span><span style="color:var(--warning); font-weight:600;">Expires in 6h</span></div>
+    </a>
+    <a href="campaign-summary.html" class="cmp">
+      <div class="cmp-head"><div><div class="ttl">April Newsletter</div><div class="zone">Newtown · Apr 28</div></div><span class="badge badge-done">Done</span></div>
+      <div style="font-size:13px; font-weight:600;">4,116 <span style="color:var(--text-muted); font-weight:400;">/ 4,200 dropped</span></div>
+      <div class="progress"><div style="width:98%;"></div></div>
+      <div class="cmp-meta"><span>3 days</span><span>98% coverage</span></div>
+    </a>
+    <a href="campaign-summary.html" class="cmp">
+      <div class="cmp-head"><div><div class="ttl">Easter Open Days</div><div class="zone">Coogee · Apr 14</div></div><span class="badge badge-done">Done</span></div>
+      <div style="font-size:13px; font-weight:600;">3,200 <span style="color:var(--text-muted); font-weight:400;">/ 3,200 dropped</span></div>
+      <div class="progress"><div style="width:100%;"></div></div>
+      <div class="cmp-meta"><span>2 days</span><span>94% coverage</span></div>
+    </a>
+    <a href="campaign-summary.html" class="cmp">
+      <div class="cmp-head"><div><div class="ttl">March Auctions</div><div class="zone">Randwick · Mar 20</div></div><span class="badge badge-done">Done</span></div>
+      <div style="font-size:13px; font-weight:600;">2,800 <span style="color:var(--text-muted); font-weight:400;">/ 2,800 dropped</span></div>
+      <div class="progress"><div style="width:100%;"></div></div>
+      <div class="cmp-meta"><span>3 days</span><span>91% coverage</span></div>
+    </a>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

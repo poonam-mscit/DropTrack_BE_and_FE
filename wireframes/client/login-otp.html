@@ -1,0 +1,108 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Email sign-in · DropTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+.split { display:grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+.left {
+  padding: 60px; color:#fff;
+  background:
+    radial-gradient(800px circle at 0% 0%, rgba(163,230,53,.25), transparent 50%),
+    radial-gradient(700px circle at 100% 100%, rgba(124,58,237,.45), transparent 55%),
+    linear-gradient(135deg, #4F46E5 0%, #3730A3 50%, #1E1B4B 100%);
+  display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;
+}
+.right { padding: 60px; display:flex; flex-direction:column; justify-content:center; max-width: 480px; margin: 0 auto; width: 100%; }
+.logo-lg { font-size:24px; font-weight:800; display:flex; align-items:center; gap:12px; letter-spacing:-0.02em; }
+.logo-lg .dot { width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg,#A3E635,#10B981); display:flex; align-items:center; justify-content:center; color:#1E1B4B; font-weight:900; }
+.tagline { font-size: 40px; line-height: 1.1; font-weight: 800; margin-top: 60px; max-width: 460px; letter-spacing:-0.03em; }
+.tagline em { font-style: normal; background: linear-gradient(90deg, #A3E635, #FFFFFF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.feature-list { margin-top: 32px; display:flex; flex-direction:column; gap:14px; max-width:440px; }
+.feature-list .item { display:flex; align-items:flex-start; gap:12px; font-size:14px; line-height:1.45; }
+.feature-list .item .check { width:24px; height:24px; border-radius:8px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#A3E635; }
+.icon-mark { width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#4F46E5,#7C3AED 50%,#A3E635); color:#fff; display:inline-flex; align-items:center; justify-content:center; box-shadow: 0 10px 30px -8px rgba(124,58,237,.5); margin-bottom: 18px; }
+.code-input { display: flex; gap: 10px; margin: 8px 0 22px; }
+.code-input input {
+  width: 52px; height: 60px; text-align: center; font-size: 24px; font-weight: 700;
+  border: 1.5px solid var(--border); border-radius: 14px; background: #fff;
+  letter-spacing: -0.01em; transition: all .15s; box-shadow: var(--shadow-xs); font-family: inherit;
+}
+.code-input input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79,70,229,.12); }
+.code-input input:not(:placeholder-shown) { border-color: var(--primary); background: var(--primary-50); color: var(--primary); }
+.email-pill { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:var(--primary-50); color:var(--primary); border-radius:999px; font-size:13px; font-weight:600; margin-bottom: 22px; }
+.back { color:var(--text-muted); font-size:13px; text-decoration:none; display:inline-flex; align-items:center; gap:6px; margin-bottom:24px; }
+</style></head>
+<body>
+<div class="split">
+  <div class="left">
+    <div class="logo-lg"><div class="dot">D</div> DropTrack</div>
+    <div>
+      <div class="tagline">Signing back in — <em>no password needed</em>.</div>
+      <div class="feature-list">
+        <div class="item"><div class="check"><i data-lucide="check" style="width:14px;height:14px;"></i></div><div><strong>Passwordless &amp; safer</strong><div style="opacity:.75; font-size:13px;">One-time codes can't be reused or phished</div></div></div>
+        <div class="item"><div class="check"><i data-lucide="check" style="width:14px;height:14px;"></i></div><div><strong>Codes expire in 10 minutes</strong><div style="opacity:.75; font-size:13px;">Short-lived &amp; tied to your device</div></div></div>
+        <div class="item"><div class="check"><i data-lucide="check" style="width:14px;height:14px;"></i></div><div><strong>AU data residency</strong><div style="opacity:.75; font-size:13px;">All authentication processed in Sydney</div></div></div>
+      </div>
+    </div>
+    <div style="font-size:12px; opacity:.6;">© 2026 DropTrack · Privacy Act 1988 compliant · AU data residency</div>
+  </div>
+
+  <div class="right">
+    <a href="login.html" class="back"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to sign in</a>
+
+    <div id="step-email">
+      <div class="icon-mark"><i data-lucide="mail" style="width:22px;height:22px;"></i></div>
+      <h2 style="font-size:28px; margin:0 0 8px; letter-spacing:-0.025em;">Sign in with email</h2>
+      <p style="color:var(--text-muted); margin:0 0 28px; font-size:14px; line-height:1.55;">Enter the email tied to your DropTrack account. We'll send a 6-digit code — no password needed.</p>
+
+      <label class="label">Email</label>
+      <input class="input" id="email" type="email" placeholder="sarah@belleproperty.com.au" style="margin-bottom:18px;">
+
+      <button onclick="showCode()" class="btn-primary" style="width:100%; justify-content:center; padding:14px; font-size:15px;">Send me a code <i data-lucide="arrow-right" style="width:16px;height:16px;"></i></button>
+
+      <p style="font-size:12px; color:var(--text-muted); margin-top:18px;">By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
+    </div>
+
+    <div id="step-code" style="display:none;">
+      <div class="icon-mark"><i data-lucide="mail-check" style="width:22px;height:22px;"></i></div>
+      <h2 style="font-size:28px; margin:0 0 8px; letter-spacing:-0.025em;">Enter your code</h2>
+      <div class="email-pill"><i data-lucide="mail" style="width:14px;height:14px;"></i> <span id="emailShown">sarah@belleproperty.com.au</span></div>
+      <p style="color:var(--text-muted); margin:0 0 6px; font-size:14px; line-height:1.55;">We sent a 6-digit code. It expires in 10 minutes.</p>
+
+      <div class="code-input">
+        <input maxlength="1" placeholder="0">
+        <input maxlength="1" placeholder="0">
+        <input maxlength="1" placeholder="0">
+        <input maxlength="1" placeholder="0">
+        <input maxlength="1" placeholder="0">
+        <input maxlength="1" placeholder="0">
+      </div>
+
+      <a href="dashboard.html" class="btn-primary" style="width:100%; justify-content:center; padding:14px; font-size:15px;">Verify &amp; sign in <i data-lucide="arrow-right" style="width:16px;height:16px;"></i></a>
+
+      <p style="color:var(--text-muted); font-size:13px; margin-top:18px;">Didn't get it? <a href="#" style="color:var(--primary); font-weight:600;">Resend code</a> · <a href="#" onclick="showEmail();return false;" style="color:var(--primary); font-weight:600;">Use different email</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  function showCode() {
+    const email = document.getElementById('email').value.trim();
+    if (email) document.getElementById('emailShown').textContent = email;
+    document.getElementById('step-email').style.display = 'none';
+    document.getElementById('step-code').style.display = 'block';
+    setTimeout(() => document.querySelector('#step-code .code-input input').focus(), 50);
+  }
+  function showEmail() {
+    document.getElementById('step-code').style.display = 'none';
+    document.getElementById('step-email').style.display = 'block';
+  }
+  const inputs = document.querySelectorAll('.code-input input');
+  inputs.forEach((el, i) => {
+    el.addEventListener('input', () => { if (el.value && i < inputs.length - 1) inputs[i+1].focus(); });
+    el.addEventListener('keydown', e => { if (e.key === 'Backspace' && !el.value && i > 0) inputs[i-1].focus(); });
+  });
+</script>
+</body></html>

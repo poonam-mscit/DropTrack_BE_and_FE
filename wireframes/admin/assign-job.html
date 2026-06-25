@@ -1,0 +1,116 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Assign job</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css"></head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" ><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" class="active"><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" ><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" ><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" ><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" ><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" ><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" ><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div>
+      <a href="dashboard.html" style="font-size:13px; color:var(--text-muted); text-decoration:none;">← Back to queue</a>
+      <h1 style="margin-top:6px;">Assign · Clinic Reopening</h1>
+      <p style="color:var(--text-muted); margin:4px 0 0;">Paddington Health · 3,000 leaflets · Paddington NSW 2021</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-ghost"><i data-lucide="x" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Defer</button>
+      <button class="btn-primary"> Confirm assignment</button>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:20px;">
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <strong style="font-size:14px;">Drop zone · split for 2 droppers</strong>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-ghost" style="font-size:11px; padding:6px 10px;"><i data-lucide="scissors" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Split zone</button>
+          <button class="btn-ghost" style="font-size:11px; padding:6px 10px;"><i data-lucide="rotate-ccw" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Reset</button>
+        </div>
+      </div>
+      <div class="map-placeholder" style="height:520px; border-radius:0;">
+        <div class="zone-poly" style="top:60px; left:80px; width:240px; height:340px; background:rgba(79,70,229,.18); border-color:var(--primary);"></div>
+        <div class="zone-poly" style="top:60px; left:320px; width:240px; height:340px; background:rgba(16,185,129,.18); border-color:var(--success); border-radius:35% 30% 40% 50%;"></div>
+        <div style="position:absolute; top:200px; left:160px; background:#fff; padding:8px 12px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.1); font-size:12px;"><strong>Zone A</strong><br>1,500 leaflets</div>
+        <div style="position:absolute; top:200px; left:420px; background:#fff; padding:8px 12px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.1); font-size:12px;"><strong>Zone B</strong><br>1,500 leaflets</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="padding:18px; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+          <div class="ai-icon" style="width:28px; height:28px; font-size:14px;"><i data-lucide="target" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i></div>
+          <strong style="font-size:15px;">AI Dropper Match</strong>
+          <span class="badge badge-ai" style="margin-left:auto;">AI</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin: 0 0 14px;">Top suggestions based on Paddington experience, completion rate &amp; current load.</p>
+
+        <div style="border:2px solid var(--primary); border-radius:12px; padding:12px; margin-bottom:10px; background: rgba(79,70,229,.04);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:40px; height:40px; background:var(--primary); border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">JK</div>
+            <div style="flex:1;">
+              <strong style="font-size:14px;">James K.</strong> <span style="font-size:11px; color:var(--success); font-weight:600;"> 98% match</span>
+              <div style="font-size:12px; color:var(--text-muted);"> 4.9 · 124 jobs · Paddington x12</div>
+            </div>
+            <input type="checkbox" checked style="width:18px; height:18px;">
+          </div>
+          <div style="margin-top:8px; font-size:11px; color:var(--text-muted);">→ Assigned to Zone A</div>
+        </div>
+
+        <div style="border:2px solid var(--success); border-radius:12px; padding:12px; margin-bottom:10px; background: rgba(16,185,129,.04);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:40px; height:40px; background:var(--success); border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">MR</div>
+            <div style="flex:1;">
+              <strong style="font-size:14px;">Maya R.</strong> <span style="font-size:11px; color:var(--success); font-weight:600;"> 94% match</span>
+              <div style="font-size:12px; color:var(--text-muted);"> 4.8 · 89 jobs · Paddington x7</div>
+            </div>
+            <input type="checkbox" checked style="width:18px; height:18px;">
+          </div>
+          <div style="margin-top:8px; font-size:11px; color:var(--text-muted);">→ Assigned to Zone B</div>
+        </div>
+
+        <div style="border:1px solid var(--border); border-radius:12px; padding:12px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:40px; height:40px; background:var(--text-muted); border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">TS</div>
+            <div style="flex:1;">
+              <strong style="font-size:14px;">Tom S.</strong> <span style="font-size:11px; color:var(--text-muted);">87% match</span>
+              <div style="font-size:12px; color:var(--text-muted);"> 4.7 · 62 jobs</div>
+            </div>
+            <input type="checkbox" style="width:18px; height:18px;">
+          </div>
+        </div>
+
+        <button class="btn-ghost" style="width:100%; justify-content:center; margin-top:10px; font-size:12px;">Browse all droppers →</button>
+      </div>
+
+      <div class="card" style="padding:18px;">
+        <strong style="font-size:14px;">Assignment Summary</strong>
+        <div style="font-size:13px; margin-top: 10px; line-height: 1.9;">
+          Droppers <strong style="float:right;">2</strong><br>
+          Total leaflets <strong style="float:right;">3,000</strong><br>
+          Est. completion <strong style="float:right;">~ 2 days</strong><br>
+          Payroll cost <strong style="float:right;">$320</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script>lucide.createIcons();</script>
+</body></html>

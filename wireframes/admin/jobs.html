@@ -1,0 +1,231 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Jobs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 22px; gap:24px; flex-wrap:wrap; }
+  .greeting h1 { font-size: 34px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+
+  .status-tabs { display:flex; gap:6px; background:#fff; border:1px solid var(--border); border-radius:14px; padding:6px; box-shadow:var(--shadow-sm); margin-bottom:14px; overflow-x:auto; }
+  .status-tabs button { background: transparent; border:none; padding: 9px 16px; border-radius: 9px; font-size:13px; font-weight:600; color: var(--text-muted); cursor:pointer; display:inline-flex; align-items:center; gap:8px; white-space:nowrap; transition: all .15s; }
+  .status-tabs button:hover { background: var(--bg-muted); color: var(--text-primary); }
+  .status-tabs button.active { background: var(--text-primary); color: #fff; }
+  .status-tabs button .count { background: rgba(255,255,255,.15); padding: 2px 8px; border-radius:999px; font-size:11px; min-width:18px; text-align:center; }
+  .status-tabs button:not(.active) .count { background: var(--bg-muted); color: var(--text-secondary); }
+  .status-tabs .dot-warn { width:6px; height:6px; background: var(--warning); border-radius:50%; }
+  .status-tabs .dot-live { width:6px; height:6px; background: var(--success); border-radius:50%; box-shadow:0 0 6px rgba(34,197,94,.5); }
+  .status-tabs .dot-done { width:6px; height:6px; background: var(--info); border-radius:50%; }
+  .status-tabs .dot-draft { width:6px; height:6px; background: var(--text-muted); border-radius:50%; }
+  .status-tabs .dot-up { width:6px; height:6px; background: var(--primary); border-radius:50%; }
+
+  .filter-bar { display:flex; gap: 8px; padding: 12px; background: #fff; border:1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-xs); margin-bottom: 16px; align-items:center; }
+  .filter-bar .input { border:none; box-shadow:none; flex:1; }
+  .seg { display: flex; gap: 2px; background: var(--bg-muted); padding: 4px; border-radius: 10px; }
+  .seg button { background: transparent; border: none; padding: 6px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+  .seg button.active { background: #fff; color: var(--text-primary); box-shadow: var(--shadow-xs); }
+
+  .jobs-card { background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow-sm); overflow:hidden; }
+  .jhead { display:grid; grid-template-columns: 1.6fr 1.2fr 1.1fr 1fr 110px 120px; gap:14px; padding: 14px 22px; background: #FAFBFC; border-bottom: 1px solid var(--border); font-size:11px; text-transform:uppercase; color: var(--text-muted); font-weight:600; letter-spacing:.06em; }
+  .jrow { display:grid; grid-template-columns: 1.6fr 1.2fr 1.1fr 1fr 110px 120px; gap:14px; padding: 16px 22px; border-bottom: 1px solid var(--border); align-items:center; transition: background .15s; }
+  .jrow:last-child { border-bottom: none; }
+  .jrow:hover { background: var(--bg-muted); }
+  .jrow .name { font-weight:600; font-size:14px; letter-spacing:-0.01em; }
+  .jrow .meta { font-size:12px; color:var(--text-muted); margin-top: 2px; }
+  .jrow .client { font-size:13.5px; }
+  .jrow .zone { font-size:13.5px; }
+  .jrow .progress-mini { height:5px; background: var(--bg-muted); border-radius:999px; overflow:hidden; margin-top:6px; max-width: 160px; }
+  .jrow .progress-mini > div { height:100%; background: linear-gradient(90deg,#4F46E5,#A3E635); border-radius:999px; }
+  .jrow .num { font-variant-numeric: tabular-nums; font-size:13.5px; font-weight:500; }
+  .jrow .right { text-align:right; }
+
+  .badge-paid { background:#E0E7FF; color:#3730A3; }
+  .badge-upcoming { background:#DBEAFE; color:#1E40AF; }
+  .badge-completed { background:#F1F5F9; color:#475569; }
+  .badge-cancelled { background:#FEE2E2; color:#991B1B; }
+
+  .droppers-stack { display:flex; }
+  .droppers-stack .avatar { width:22px; height:22px; border-radius:50%; border:2px solid #fff; font-size:10px; font-weight:700; color:#fff; display:flex; align-items:center; justify-content:center; }
+  .droppers-stack .avatar:not(:first-child) { margin-left:-6px; }
+
+  .empty-hint { padding: 14px 22px; font-size: 12px; color: var(--text-muted); background: var(--bg-muted); display:flex; justify-content:space-between; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" class="active"><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" ><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" ><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" ><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" ><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" ><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" ><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" ><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>All jobs <span class="serif">— across the network.</span></h1>
+      <div style="color:var(--text-muted); font-size:13px; margin-top:6px;">38 jobs total · 14 live · 8 awaiting assignment · this month</div>
+    </div>
+    <button class="btn-ghost"><i data-lucide="download"></i> Export CSV</button>
+  </div>
+
+  <div class="status-tabs">
+    <button class="active">All <span class="count">38</span></button>
+    <button><span class="dot-draft"></span> Draft <span class="count">3</span></button>
+    <button><span class="dot-warn"></span> Awaiting assignment <span class="count">8</span></button>
+    <button><span class="dot-up"></span> Upcoming <span class="count">5</span></button>
+    <button><span class="dot-live"></span> Active <span class="count">14</span></button>
+    <button><span class="dot-done"></span> Completed <span class="count">7</span></button>
+    <button>Cancelled <span class="count">1</span></button>
+  </div>
+
+  <div class="filter-bar">
+    <i data-lucide="search" style="color:var(--text-muted); margin-left:8px;"></i>
+    <input class="input" placeholder="Search by campaign, client, suburb or job ID">
+    <div class="seg">
+      <button class="active">All clients</button><button>Real Estate</button><button>Medical</button><button>Political</button><button>Retail</button>
+    </div>
+    <button class="btn-ghost"><i data-lucide="sliders-horizontal"></i> Filters</button>
+    <button class="btn-ghost"><i data-lucide="calendar"></i> Date</button>
+  </div>
+
+  <div class="jobs-card">
+    <div class="jhead">
+      <div>Campaign</div>
+      <div>Client</div>
+      <div>Zone</div>
+      <div>Progress</div>
+      <div style="text-align:right;">Status</div>
+      <div></div>
+    </div>
+
+    <!-- ACTIVE -->
+    <div class="jrow">
+      <div><div class="name">Spring Listings — Bondi</div><div class="meta">JOB-2841 · started 8 May</div></div>
+      <div class="client">Belle Property<div class="meta">Real Estate</div></div>
+      <div class="zone">Bondi Junction NSW</div>
+      <div>
+        <div class="num">2,156 <span style="color:var(--text-muted); font-weight:400;">/ 2,500</span></div>
+        <div class="progress-mini"><div style="width:86%;"></div></div>
+        <div class="droppers-stack" style="margin-top:8px;">
+          <div class="avatar" style="background:var(--primary);">JK</div>
+          <div class="avatar" style="background:var(--success);">MR</div>
+        </div>
+      </div>
+      <div class="right"><span class="badge badge-active">Active</span></div>
+      <div class="right"><a href="job-tracking.html" class="btn-primary" style="padding:6px 12px; font-size:12px;">Track</a></div>
+    </div>
+
+    <div class="jrow">
+      <div><div class="name">Open House Flyers</div><div class="meta">JOB-2840 · started 10 May</div></div>
+      <div class="client">Belle Property<div class="meta">Real Estate</div></div>
+      <div class="zone">Surry Hills NSW</div>
+      <div>
+        <div class="num">1,408 <span style="color:var(--text-muted); font-weight:400;">/ 1,800</span></div>
+        <div class="progress-mini"><div style="width:78%;"></div></div>
+        <div class="droppers-stack" style="margin-top:8px;"><div class="avatar" style="background:var(--warning);">TS</div></div>
+      </div>
+      <div class="right"><span class="badge badge-active">Active</span></div>
+      <div class="right"><a href="job-tracking.html" class="btn-primary" style="padding:6px 12px; font-size:12px;">Track</a></div>
+    </div>
+
+    <!-- AWAITING ASSIGNMENT -->
+    <div class="jrow">
+      <div><div class="name">Clinic Reopening</div><div class="meta">JOB-2845 · paid 2 hr ago</div></div>
+      <div class="client">Paddington Health<div class="meta">Medical</div></div>
+      <div class="zone">Paddington NSW</div>
+      <div><div class="num">3,000 leaflets</div><div class="meta">Awaiting roster</div></div>
+      <div class="right"><span class="badge badge-paid">Awaiting</span></div>
+      <div class="right"><a href="assign-job.html" class="btn-primary" style="padding:6px 12px; font-size:12px;">Assign</a></div>
+    </div>
+
+    <div class="jrow">
+      <div><div class="name">Election Push</div><div class="meta">JOB-2843 · paid 4 hr ago</div></div>
+      <div class="client">Local Greens<div class="meta">Political</div></div>
+      <div class="zone">Newtown NSW</div>
+      <div><div class="num">5,400 leaflets</div><div class="meta">Awaiting roster</div></div>
+      <div class="right"><span class="badge badge-paid">Awaiting</span></div>
+      <div class="right"><a href="assign-job.html" class="btn-primary" style="padding:6px 12px; font-size:12px;">Assign</a></div>
+    </div>
+
+    <!-- UPCOMING -->
+    <div class="jrow">
+      <div><div class="name">Pizza Tuesdays</div><div class="meta">JOB-2839 · starts 14 May</div></div>
+      <div class="client">Crust Co.<div class="meta">Retail / F&amp;B</div></div>
+      <div class="zone">Glebe NSW</div>
+      <div><div class="num">1,200 leaflets</div><div class="droppers-stack" style="margin-top:6px;"><div class="avatar" style="background:var(--info);">LC</div></div></div>
+      <div class="right"><span class="badge badge-upcoming">Upcoming</span></div>
+      <div class="right"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">View</a></div>
+    </div>
+
+    <div class="jrow">
+      <div><div class="name">Mother's Day Brunch</div><div class="meta">JOB-2838 · starts 11 May</div></div>
+      <div class="client">Three Blue Ducks<div class="meta">Retail / F&amp;B</div></div>
+      <div class="zone">Bronte NSW</div>
+      <div><div class="num">900 leaflets</div><div class="droppers-stack" style="margin-top:6px;"><div class="avatar" style="background:var(--success);">MR</div></div></div>
+      <div class="right"><span class="badge badge-upcoming">Upcoming</span></div>
+      <div class="right"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">View</a></div>
+    </div>
+
+    <!-- DRAFT -->
+    <div class="jrow">
+      <div><div class="name">Winter Promo</div><div class="meta">JOB-2851 · draft, created 1hr ago</div></div>
+      <div class="client">Belle Property<div class="meta">Real Estate</div></div>
+      <div class="zone">Coogee NSW</div>
+      <div><div class="num">2,800 leaflets</div><div class="meta" style="color:var(--warning); font-weight:600;">Awaiting payment</div></div>
+      <div class="right"><span class="badge badge-draft">Draft</span></div>
+      <div class="right"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">View</a></div>
+    </div>
+
+    <!-- COMPLETED -->
+    <div class="jrow">
+      <div><div class="name">April Newsletter</div><div class="meta">JOB-2812 · completed 28 Apr</div></div>
+      <div class="client">Belle Property<div class="meta">Real Estate</div></div>
+      <div class="zone">Newtown NSW</div>
+      <div><div class="num">4,116 <span style="color:var(--text-muted); font-weight:400;">/ 4,200</span></div><div class="progress-mini"><div style="width:98%; background: var(--success);"></div></div><div class="meta">98% coverage</div></div>
+      <div class="right"><span class="badge badge-completed">Completed</span></div>
+      <div class="right"><a href="job-tracking.html" class="btn-ghost" style="padding:6px 12px; font-size:12px;">Replay</a></div>
+    </div>
+
+    <div class="jrow">
+      <div><div class="name">Easter Open Days</div><div class="meta">JOB-2805 · completed 14 Apr</div></div>
+      <div class="client">Belle Property<div class="meta">Real Estate</div></div>
+      <div class="zone">Coogee NSW</div>
+      <div><div class="num">3,200 <span style="color:var(--text-muted); font-weight:400;">/ 3,200</span></div><div class="progress-mini"><div style="width:100%; background: var(--success);"></div></div><div class="meta">94% coverage</div></div>
+      <div class="right"><span class="badge badge-completed">Completed</span></div>
+      <div class="right"><a href="job-tracking.html" class="btn-ghost" style="padding:6px 12px; font-size:12px;">Replay</a></div>
+    </div>
+
+    <!-- CANCELLED -->
+    <div class="jrow">
+      <div><div class="name">March Townhall Notice</div><div class="meta">JOB-2780 · cancelled 18 Mar · 48-hr window</div></div>
+      <div class="client">Inner West Council<div class="meta">Political</div></div>
+      <div class="zone">Marrickville NSW</div>
+      <div><div class="num">1,800 leaflets</div><div class="meta">Refund minus $50 fee</div></div>
+      <div class="right"><span class="badge badge-cancelled">Cancelled</span></div>
+      <div class="right"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">Refund log</a></div>
+    </div>
+
+    <div class="empty-hint">
+      <span>Showing 10 of 38 jobs · sorted by activity</span>
+      <a href="#" style="color:var(--primary); font-weight:600;">Load more</a>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

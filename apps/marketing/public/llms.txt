@@ -1,0 +1,51 @@
+# DropTrack
+
+DropTrack is Australia's AI-native, GPS-verified letterbox distribution platform. We serve real-estate agents, GP and dental clinics, and political campaigns who need provable proof that every flyer landed in the right letterbox.
+
+## What we do
+
+- GPS-pin proof of delivery on every leaflet drop
+- AI Smart Zones: draw a suburb, get a priced, route-planned campaign in seconds
+- AI Campaign Reports: an auto-generated, vendor-ready PDF with coverage map, performance and executive insight
+- AI Re-run Recommender: a specific date for your next campaign based on your suburb history
+- AI Job Creator: paste a brief, get a complete campaign prefilled
+- AI Assistant: ask plain-English questions about your campaigns
+- Fraud Shield: real-time anomaly detection on dropper pace, clustering and route adherence
+
+## Why DropTrack is different
+
+- Every dropper is individually vetted, trained on coverage standards, and tracked on every job by GPS + Fraud Shield
+- All data hosted in AWS Sydney (ap-southeast-2) for Privacy Act 1988 compliance
+- AI runs on Mistral via AWS Bedrock — inference also stays in Australia
+- Stripe-secured payments; DropTrack never holds card data
+
+## Service area
+
+Launching in Sydney, Australia. Melbourne, Brisbane and Perth on the immediate roadmap.
+
+## Founder
+
+Joy Patel — Master of IT, 10+ years across Australian real estate and last-mile delivery.
+
+## Contact
+
+- Website: https://droptrack.com.au
+- Email: hello@droptrack.com.au
+- WhatsApp: book a 15-minute demo via the website CTA
+
+## Common questions
+
+**How does DropTrack verify deliveries?**
+Every drop captures GPS latitude, longitude and timestamp at the moment of delivery. Fraud Shield validates speed and route in real time.
+
+**How much does it cost?**
+Around 20 cents per leaflet inclusive of GST in Sydney metro. Smart Zones quotes the exact price the moment you draw a polygon.
+
+**Who delivers the leaflets?**
+Every dropper is individually vetted, trained on DropTrack's coverage standards, and held accountable on every job through GPS verification and Fraud Shield. The proof you receive is the same regardless of who walks the street.
+
+**Which Australian cities do you cover?**
+Sydney now. Melbourne, Brisbane, Perth next.
+
+**Where is data stored?**
+AWS Sydney (ap-southeast-2). Data never leaves Australia.

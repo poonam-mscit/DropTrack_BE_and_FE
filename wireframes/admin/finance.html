@@ -1,0 +1,142 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 22px; gap:24px; flex-wrap:wrap; }
+  .greeting h1 { font-size: 34px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .greeting .meta { color: var(--text-muted); font-size: 13px; margin-top:6px; }
+
+  .top-row { display:grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .revenue-card { background: linear-gradient(160deg, #1A1B36 0%, #0F1029 100%); color:#fff; border-radius:24px; padding:28px 32px; position:relative; overflow:hidden; box-shadow: 0 30px 60px -20px rgba(15,16,41,.4); }
+  .revenue-card::before { content:''; position:absolute; inset:0; background: radial-gradient(600px circle at 100% 0%, rgba(124,58,237,.4), transparent 50%), radial-gradient(500px circle at 0% 100%, rgba(163,230,53,.18), transparent 50%); pointer-events:none; }
+  .revenue-card > * { position: relative; }
+  .revenue-card .eyebrow { font-size:11px; font-weight:700; letter-spacing:.14em; text-transform: uppercase; color:#A3E635; }
+  .revenue-card .big { font-size: 56px; font-weight:800; letter-spacing:-0.035em; line-height:1; margin: 14px 0 8px; }
+  .revenue-card .trend { color: #A3E635; font-weight: 600; font-size: 14px; }
+  .revenue-card .footer { display:flex; gap: 32px; margin-top: 32px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.1); }
+  .revenue-card .footer .item .lbl { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.5); font-weight:600; }
+  .revenue-card .footer .item .val { font-size: 20px; font-weight: 700; margin-top:4px; }
+  .revenue-card .chart { margin-top: 26px; height: 70px; }
+
+  .side-stack { display:flex; flex-direction:column; gap:14px; }
+  .side-card { padding: 22px; background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow: var(--shadow-sm); }
+  .side-card .label { font-size: 11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); font-weight:600; }
+  .side-card .value { font-size: 28px; font-weight: 700; letter-spacing:-0.025em; margin-top: 6px; line-height: 1; }
+
+  .kpi-row { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-bottom: 18px; }
+  .kpi-card { padding: 18px 20px; background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow: var(--shadow-sm); }
+  .kpi-card .label { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); font-weight:600; }
+  .kpi-card .value { font-size: 24px; font-weight: 700; letter-spacing:-0.02em; margin-top: 6px; line-height: 1; }
+  .kpi-card .sub { font-size:11.5px; color:var(--text-muted); margin-top:6px; }
+
+  .table-card { background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow: var(--shadow-sm); overflow:hidden; }
+  .section-head { padding: 18px 22px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .section-head h3 { margin:0; font-size:16px; letter-spacing:-0.015em; }
+  th, td { padding: 14px 22px; }
+  th { background:#FAFBFC; }
+  .num { font-variant-numeric: tabular-nums; }
+  .status-pill { font-size:11px; font-weight:600; padding: 3px 10px; border-radius:999px; }
+  .status-paid { background:#DCFCE7; color:#15803D; }
+  .status-refund { background:#FEF3C7; color:#92400E; }
+  .status-pending { background:#E0E7FF; color:#3730A3; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" ><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" ><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" ><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" ><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" ><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" ><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" class="active"><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" ><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>Finance <span class="serif">— the money side.</span></h1>
+      <div class="meta">Revenue, payroll &amp; margins · GST registered · all reconciled with Stripe</div>
+    </div>
+    <button class="btn-ghost"><i data-lucide="download"></i> Export period (.csv)</button>
+  </div>
+
+  <div class="top-row">
+    <div class="revenue-card">
+      <div class="eyebrow">Revenue · May 2026 to date</div>
+      <div class="big">$48,210</div>
+      <div class="trend">▲ 18% MoM · 93% of $52,000 target</div>
+      <div class="chart">
+        <svg viewBox="0 0 600 70" preserveAspectRatio="none" style="width:100%; height:100%;">
+          <defs>
+            <linearGradient id="rg" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#A3E635" stop-opacity=".5"/>
+              <stop offset="100%" stop-color="#A3E635" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M 0 58 L 40 52 L 80 50 L 120 44 L 160 46 L 200 36 L 240 32 L 280 28 L 320 30 L 360 22 L 400 18 L 440 24 L 480 14 L 520 10 L 560 8 L 600 6 L 600 70 L 0 70 Z" fill="url(#rg)"/>
+          <path d="M 0 58 L 40 52 L 80 50 L 120 44 L 160 46 L 200 36 L 240 32 L 280 28 L 320 30 L 360 22 L 400 18 L 440 24 L 480 14 L 520 10 L 560 8 L 600 6" stroke="#A3E635" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="footer">
+        <div class="item"><div class="lbl">Gross</div><div class="val">$52,810</div></div>
+        <div class="item"><div class="lbl">Platform fees</div><div class="val">$1,425</div></div>
+        <div class="item"><div class="lbl">Refunds</div><div class="val">−$680</div></div>
+        <div class="item"><div class="lbl">GST collected</div><div class="val">$4,381</div></div>
+      </div>
+    </div>
+
+    <div class="side-stack">
+      <div class="side-card"><div class="label">Net margin · May</div><div class="value">$24,820</div><div style="font-size:12px; color:var(--success); font-weight:500; margin-top:6px;">51.5% margin</div></div>
+      <div class="side-card"><div class="label">Payroll · May</div><div class="value">$23,390</div><div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Employees · 38 active</div></div>
+      <div class="side-card"><div class="label">Next BAS due</div><div class="value" style="font-size:20px;">28 Jul 2026</div><div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Q4 FY25/26 · quarterly</div></div>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="label">Revenue YTD</div><div class="value">$214,820</div><div class="sub">2025/26 financial year</div></div>
+    <div class="kpi-card"><div class="label">Avg job size</div><div class="value">$1,268</div><div class="sub">38 invoices MTD</div></div>
+    <div class="kpi-card"><div class="label">Outstanding</div><div class="value">$0</div><div class="sub">Stripe settles next day</div></div>
+    <div class="kpi-card"><div class="label">Refund rate</div><div class="value">1.4%</div><div class="sub">below industry avg 3%</div></div>
+  </div>
+
+  <div class="table-card">
+    <div class="section-head">
+      <h3>Recent invoices</h3>
+      <div style="display:flex; gap:6px;"><div style="display:flex; gap:2px; background: var(--bg-muted); padding:4px; border-radius:10px;">
+        <button style="background:#fff; box-shadow:var(--shadow-xs); padding:6px 12px; border-radius:7px; font-size:12px; font-weight:600; border:none;">All</button>
+        <button style="background:transparent; border:none; padding:6px 12px; font-size:12px; color:var(--text-muted); font-weight:600;">Paid</button>
+        <button style="background:transparent; border:none; padding:6px 12px; font-size:12px; color:var(--text-muted); font-weight:600;">Refunds</button>
+        <button style="background:transparent; border:none; padding:6px 12px; font-size:12px; color:var(--text-muted); font-weight:600;">Pending</button>
+      </div></div>
+    </div>
+    <table>
+      <thead><tr><th>Invoice</th><th>Client</th><th>Campaign</th><th>Date</th><th>Status</th><th style="text-align:right;">Net</th><th style="text-align:right;">GST</th><th style="text-align:right;">Total</th></tr></thead>
+      <tbody>
+        <tr><td class="num">#INV-04812</td><td>Belle Property</td><td>Spring Listings — Bondi</td><td>8 May 2026</td><td><span class="status-pill status-paid">Paid</span></td><td class="num" style="text-align:right;">$513.64</td><td class="num" style="text-align:right;">$51.36</td><td class="num" style="text-align:right; font-weight:600;">$565.00</td></tr>
+        <tr><td class="num">#INV-04798</td><td>Belle Property</td><td>Open House Flyers</td><td>10 May 2026</td><td><span class="status-pill status-paid">Paid</span></td><td class="num" style="text-align:right;">$374.55</td><td class="num" style="text-align:right;">$37.45</td><td class="num" style="text-align:right; font-weight:600;">$412.00</td></tr>
+        <tr><td class="num">#INV-04802</td><td>Local Greens</td><td>Election Push</td><td>11 May 2026</td><td><span class="status-pill status-paid">Paid</span></td><td class="num" style="text-align:right;">$1,090.91</td><td class="num" style="text-align:right;">$109.09</td><td class="num" style="text-align:right; font-weight:600;">$1,200.00</td></tr>
+        <tr><td class="num">#INV-04788</td><td>Inner West Council</td><td>Council Notice</td><td>11 May 2026</td><td><span class="status-pill status-pending">Settling</span></td><td class="num" style="text-align:right;">$436.36</td><td class="num" style="text-align:right;">$43.64</td><td class="num" style="text-align:right; font-weight:600;">$480.00</td></tr>
+        <tr><td class="num">#INV-04702</td><td>Belle Property</td><td>April Newsletter</td><td>26 Apr 2026</td><td><span class="status-pill status-paid">Paid</span></td><td class="num" style="text-align:right;">$849.09</td><td class="num" style="text-align:right;">$84.91</td><td class="num" style="text-align:right; font-weight:600;">$934.00</td></tr>
+        <tr><td class="num">#INV-04688</td><td>Belle Property</td><td>Easter Open Days</td><td>12 Apr 2026</td><td><span class="status-pill status-refund">Partial refund</span></td><td class="num" style="text-align:right;">$618.18</td><td class="num" style="text-align:right;">$61.82</td><td class="num" style="text-align:right; font-weight:600;">$680.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

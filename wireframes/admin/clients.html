@@ -1,0 +1,174 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Clients</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 22px; gap:24px; flex-wrap:wrap; }
+  .greeting h1 { font-size: 34px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .greeting .meta { color: var(--text-muted); font-size: 13px; margin-top:6px; }
+
+  .kpi-row { display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+  .kpi-card { padding: 16px 18px; background:#fff; border:1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-sm); }
+  .kpi-card .label { font-size: 10px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); font-weight:600; }
+  .kpi-card .value { font-size: 24px; font-weight: 700; letter-spacing:-0.02em; margin-top: 4px; line-height: 1; }
+  .kpi-card .sub { font-size:11px; color:var(--text-muted); margin-top:6px; }
+
+  .filter-bar { display:flex; gap: 8px; padding: 10px 12px; background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow: var(--shadow-xs); margin-bottom: 16px; align-items:center; }
+  .filter-bar .input { border:none; box-shadow:none; flex:1; }
+  .seg { display:flex; gap:2px; background: var(--bg-muted); padding:4px; border-radius:10px; }
+  .seg button { background:transparent; border:none; padding: 6px 12px; border-radius:7px; font-size:12px; font-weight:600; color: var(--text-muted); cursor:pointer; }
+  .seg button.active { background:#fff; color: var(--text-primary); box-shadow: var(--shadow-xs); }
+
+  .table-card { background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow: var(--shadow-sm); overflow:hidden; }
+  .thead { display:grid; grid-template-columns: 1.6fr 1fr 0.9fr 1fr 0.9fr 110px 100px; gap:14px; padding: 14px 22px; background:#FAFBFC; border-bottom:1px solid var(--border); font-size:11px; text-transform:uppercase; color: var(--text-muted); font-weight:600; letter-spacing:.06em; }
+  .trow { display:grid; grid-template-columns: 1.6fr 1fr 0.9fr 1fr 0.9fr 110px 100px; gap:14px; padding: 16px 22px; border-bottom: 1px solid var(--border); align-items:center; transition: background .15s; }
+  .trow:last-child { border-bottom:none; }
+  .trow:hover { background: var(--bg-muted); }
+  .trow .name-cell { display:flex; align-items:center; gap:12px; }
+  .trow .av { width:36px; height:36px; border-radius:10px; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
+  .trow .name { font-weight:600; font-size:14px; letter-spacing:-0.01em; }
+  .trow .meta { font-size:11.5px; color:var(--text-muted); margin-top: 2px; }
+  .trow .industry-pill { padding: 3px 9px; border-radius: 999px; font-size:11px; font-weight:600; background: var(--bg-muted); color: var(--text-secondary); display:inline-block; }
+  .num { font-variant-numeric: tabular-nums; font-weight:500; font-size:13.5px; }
+  .empty-hint { padding: 14px 22px; font-size: 12px; color: var(--text-muted); background: var(--bg-muted); display:flex; justify-content:space-between; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" ><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" ><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" ><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" ><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" class="active"><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" ><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" ><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" ><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>Clients <span class="serif">— who you serve.</span></h1>
+      <div class="meta">142 active businesses · 38 active this month · $48,210 MTD revenue</div>
+    </div>
+    <button class="btn-primary"><i data-lucide="user-plus"></i> Add client</button>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="label">Total clients</div><div class="value">142</div><div class="sub">+8 in May</div></div>
+    <div class="kpi-card"><div class="label">Active this month</div><div class="value">38</div><div class="sub">ran 1+ campaign</div></div>
+    <div class="kpi-card"><div class="label">Top spender</div><div class="value" style="font-size:18px;">Belle Property</div><div class="sub">$8,210 MTD</div></div>
+    <div class="kpi-card"><div class="label">Avg LTV</div><div class="value">$3,420</div><div class="sub">12-month rolling</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <i data-lucide="search" style="color:var(--text-muted); margin-left:8px;"></i>
+    <input class="input" placeholder="Search by name, ABN or suburb">
+    <div class="seg">
+      <button class="active">All</button><button>Real Estate</button><button>Medical</button><button>Political</button><button>Retail</button><button>Other</button>
+    </div>
+    <button class="btn-ghost"><i data-lucide="download"></i> Export</button>
+  </div>
+
+  <div class="table-card">
+    <div class="thead">
+      <div>Client</div>
+      <div>Industry</div>
+      <div style="text-align:right;">Campaigns</div>
+      <div style="text-align:right;">Total spend</div>
+      <div style="text-align:right;">Last active</div>
+      <div style="text-align:right;">Status</div>
+      <div></div>
+    </div>
+
+    <div class="trow">
+      <div class="name-cell"><div class="av" style="background:var(--primary);">BP</div><div><div class="name">Belle Property</div><div class="meta">sarah@belleproperty.com.au · ABN 11 222 333 444</div></div></div>
+      <div><span class="industry-pill">Real Estate</span></div>
+      <div class="num" style="text-align:right;">14</div>
+      <div class="num" style="text-align:right;">$18,420</div>
+      <div class="num" style="text-align:right;">Today</div>
+      <div style="text-align:right;"><span class="badge badge-active">Active</span></div>
+      <div style="text-align:right;"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">View</a></div>
+    </div>
+
+    <div class="trow">
+      <div class="name-cell"><div class="av" style="background:var(--success);">PH</div><div><div class="name">Paddington Health</div><div class="meta">admin@paddhealth.com.au · ABN 22 333 444 555</div></div></div>
+      <div><span class="industry-pill">Medical / Clinic</span></div>
+      <div class="num" style="text-align:right;">3</div>
+      <div class="num" style="text-align:right;">$2,710</div>
+      <div class="num" style="text-align:right;">2 hr ago</div>
+      <div style="text-align:right;"><span class="badge badge-active">Active</span></div>
+      <div style="text-align:right;"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">View</a></div>
+    </div>
+
+    <div class="trow">
+      <div class="name-cell"><div class="av" style="background:var(--warning);">LG</div><div><div class="name">Local Greens</div><div class="meta">campaign@greens.org.au</div></div></div>
+      <div><span class="industry-pill">Political</span></div>
+      <div class="num" style="text-align:right;">2</div>
+      <div class="num" style="text-align:right;">$5,400</div>
+      <div class="num" style="text-align:right;">4 hr ago</div>
+      <div style="text-align:right;"><span class="badge badge-active">Active</span></div>
+      <div style="text-align:right;"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">View</a></div>
+    </div>
+
+    <div class="trow">
+      <div class="name-cell"><div class="av" style="background:var(--info);">CC</div><div><div class="name">Crust Co.</div><div class="meta">orders@crustco.com.au · ABN 44 555 666 777</div></div></div>
+      <div><span class="industry-pill">Food &amp; Restaurant</span></div>
+      <div class="num" style="text-align:right;">9</div>
+      <div class="num" style="text-align:right;">$4,860</div>
+      <div class="num" style="text-align:right;">6 hr ago</div>
+      <div style="text-align:right;"><span class="badge badge-active">Active</span></div>
+      <div style="text-align:right;"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">View</a></div>
+    </div>
+
+    <div class="trow">
+      <div class="name-cell"><div class="av" style="background:#7C3AED;">SG</div><div><div class="name">Sydney Grammar</div><div class="meta">marketing@sg.nsw.edu.au</div></div></div>
+      <div><span class="industry-pill">Education</span></div>
+      <div class="num" style="text-align:right;">1</div>
+      <div class="num" style="text-align:right;">$1,290</div>
+      <div class="num" style="text-align:right;">8 hr ago</div>
+      <div style="text-align:right;"><span class="badge badge-active">Active</span></div>
+      <div style="text-align:right;"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">View</a></div>
+    </div>
+
+    <div class="trow">
+      <div class="name-cell"><div class="av" style="background:#0EA5E9;">IW</div><div><div class="name">Inner West Council</div><div class="meta">comms@innerwest.nsw.gov.au</div></div></div>
+      <div><span class="industry-pill">Government</span></div>
+      <div class="num" style="text-align:right;">7</div>
+      <div class="num" style="text-align:right;">$9,810</div>
+      <div class="num" style="text-align:right;">Yesterday</div>
+      <div style="text-align:right;"><span class="badge badge-active">Active</span></div>
+      <div style="text-align:right;"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">View</a></div>
+    </div>
+
+    <div class="trow">
+      <div class="name-cell"><div class="av" style="background:var(--text-muted);">AF</div><div><div class="name">Anytime Fitness</div><div class="meta">randwick@anytime.com.au</div></div></div>
+      <div><span class="industry-pill">Retail</span></div>
+      <div class="num" style="text-align:right;">4</div>
+      <div class="num" style="text-align:right;">$3,120</div>
+      <div class="num" style="text-align:right;">3 days ago</div>
+      <div style="text-align:right;"><span class="badge badge-draft">Quiet</span></div>
+      <div style="text-align:right;"><a href="#" class="btn-ghost" style="padding:6px 12px; font-size:12px;">View</a></div>
+    </div>
+
+    <div class="empty-hint">
+      <span>Showing 7 of 142 clients · sorted by recent activity</span>
+      <a href="#" style="color:var(--primary); font-weight:600;">Load more</a>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

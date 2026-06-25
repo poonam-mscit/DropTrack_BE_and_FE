@@ -1,0 +1,59 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Dropper · Active</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>body { background:#18181B; }</style>
+</head>
+<body>
+<div class="phone">
+  <div class="phone-notch"></div>
+  <div class="phone-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <div>
+        <div style="font-size:11px; color:#A3E635; font-weight:700;">● LIVE · TRACKING</div>
+        <strong style="font-size:16px;">Spring Listings — Bondi</strong>
+      </div>
+      <button style="background:#EF4444; color:#fff; border:none; padding:8px 12px; border-radius:8px; font-weight:700; font-size:11px;"><i data-lucide="alert-octagon" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> SOS</button>
+    </div>
+
+    <div style="background:#18181B; border:1px solid #27272A; border-radius:14px; overflow:hidden; margin-bottom:14px;">
+      <div class="map-placeholder" style="height: 280px; border-radius: 0; filter: brightness(.9);">
+        <div class="zone-poly" style="top:10px; left:20px; width:300px; height:220px;"></div>
+        <svg style="position:absolute; top:10px; left:20px; width:300px; height:220px;">
+          <path class="route-path" d="M 40 200 L 80 160 L 130 160 L 130 110 L 200 110 L 200 70" />
+        </svg>
+        <div class="drop-pin" style="top:200px; left:55px;"></div>
+        <div class="drop-pin" style="top:160px; left:95px;"></div>
+        <div class="drop-pin" style="top:160px; left:140px;"></div>
+        <div class="drop-pin" style="top:115px; left:170px;"></div>
+        <div class="dropper-marker" style="top:80px; left:215px;"></div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-bottom: 16px;">
+      <div style="font-size:11px; color:#A1A1AA; text-transform:uppercase; letter-spacing:.5px;">Drops completed</div>
+      <div style="font-size:48px; font-weight:800; color:#A3E635; line-height:1;">624</div>
+      <div style="font-size:13px; color:#A1A1AA; margin-top:4px;">of 1,250 · 50%</div>
+      <div style="height:8px; background:#27272A; border-radius:4px; overflow:hidden; margin-top:10px;"><div style="height:100%; width:50%; background:linear-gradient(90deg,#4F46E5,#A3E635);"></div></div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:6px; margin-bottom:14px;">
+      <div class="card-dark" style="padding:10px; margin:0; text-align:center;"><div style="font-size:10px; color:#A1A1AA;">Time</div><strong style="font-size:14px;">4h 12m</strong></div>
+      <div class="card-dark" style="padding:10px; margin:0; text-align:center;"><div style="font-size:10px; color:#A1A1AA;">Distance</div><strong style="font-size:14px;">4.2 km</strong></div>
+      <div class="card-dark" style="padding:10px; margin:0; text-align:center;"><div style="font-size:10px; color:#A1A1AA;">Pace</div><strong style="font-size:14px;">148/hr</strong></div>
+    </div>
+
+    <button class="btn-accent" style="font-size:22px; padding: 20px; margin-bottom:10px;"><i data-lucide="map-pin" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> MARK DROP</button>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+      <button class="btn-primary" style="background:#27272A; color:#fff; padding:14px; justify-content:center;"><i data-lucide="pause" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Pause</button>
+      <a href="summary.html" class="btn-primary" style="background:#EF4444; padding:14px; justify-content:center; text-decoration:none;"><i data-lucide="square" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Stop</a>
+    </div>
+
+    <div style="background:#1E1B4B; border:1px solid #3730A3; border-radius:10px; padding:10px; margin-top:14px; font-size:11px; color:#C7D2FE;">
+      <i data-lucide="shield-check" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Fraud Shield: GPS verified · No anomalies detected
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script>lucide.createIcons();</script>
+</body></html>

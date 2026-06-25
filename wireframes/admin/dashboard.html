@@ -1,0 +1,280 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Operations</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 32px; gap: 24px; flex-wrap: wrap; }
+  .greeting h1 { font-size: 38px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; max-width: 760px; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .greeting .meta { color: var(--text-muted); font-size: 13px; margin-top: 8px; display:flex; align-items:center; gap:8px; }
+  .greeting .meta .dot { width:6px; height:6px; background: var(--success); border-radius:50%; box-shadow: 0 0 8px rgba(16,185,129,.6); }
+  .quick { display:flex; gap:8px; }
+
+  .bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; margin-bottom: 16px; }
+
+  .feature-card {
+    grid-column: span 7;
+    background: linear-gradient(160deg, #1A1B36 0%, #0F1029 100%);
+    color: #fff; border-radius: 24px; padding: 32px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(15,16,41,.4);
+    min-height: 320px; display:flex; flex-direction:column;
+  }
+  .feature-card::before {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(600px circle at 100% 0%, rgba(124,58,237,.4), transparent 50%),
+      radial-gradient(500px circle at 0% 100%, rgba(163,230,53,.18), transparent 50%);
+    pointer-events:none;
+  }
+  .feature-card > * { position: relative; }
+  .feature-card .eyebrow { display: inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color: #A3E635; }
+  .feature-card .eyebrow::before { content:''; width:6px; height:6px; background:#A3E635; border-radius:50%; box-shadow: 0 0 12px rgba(163,230,53,.8); }
+  .feature-card .big-stat { font-size: 84px; font-weight: 800; letter-spacing: -0.045em; line-height: 1; margin: 16px 0 12px; }
+  .feature-card .stat-context { font-size: 15px; color: rgba(255,255,255,.7); line-height: 1.5; max-width: 460px; }
+  .feature-card .stat-row { display:flex; gap: 36px; margin-top: auto; padding-top: 24px; flex-wrap:wrap; }
+  .feature-card .stat-row .item .label { font-size: 11px; text-transform:uppercase; letter-spacing:.1em; color: rgba(255,255,255,.55); font-weight:600; }
+  .feature-card .stat-row .item .val { font-size: 28px; font-weight: 700; letter-spacing:-0.025em; margin-top:6px; }
+  .feature-card .card-actions { margin-top: 20px; display:flex; gap:10px; }
+  .pill-btn { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); color:#fff; padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 500; text-decoration: none; backdrop-filter: blur(10px); display:inline-flex; align-items:center; gap:6px; }
+  .pill-btn:hover { background: rgba(255,255,255,.18); }
+  .pill-btn.solid { background: #A3E635; color: #0a0a0a; border-color: #A3E635; font-weight:700; }
+
+  .right-stack { grid-column: span 5; display: flex; flex-direction: column; gap: 14px; }
+  .stat-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 22px; box-shadow: var(--shadow-sm); }
+  .stat-card .label { font-size: 11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); font-weight:600; }
+  .stat-card .value { font-size: 32px; font-weight: 700; letter-spacing:-0.025em; margin-top: 6px; line-height: 1; }
+  .stat-card .trend { font-size: 12px; color: var(--success); font-weight:500; display:inline-flex; align-items:center; gap:4px; margin-top: 8px; }
+  .row-bar { display:flex; gap:4px; margin-top: 14px; height: 8px; }
+  .row-bar span { flex:1; background: var(--bg-muted); border-radius:3px; }
+  .row-bar span.fill { background: linear-gradient(90deg,#4F46E5, #A3E635); }
+
+  .alert-card { background: linear-gradient(135deg, #FFFFFF 0%, #FFF7F7 100%); border: 1px solid rgba(239,68,68,.2); border-radius: 20px; padding: 22px; }
+  .alert-card .head { display:flex; align-items:center; gap:10px; margin-bottom: 10px; }
+  .alert-card .head .badge-shield { width:32px; height:32px; border-radius:10px; background: linear-gradient(135deg, #EF4444, #DC2626); color:#fff; display:flex; align-items:center; justify-content:center; }
+  .alert-card .head .title { font-size: 11px; font-weight:700; letter-spacing:.1em; text-transform: uppercase; color: var(--danger); }
+  .alert-card p { font-size: 14px; line-height: 1.5; color: var(--text-primary); margin: 0 0 14px; }
+  .alert-card a { font-size: 13px; font-weight: 600; color: var(--danger); display:inline-flex; align-items:center; gap:4px; }
+
+  .queue { grid-column: span 7; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px; box-shadow: var(--shadow-sm); overflow:hidden; }
+  .queue-head { padding: 18px 20px 12px; display:flex; justify-content:space-between; align-items:baseline; }
+  .queue-head h3 { font-size: 17px; margin: 0; letter-spacing:-0.015em; }
+  .queue-head a { font-size: 13px; color: var(--text-muted); font-weight: 500; text-decoration:none; }
+  .qrow { display:grid; grid-template-columns: 1.4fr 1fr 90px 110px 110px; gap: 14px; padding: 14px 20px; border-top: 1px solid var(--border); align-items:center; transition: background .15s; }
+  .qrow:hover { background: var(--bg-muted); }
+  .qrow .name { font-weight: 600; font-size: 14px; letter-spacing:-0.01em; }
+  .qrow .client { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .qrow .zone-meta { font-size: 13px; color: var(--text-secondary); }
+  .qrow .leaflets { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  .qrow .waiting { font-size: 12px; color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .qrow .waiting.urgent { color: var(--warning); font-weight: 600; }
+  .qrow .action { text-align: right; }
+
+  .activity { grid-column: span 5; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 22px; box-shadow: var(--shadow-sm); }
+  .activity-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 6px; }
+  .activity-head h3 { font-size: 17px; margin: 0; letter-spacing:-0.015em; }
+  .ev { display:grid; grid-template-columns: 50px 1fr; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); position: relative; }
+  .ev:last-child { border-bottom: none; padding-bottom: 0; }
+  .ev .time { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; padding-top: 2px; }
+  .ev .dot-rail { position: absolute; left:40px; top: 18px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--bg-surface), 0 0 0 5px var(--border); }
+  .ev .dot-rail.success { background: var(--success); }
+  .ev .dot-rail.warning { background: var(--warning); }
+  .ev .body strong { font-size: 13.5px; font-weight: 600; }
+  .ev .body p { margin: 2px 0 0; font-size: 12.5px; color: var(--text-muted); line-height: 1.45; }
+
+  .insight-card {
+    grid-column: span 12;
+    background:
+      radial-gradient(600px circle at 0% 0%, rgba(79,70,229,.15), transparent 50%),
+      radial-gradient(500px circle at 100% 100%, rgba(163,230,53,.12), transparent 50%),
+      linear-gradient(160deg, #1A1B36 0%, #0F1029 100%);
+    color: #fff; border-radius: 24px; padding: 28px 32px; box-shadow: 0 30px 60px -20px rgba(15,16,41,.4);
+    display:flex; gap: 28px; align-items:center; flex-wrap:wrap;
+  }
+  .insight-card .icon-mark { width: 56px; height:56px; border-radius: 16px; background: linear-gradient(135deg,#4F46E5,#7C3AED 50%,#A3E635); color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow: 0 10px 30px -8px rgba(124,58,237,.5); }
+  .insight-card .icon-mark i { width: 24px; height: 24px; }
+  .insight-card .copy { flex:1; min-width: 320px; }
+  .insight-card .eyebrow { display: inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color: #A3E635; margin-bottom: 6px; }
+  .insight-card h3 { margin: 0 0 6px; font-size: 20px; letter-spacing:-0.02em; }
+  .insight-card p { margin: 0; font-size: 14.5px; color: rgba(255,255,255,.7); line-height: 1.5; max-width: 640px; }
+
+  .map-mini { grid-column: span 5; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-sm); overflow: hidden; }
+  .map-mini .head { padding: 18px 20px; display:flex; justify-content:space-between; align-items:baseline; }
+  .map-mini .head h3 { font-size: 17px; margin: 0; letter-spacing:-0.015em; }
+  .map-mini .head a { font-size: 13px; color: var(--text-muted); font-weight: 500; text-decoration:none; }
+  .map-mini .mini-map { margin: 0 18px 18px; height: 200px; border-radius: 14px; position: relative; overflow: hidden;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(163,230,53,.15), transparent 50%),
+      radial-gradient(circle at 70% 60%, rgba(79,70,229,.18), transparent 50%),
+      linear-gradient(135deg,#F0FDF4, #EEF2FF);
+    background-image:
+      linear-gradient(rgba(79,70,229,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,70,229,.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .map-mini .live { position:absolute; width:14px; height:14px; border-radius: 50%; background: var(--primary); border: 3px solid #fff; box-shadow: 0 4px 12px rgba(79,70,229,.4), 0 0 0 0 rgba(79,70,229,.5); animation: pulse 2s infinite; }
+  .map-mini .live.green { background: var(--success); box-shadow: 0 4px 12px rgba(16,185,129,.4), 0 0 0 0 rgba(16,185,129,.5); }
+  .map-mini .live.amber { background: var(--warning); box-shadow: 0 4px 12px rgba(245,158,11,.4); animation: none; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" class="active"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" ><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" ><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" ><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" ><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" ><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" ><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" ><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" ><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>Operations <span class="serif">— a calm Tuesday morning so far.</span></h1>
+      <div class="meta"><span class="dot"></span> 22 droppers working · 14 active jobs · all green</div>
+    </div>
+    <div class="quick">
+      <a href="#" class="bell" title="Notifications"><i data-lucide="bell"></i><span class="bell-dot">5</span></a>
+      <button class="btn-ghost"><i data-lucide="download"></i> Export</button>
+      <a href="assign.html" class="btn-primary"><i data-lucide="inbox"></i> Open queue (8)</a>
+    </div>
+  </div>
+
+  <div class="bento">
+    <div class="feature-card">
+      <div class="eyebrow">Live across the network</div>
+      <div class="big-stat">22 <span style="font-size: 28px; font-weight:500; color: rgba(255,255,255,.5); letter-spacing:-0.015em; margin-left:4px;">of 38</span></div>
+      <div class="stat-context">Droppers actively walking right now across 14 jobs in Sydney metro. Coverage is averaging 92% on closed jobs this week — your best month yet.</div>
+      <div class="stat-row">
+        <div class="item"><div class="label">Active jobs</div><div class="val">14</div></div>
+        <div class="item"><div class="label">Drops today</div><div class="val">14,820</div></div>
+        <div class="item"><div class="label">Avg pace</div><div class="val">148<span style="font-size:14px; opacity:.5; font-weight:500; margin-left:2px;">/hr</span></div></div>
+      </div>
+      <div class="card-actions">
+        <a href="master-map.html" class="pill-btn solid">Open master map <i data-lucide="arrow-up-right" style="width:14px;height:14px;"></i></a>
+        <a href="droppers.html" class="pill-btn">View droppers</a>
+      </div>
+    </div>
+
+    <div class="right-stack">
+      <div class="stat-card">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">
+          <div>
+            <div class="label">Awaiting assignment</div>
+            <div class="value" style="color: var(--warning);">8</div>
+            <div class="trend" style="color:var(--warning);"><i data-lucide="alarm-clock-check" style="width:12px;height:12px;"></i> oldest waiting 1 day</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom: 4px; text-transform:uppercase; letter-spacing:.08em; font-weight:600;">Value</div>
+            <div style="font-size:22px; font-weight:700; letter-spacing:-0.02em;">$4,280</div>
+          </div>
+        </div>
+        <div class="row-bar"><span class="fill"></span><span class="fill"></span><span class="fill"></span><span class="fill"></span><span class="fill"></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="label">Revenue · this month</div>
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-top:6px;">
+          <div class="value">$48,210</div>
+          <div style="text-align:right; font-size:12px; color:var(--success); font-weight:500;">▲ 18% MoM</div>
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">May target · $52,000 · <span style="color:var(--text-primary); font-weight:600;">93%</span> achieved</div>
+      </div>
+
+      <div class="alert-card">
+        <div class="head">
+          <div class="badge-shield"><i data-lucide="shield-check" style="width:16px;height:16px;"></i></div>
+          <span class="title">Fraud Shield</span>
+        </div>
+        <p>2 pace anomalies flagged in the last 24h on the March Auctions job. Both auto-cleared by AI review (legitimate GPS).</p>
+        <a href="#">Review log <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></a>
+      </div>
+    </div>
+
+    <div class="queue">
+      <div class="queue-head"><h3>Paid · awaiting assignment</h3><a href="assign.html">Open queue →</a></div>
+      <div class="qrow">
+        <div><div class="name">Clinic Reopening</div><div class="client">Paddington Health</div></div>
+        <div class="zone-meta">Paddington NSW</div>
+        <div class="leaflets">3,000</div>
+        <div class="waiting urgent">2 hr ago</div>
+        <div class="action"><a href="assign.html" class="btn-primary" style="padding:6px 12px; font-size:12px;">Assign</a></div>
+      </div>
+      <div class="qrow">
+        <div><div class="name">Election Push</div><div class="client">Local Greens</div></div>
+        <div class="zone-meta">Newtown NSW</div>
+        <div class="leaflets">5,400</div>
+        <div class="waiting urgent">4 hr ago</div>
+        <div class="action"><a href="assign.html" class="btn-primary" style="padding:6px 12px; font-size:12px;">Assign</a></div>
+      </div>
+      <div class="qrow">
+        <div><div class="name">Pizza Tuesdays</div><div class="client">Crust Co.</div></div>
+        <div class="zone-meta">Glebe NSW</div>
+        <div class="leaflets">1,200</div>
+        <div class="waiting">6 hr ago</div>
+        <div class="action"><a href="assign.html" class="btn-primary" style="padding:6px 12px; font-size:12px;">Assign</a></div>
+      </div>
+      <div class="qrow">
+        <div><div class="name">Auction List</div><div class="client">Belle Property</div></div>
+        <div class="zone-meta">Coogee NSW</div>
+        <div class="leaflets">2,800</div>
+        <div class="waiting urgent">1 day</div>
+        <div class="action"><a href="assign.html" class="btn-primary" style="padding:6px 12px; font-size:12px;">Assign</a></div>
+      </div>
+    </div>
+
+    <div class="activity">
+      <div class="activity-head"><h3>Recent events</h3><a href="#" style="font-size:13px; color:var(--text-muted); text-decoration:none;">All</a></div>
+      <div class="ev"><div class="time">09:42</div><div class="dot-rail success"></div><div class="body"><strong>April Newsletter completed</strong><p>Newtown · 98% coverage · AI report generated</p></div></div>
+      <div class="ev"><div class="time">09:14</div><div class="dot-rail"></div><div class="body"><strong>James K. crossed 50% on Spring Listings</strong><p>1,238 drops · 4.2 km · Bondi Junction</p></div></div>
+      <div class="ev"><div class="time">08:14</div><div class="dot-rail"></div><div class="body"><strong>Maya R. started Open House Flyers</strong><p>Surry Hills zone B · ETA 14:30</p></div></div>
+      <div class="ev"><div class="time">07:30</div><div class="dot-rail warning"></div><div class="body"><strong>Clinic Reopening still unassigned</strong><p>Paid 2 hr ago · 3,000 leaflets · Paddington</p></div></div>
+      <div class="ev"><div class="time">06:55</div><div class="dot-rail success"></div><div class="body"><strong>Tom S. signed in for the day</strong><p>Newtown · scheduled for Election Push</p></div></div>
+    </div>
+
+    <div class="map-mini">
+      <div class="head"><h3>Live across the city</h3><a href="master-map.html">Open master map →</a></div>
+      <div class="mini-map">
+        <div class="live" style="top:28%; left:20%;"></div>
+        <div class="live green" style="top:42%; left:30%;"></div>
+        <div class="live green" style="top:38%; left:60%;"></div>
+        <div class="live" style="top:58%; left:50%;"></div>
+        <div class="live amber" style="top:62%; left:74%;"></div>
+        <div class="live" style="top:75%; left:35%;"></div>
+        <svg style="position:absolute; inset:0; width:100%; height:100%;">
+          <path d="M 40 120 L 75 100 L 110 90 L 145 75 L 180 70 L 215 60" stroke="#A3E635" stroke-width="2" fill="none" stroke-dasharray="6 4" stroke-linecap="round"/>
+          <path d="M 200 150 L 230 130 L 270 120 L 310 105" stroke="#10B981" stroke-width="2" fill="none" stroke-dasharray="6 4" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="insight-card">
+      <div class="icon-mark"><i data-lucide="sparkles"></i></div>
+      <div class="copy">
+        <div class="eyebrow">AI Insight · Operations</div>
+        <h3>Bondi demand is up 32% this week.</h3>
+        <p>Three open jobs (8,700 leaflets) sit in that postcode this Thursday. Roster 2 extra droppers from your Surry Hills bench — they completed 9 jobs there in March.</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <a href="droppers.html" class="pill-btn solid">Roster droppers <i data-lucide="arrow-up-right" style="width:14px;height:14px;"></i></a>
+        <a href="#" class="pill-btn">Dismiss</a>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Billing · DropTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; max-width: 1100px; }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 28px; gap:24px; flex-wrap:wrap; }
+  .greeting h1 { font-size: 34px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .kpi-row { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+  .kpi-card { padding: 22px; background: #fff; border:1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-sm); }
+  .kpi-card .label { font-size: 11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); font-weight:600; }
+  .kpi-card .value { font-size: 30px; font-weight: 700; letter-spacing:-0.025em; margin-top: 6px; line-height: 1; }
+  .kpi-card .sub { font-size:12px; color:var(--text-muted); margin-top:6px; }
+  .section { background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow: var(--shadow-sm); margin-bottom: 16px; overflow:hidden; }
+  .section-head { padding: 18px 22px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .section-head h3 { margin:0; font-size:16px; letter-spacing:-0.015em; }
+  .pm-row { padding: 18px 22px; display:flex; align-items:center; gap:14px; }
+  .pm-row .brand { width: 44px; height:32px; border-radius:8px; background:#1A1F36; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px; letter-spacing:.05em; }
+  .pm-row .info { flex:1; }
+  .pm-row .info .name { font-weight:600; font-size:14px; }
+  .pm-row .info .meta { font-size:12px; color:var(--text-muted); margin-top:2px; }
+  th, td { padding: 14px 22px; }
+  .status-pill { font-size:11px; font-weight:600; padding: 3px 10px; border-radius:999px; }
+  .status-paid { background:#DCFCE7; color:#15803D; }
+  .status-failed { background:#FEE2E2; color:#991B1B; }
+  .status-refund { background:#FEF3C7; color:#92400E; }
+  .invoice-num { font-family: 'Inter', monospace; font-variant-numeric: tabular-nums; font-size:13px; color:var(--text-secondary); }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack</div>
+  <div class="nav-label">Workspace</div>
+  <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="tracking.html"><i data-lucide="map-pin"></i> Live Tracking <span class="count">2</span></a>
+  <a href="campaigns.html"><i data-lucide="folder-clock"></i> Campaigns</a>
+  <div class="nav-label">Create</div>
+  <a href="create-1.html"><i data-lucide="plus"></i> New Campaign</a>
+  <a href="ai-assistant.html"><i data-lucide="sparkles"></i> AI Assistant <span class="dot-new"></span></a>
+  <div class="nav-label">Account</div>
+  <a href="billing.html" class="active"><i data-lucide="credit-card"></i> Billing</a>
+    <a class="user-card" href="profile.html">
+    <div class="avatar">SN</div>
+    <div class="info"><div class="name">Sarah Nguyen</div><div class="role">Belle Property — Bondi</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>Billing <span class="serif">— invoices, methods &amp; spend.</span></h1>
+      <div style="color:var(--text-muted); font-size:13px; margin-top:6px;">All payments processed by Stripe · GST registered</div>
+    </div>
+    <button class="btn-ghost"><i data-lucide="download"></i> Download statements</button>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="label">Spent this month</div><div class="value">$3,280</div><div class="sub">May 2026 · 5 campaigns</div></div>
+    <div class="kpi-card"><div class="label">Spent YTD</div><div class="value">$14,650</div><div class="sub">2026 financial year</div></div>
+    <div class="kpi-card"><div class="label">GST collected</div><div class="value">$1,332</div><div class="sub">10% incl. in totals</div></div>
+  </div>
+
+  <div class="section">
+    <div style="padding: 22px; display:flex; align-items:center; gap:18px;">
+      <div style="width:48px; height:48px; border-radius:14px; background:#635BFF; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:20px; flex-shrink:0;">S</div>
+      <div style="flex:1;">
+        <div style="font-size:15px; font-weight:600; letter-spacing:-0.015em;">Payment methods are managed by Stripe</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px; line-height:1.5;">For your security, DropTrack never sees or stores your card details. Update cards, change your default, or download receipts in Stripe's hosted Customer Portal.</div>
+      </div>
+      <a href="#" class="btn-primary" style="flex-shrink:0;">Open Stripe portal <i data-lucide="external-link" style="width:16px;height:16px;"></i></a>
+    </div>
+    <div style="padding: 14px 22px; background: var(--bg-muted); border-top: 1px solid var(--border); display:flex; align-items:center; gap:14px; font-size:12px; color:var(--text-secondary);">
+      <i data-lucide="shield-check" style="width:14px;height:14px; color:var(--success);"></i>
+      <span><strong>Current default:</strong> Visa ending 4242 — Expires 08/28</span>
+      <span style="color:var(--text-muted);">·</span>
+      <span>PCI-DSS Level 1 compliant</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h3>Invoice history</h3>
+      <div class="seg" style="display:flex; gap:2px; background: var(--bg-muted); padding: 4px; border-radius: 10px;">
+        <button style="background:#fff; box-shadow: var(--shadow-xs); padding: 6px 12px; border-radius:7px; font-size:12px; font-weight:600; border:none;">All</button>
+        <button style="background:transparent; border:none; padding: 6px 12px; font-size:12px; color:var(--text-muted); font-weight:600;">Paid</button>
+        <button style="background:transparent; border:none; padding: 6px 12px; font-size:12px; color:var(--text-muted); font-weight:600;">Refunds</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Invoice</th><th>Campaign</th><th>Date</th><th>Status</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="invoice-num">#INV-04812</td><td>Spring Listings — Bondi</td><td>8 May 2026</td><td><span class="status-pill status-paid">Paid</span></td><td style="text-align:right; font-weight:600;">$565.00</td><td><a href="#" style="font-size:13px;">PDF</a></td></tr>
+        <tr><td class="invoice-num">#INV-04798</td><td>Open House Flyers</td><td>10 May 2026</td><td><span class="status-pill status-paid">Paid</span></td><td style="text-align:right; font-weight:600;">$412.00</td><td><a href="#" style="font-size:13px;">PDF</a></td></tr>
+        <tr><td class="invoice-num">#INV-04702</td><td>April Newsletter</td><td>26 Apr 2026</td><td><span class="status-pill status-paid">Paid</span></td><td style="text-align:right; font-weight:600;">$934.00</td><td><a href="#" style="font-size:13px;">PDF</a></td></tr>
+        <tr><td class="invoice-num">#INV-04688</td><td>Easter Open Days</td><td>12 Apr 2026</td><td><span class="status-pill status-refund">Partial refund</span></td><td style="text-align:right; font-weight:600;">$680.00</td><td><a href="#" style="font-size:13px;">PDF</a></td></tr>
+        <tr><td class="invoice-num">#INV-04601</td><td>March Auctions</td><td>18 Mar 2026</td><td><span class="status-pill status-paid">Paid</span></td><td style="text-align:right; font-weight:600;">$612.00</td><td><a href="#" style="font-size:13px;">PDF</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

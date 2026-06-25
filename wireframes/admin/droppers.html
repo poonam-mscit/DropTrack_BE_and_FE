@@ -1,0 +1,104 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Droppers</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css"></head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" ><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" ><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" ><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" class="active"><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" ><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" ><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" ><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" ><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div>
+      <h1>Droppers · Employee Directory</h1>
+      <p style="color:var(--text-muted); margin:4px 0 0;">38 active employees · 22 working now · 4 onboarding</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-ghost"><i data-lucide="download" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Export</button>
+      <a href="invite-dropper.html" class="btn-primary"><i data-lucide="user-plus"></i> Invite dropper</a>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:14px; margin-bottom:24px;">
+    <div class="card kpi"><div class="label">Active</div><div class="value">38</div></div>
+    <div class="card kpi"><div class="label">Working now</div><div class="value" style="color:var(--success);">22</div></div>
+    <div class="card kpi"><div class="label">Onboarding</div><div class="value" style="color:var(--warning);">4</div></div>
+    <div class="card kpi"><div class="label">Avg rating</div><div class="value"> 4.7</div></div>
+  </div>
+
+  <div class="card">
+    <div style="padding:14px 20px; border-bottom:1px solid var(--border); display:flex; gap:10px;">
+      <input class="input" placeholder="<i data-lucide="search" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Search by name, suburb or employee ID" style="flex:1;">
+      <button class="btn-ghost">Status: All</button>
+      <button class="btn-ghost">Zone: All</button>
+    </div>
+    <table>
+      <thead><tr><th>Employee</th><th>Status</th><th>Current Job</th><th>Jobs Done</th><th>Rating</th><th>Onboarding</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:36px; height:36px; background:var(--primary); border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">JK</div><div><strong>James Kowalski</strong><div style="font-size:11px; color:var(--text-muted);">EMP-0124 · Bondi</div></div></div></td>
+          <td><span class="badge badge-active">● Working</span></td>
+          <td style="font-size:13px;">Spring Listings</td>
+          <td>124</td>
+          <td> 4.9</td>
+          <td><span class="badge badge-active" style="font-size:10px;">Complete</span></td>
+          <td><a href="#" style="color:var(--primary); font-size:13px; text-decoration:none; font-weight:600;">View →</a></td>
+        </tr>
+        <tr>
+          <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:36px; height:36px; background:var(--success); border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">MR</div><div><strong>Maya Reddy</strong><div style="font-size:11px; color:var(--text-muted);">EMP-0098 · Paddington</div></div></div></td>
+          <td><span class="badge badge-active">● Working</span></td>
+          <td style="font-size:13px;">Spring Listings</td>
+          <td>89</td>
+          <td> 4.8</td>
+          <td><span class="badge badge-active" style="font-size:10px;">Complete</span></td>
+          <td><a href="#" style="color:var(--primary); font-size:13px; text-decoration:none; font-weight:600;">View →</a></td>
+        </tr>
+        <tr>
+          <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:36px; height:36px; background:var(--warning); border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">TS</div><div><strong>Tom Sullivan</strong><div style="font-size:11px; color:var(--text-muted);">EMP-0156 · Newtown</div></div></div></td>
+          <td><span class="badge badge-draft">○ Available</span></td>
+          <td style="font-size:13px; color:var(--text-muted);">—</td>
+          <td>62</td>
+          <td> 4.7</td>
+          <td><span class="badge badge-active" style="font-size:10px;">Complete</span></td>
+          <td><a href="#" style="color:var(--primary); font-size:13px; text-decoration:none; font-weight:600;">View →</a></td>
+        </tr>
+        <tr>
+          <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:36px; height:36px; background:var(--info); border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">LC</div><div><strong>Lin Chen</strong><div style="font-size:11px; color:var(--text-muted);">EMP-0201 · Onboarding</div></div></div></td>
+          <td><span class="badge badge-draft"><i data-lucide="clock" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Onboarding</span></td>
+          <td style="font-size:13px; color:var(--text-muted);">—</td>
+          <td>0</td>
+          <td>—</td>
+          <td><span class="badge badge-draft" style="font-size:10px;">Partial · 3/6</span></td>
+          <td><a href="#" style="color:var(--primary); font-size:13px; text-decoration:none; font-weight:600;">Review →</a></td>
+        </tr>
+        <tr>
+          <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:36px; height:36px; background:var(--danger); border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">AB</div><div><strong>Alex Brown</strong><div style="font-size:11px; color:var(--text-muted);">EMP-0078 · Glebe</div></div></div></td>
+          <td><span class="badge badge-danger"><i data-lucide="pause" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Suspended</span></td>
+          <td style="font-size:13px; color:var(--text-muted);">—</td>
+          <td>34</td>
+          <td> 3.2</td>
+          <td><span class="badge badge-active" style="font-size:10px;">Complete</span></td>
+          <td><a href="#" style="color:var(--primary); font-size:13px; text-decoration:none; font-weight:600;">View →</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script>lucide.createIcons();</script>
+</body></html>

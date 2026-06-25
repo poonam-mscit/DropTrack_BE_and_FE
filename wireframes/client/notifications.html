@@ -1,0 +1,159 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Notifications · DropTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; max-width: 900px; }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 24px; gap:24px; flex-wrap:wrap; }
+  .greeting h1 { font-size: 34px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .greeting .meta { color: var(--text-muted); font-size: 13px; margin-top:6px; }
+  .seg { display: flex; gap: 2px; background: var(--bg-muted); padding: 4px; border-radius: 12px; margin-bottom: 16px; width: fit-content; }
+  .seg button { background: transparent; border: none; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+  .seg button.active { background: #fff; color: var(--text-primary); box-shadow: var(--shadow-xs); }
+  .seg button .count { background: var(--primary); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 999px; margin-left: 6px; }
+  .group { margin-bottom: 18px; }
+  .group-label { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted); font-weight: 700; margin: 4px 4px 10px; }
+  .list { background: #fff; border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-sm); overflow: hidden; }
+  .n-item { padding: 16px 20px; display:grid; grid-template-columns: 40px 1fr auto; gap: 14px; align-items: flex-start; border-bottom: 1px solid var(--border); transition: background .15s; cursor: pointer; position: relative; }
+  .n-item:last-child { border-bottom: none; }
+  .n-item:hover { background: var(--bg-muted); }
+  .n-item.unread { background: linear-gradient(90deg, rgba(79,70,229,.04), transparent 40%); }
+  .n-item.unread::before { content:''; position:absolute; left:8px; top:50%; transform:translateY(-50%); width:6px; height:6px; background: var(--primary); border-radius:50%; }
+  .n-ico { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .n-ico.ai { background: linear-gradient(135deg,#4F46E5,#7C3AED 50%,#A3E635); color:#fff; }
+  .n-ico.success { background: #DCFCE7; color: #15803D; }
+  .n-ico.warning { background: #FEF3C7; color: #92400E; }
+  .n-ico.info { background: #E0F2FE; color: #0369A1; }
+  .n-ico.alert { background: #FEE2E2; color: #991B1B; }
+  .n-body strong { font-size: 14px; font-weight: 600; letter-spacing:-0.005em; display:block; }
+  .n-body p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 4px 0 0; }
+  .n-body .actions { margin-top: 10px; display:flex; gap:8px; }
+  .n-body .actions a { font-size: 12px; padding: 5px 10px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+  .n-body .actions .primary { background: var(--primary-50); color: var(--primary); }
+  .n-body .actions .ghost { color: var(--text-muted); }
+  .n-time { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; padding-top: 2px; }
+  .empty { padding: 60px 20px; text-align: center; color: var(--text-muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack</div>
+  <div class="nav-label">Workspace</div>
+  <a href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="tracking.html"><i data-lucide="map-pin"></i> Live Tracking <span class="count">2</span></a>
+  <a href="campaigns.html"><i data-lucide="folder-clock"></i> Campaigns</a>
+  <div class="nav-label">Create</div>
+  <a href="create-1.html"><i data-lucide="plus"></i> New Campaign</a>
+  <a href="ai-assistant.html"><i data-lucide="sparkles"></i> AI Assistant <span class="dot-new"></span></a>
+  <div class="nav-label">Account</div>
+  <a href="billing.html"><i data-lucide="credit-card"></i> Billing</a>
+    <a class="user-card" href="profile.html">
+    <div class="avatar">SN</div>
+    <div class="info"><div class="name">Sarah Nguyen</div><div class="role">Belle Property — Bondi</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>Notifications <span class="serif">— what's new for you.</span></h1>
+      <div class="meta">3 unread · 12 total this week</div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-ghost"><i data-lucide="check-check"></i> Mark all read</button>
+      <a href="settings.html" class="btn-ghost"><i data-lucide="settings"></i> Preferences</a>
+    </div>
+  </div>
+
+  <div class="seg">
+    <button class="active">All <span class="count">3</span></button>
+    <button>Campaigns</button>
+    <button>AI Insights</button>
+    <button>Billing</button>
+    <button>System</button>
+  </div>
+
+  <div class="group">
+    <div class="group-label">Today</div>
+    <div class="list">
+      <div class="n-item unread">
+        <div class="n-ico ai"><i data-lucide="sparkles"></i></div>
+        <div class="n-body">
+          <strong>AI Campaign Report is ready</strong>
+          <p>Newtown · April Newsletter — 98% coverage. The PDF has been generated and saved to your campaign history.</p>
+          <div class="actions"><a href="#" class="primary">View report</a><a href="#" class="ghost">Download PDF</a></div>
+        </div>
+        <div class="n-time">09:42</div>
+      </div>
+      <div class="n-item unread">
+        <div class="n-ico success"><i data-lucide="check-circle-2"></i></div>
+        <div class="n-body">
+          <strong>Spring Listings has reached 50%</strong>
+          <p>James K. just hit the halfway mark in Bondi Junction. Coverage is tracking 12% ahead of schedule.</p>
+          <div class="actions"><a href="tracking.html" class="primary">Open live tracking</a></div>
+        </div>
+        <div class="n-time">09:14</div>
+      </div>
+      <div class="n-item unread">
+        <div class="n-ico warning"><i data-lucide="triangle-alert"></i></div>
+        <div class="n-body">
+          <strong>Clinic Reopening draft expires in 6 hours</strong>
+          <p>Your unpaid draft will move out of the queue tonight at 15:30 AEST. Pay to confirm or it'll be archived.</p>
+          <div class="actions"><a href="create-3.html" class="primary">Pay now</a><a href="#" class="ghost">Extend draft</a></div>
+        </div>
+        <div class="n-time">07:30</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-label">Yesterday</div>
+    <div class="list">
+      <div class="n-item">
+        <div class="n-ico info"><i data-lucide="map-pin"></i></div>
+        <div class="n-body">
+          <strong>Maya R. started Open House Flyers</strong>
+          <p>Surry Hills zone B is now live. ETA 14:30. Live route available on the map.</p>
+        </div>
+        <div class="n-time">Mon · 14:02</div>
+      </div>
+      <div class="n-item">
+        <div class="n-ico info"><i data-lucide="credit-card"></i></div>
+        <div class="n-body">
+          <strong>Payment received — $565.00</strong>
+          <p>Invoice #INV-04812 for Spring Listings — Bondi has been paid. Receipt sent to your email.</p>
+          <div class="actions"><a href="billing.html" class="ghost">View invoice</a></div>
+        </div>
+        <div class="n-time">Mon · 11:18</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="group-label">This week</div>
+    <div class="list">
+      <div class="n-item">
+        <div class="n-ico ai"><i data-lucide="sparkles"></i></div>
+        <div class="n-body">
+          <strong>Weekly AI digest available</strong>
+          <p>Your top-performing campaign this week was Bondi Junction at 96% coverage. Three suggestions for next week.</p>
+          <div class="actions"><a href="ai-assistant.html" class="primary">Open digest</a></div>
+        </div>
+        <div class="n-time">Sun</div>
+      </div>
+      <div class="n-item">
+        <div class="n-ico alert"><i data-lucide="shield-alert"></i></div>
+        <div class="n-body">
+          <strong>Fraud Shield cleared a flag</strong>
+          <p>A pace anomaly was flagged on the March Auctions campaign and reviewed. Outcome: legitimate (verified GPS).</p>
+        </div>
+        <div class="n-time">Fri</div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Reports</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 22px; gap:24px; flex-wrap:wrap; }
+  .greeting h1 { font-size: 34px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .greeting .meta { color: var(--text-muted); font-size: 13px; margin-top:6px; }
+
+  .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; margin-bottom: 22px; }
+  .report-card { padding: 22px; background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow: var(--shadow-sm); text-decoration:none; color:inherit; transition: all .2s; display:flex; flex-direction:column; gap: 14px; min-height: 200px; cursor:pointer; }
+  .report-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: rgba(79,70,229,.25); }
+  .report-card .ico { width: 44px; height:44px; border-radius:13px; background: var(--primary-50); color: var(--primary); display:flex; align-items:center; justify-content:center; }
+  .report-card.ai .ico { background: linear-gradient(135deg,#4F46E5,#7C3AED 50%,#A3E635); color:#fff; }
+  .report-card h3 { font-size: 17px; margin:0; letter-spacing:-0.015em; }
+  .report-card p { font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.5; flex: 1; }
+  .report-card .meta { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted); padding-top: 12px; border-top:1px solid var(--border); }
+  .report-card .meta strong { color: var(--primary); font-weight:600; }
+
+  .scheduled-card { background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow: var(--shadow-sm); overflow:hidden; }
+  .section-head { padding: 18px 22px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .section-head h3 { margin:0; font-size:16px; letter-spacing:-0.015em; }
+  .srow { display:grid; grid-template-columns: 1.4fr 1.2fr 0.9fr 0.9fr 130px 110px; gap:14px; padding: 14px 22px; border-bottom:1px solid var(--border); align-items:center; }
+  .srow:last-child { border-bottom:none; }
+  .srow:hover { background: var(--bg-muted); }
+  .srow .name { font-weight:600; font-size:14px; }
+  .srow .meta { font-size:12px; color: var(--text-muted); margin-top: 2px; }
+  .num { font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  .pill { font-size:11px; font-weight:600; padding: 3px 9px; border-radius:999px; }
+  .pill-active { background:#DCFCE7; color:#15803D; }
+  .pill-paused { background:#FEF3C7; color:#92400E; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" ><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" ><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" ><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" ><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" ><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" ><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" ><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" class="active"><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>Reports <span class="serif">— what's actually happening.</span></h1>
+      <div class="meta">Generate insights, export data &amp; schedule recurring reports</div>
+    </div>
+    <button class="btn-primary"><i data-lucide="plus"></i> Custom report</button>
+  </div>
+
+  <h3 style="font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--text-muted); margin: 4px 0 12px;">Quick reports</h3>
+  <div class="grid">
+    <a href="#" class="report-card ai">
+      <div class="ico"><i data-lucide="sparkles"></i></div>
+      <h3>AI Executive Summary</h3>
+      <p>One-page narrative of the month — wins, gaps, and three suggestions for next month. Auto-generated.</p>
+      <div class="meta"><span>Last run · 2 hr ago</span><strong>Run →</strong></div>
+    </a>
+
+    <a href="#" class="report-card">
+      <div class="ico"><i data-lucide="bar-chart-3"></i></div>
+      <h3>Coverage performance</h3>
+      <p>Average coverage by suburb, client type and dropper. Highlights jobs below threshold.</p>
+      <div class="meta"><span>CSV · PDF</span><strong>Run →</strong></div>
+    </a>
+
+    <a href="#" class="report-card">
+      <div class="ico"><i data-lucide="users"></i></div>
+      <h3>Dropper performance</h3>
+      <p>Drops per hour, distance walked, rating &amp; fraud flags per employee. Ideal for monthly review.</p>
+      <div class="meta"><span>CSV · PDF</span><strong>Run →</strong></div>
+    </a>
+
+    <a href="#" class="report-card">
+      <div class="ico"><i data-lucide="building-2"></i></div>
+      <h3>Client revenue</h3>
+      <p>Spend by client, industry mix, repeat rate. Useful for sales prioritisation.</p>
+      <div class="meta"><span>CSV · PDF</span><strong>Run →</strong></div>
+    </a>
+
+    <a href="#" class="report-card">
+      <div class="ico"><i data-lucide="shield-check"></i></div>
+      <h3>Fraud audit log</h3>
+      <p>Every flagged anomaly, dropper, outcome &amp; auditor for compliance handover.</p>
+      <div class="meta"><span>CSV · signed PDF</span><strong>Run →</strong></div>
+    </a>
+
+    <a href="#" class="report-card">
+      <div class="ico"><i data-lucide="wallet"></i></div>
+      <h3>Finance reconciliation</h3>
+      <p>Stripe payouts vs. invoices, GST collected, refunds. Drops straight into Xero format.</p>
+      <div class="meta"><span>Xero · CSV</span><strong>Run →</strong></div>
+    </a>
+
+    <a href="#" class="report-card">
+      <div class="ico"><i data-lucide="map"></i></div>
+      <h3>Geographic heatmap</h3>
+      <p>Where leaflets actually landed — suburb-by-suburb intensity for the period.</p>
+      <div class="meta"><span>PNG · GeoJSON</span><strong>Run →</strong></div>
+    </a>
+
+    <a href="#" class="report-card">
+      <div class="ico"><i data-lucide="alarm-clock-check"></i></div>
+      <h3>Service-level report</h3>
+      <p>Time-to-assign, on-time start rate, coverage promise vs. delivered.</p>
+      <div class="meta"><span>CSV · PDF</span><strong>Run →</strong></div>
+    </a>
+
+    <a href="#" class="report-card">
+      <div class="ico"><i data-lucide="file-text"></i></div>
+      <h3>BAS-ready export</h3>
+      <p>Q3 quarterly BAS package — sales, GST collected, GST paid, ready for your accountant.</p>
+      <div class="meta"><span>PDF · CSV</span><strong>Run →</strong></div>
+    </a>
+  </div>
+
+  <div class="scheduled-card">
+    <div class="section-head">
+      <h3>Scheduled &amp; saved reports</h3>
+      <button class="btn-ghost" style="font-size:12px;"><i data-lucide="plus"></i> New schedule</button>
+    </div>
+    <div class="srow">
+      <div><div class="name">Weekly performance digest</div><div class="meta">Coverage + dropper KPIs</div></div>
+      <div>To · sarah@droptrack.au + 2 others</div>
+      <div class="num">PDF</div>
+      <div class="num">Fridays 09:00</div>
+      <div><span class="pill pill-active">Active</span></div>
+      <div><a href="#" class="btn-ghost" style="font-size:12px; padding:6px 12px;">Edit</a></div>
+    </div>
+    <div class="srow">
+      <div><div class="name">Monthly board report</div><div class="meta">Revenue, churn, AI insights</div></div>
+      <div>To · board@droptrack.au</div>
+      <div class="num">PDF</div>
+      <div class="num">1st of month</div>
+      <div><span class="pill pill-active">Active</span></div>
+      <div><a href="#" class="btn-ghost" style="font-size:12px; padding:6px 12px;">Edit</a></div>
+    </div>
+    <div class="srow">
+      <div><div class="name">Quarterly BAS package</div><div class="meta">Sales, GST collected/paid</div></div>
+      <div>To · accountant@droptrack.au</div>
+      <div class="num">PDF + CSV</div>
+      <div class="num">28 of quarter</div>
+      <div><span class="pill pill-active">Active</span></div>
+      <div><a href="#" class="btn-ghost" style="font-size:12px; padding:6px 12px;">Edit</a></div>
+    </div>
+    <div class="srow">
+      <div><div class="name">Fraud weekly log</div><div class="meta">Compliance hand-off</div></div>
+      <div>To · legal@droptrack.au</div>
+      <div class="num">Signed PDF</div>
+      <div class="num">Mondays 07:00</div>
+      <div><span class="pill pill-paused">Paused</span></div>
+      <div><a href="#" class="btn-ghost" style="font-size:12px; padding:6px 12px;">Edit</a></div>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

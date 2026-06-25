@@ -1,0 +1,69 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Sign up · DropTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+.split { display:grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+.left {
+  padding: 60px; color:#fff;
+  background:
+    radial-gradient(800px circle at 0% 0%, rgba(163,230,53,.25), transparent 50%),
+    radial-gradient(700px circle at 100% 100%, rgba(124,58,237,.45), transparent 55%),
+    linear-gradient(135deg, #4F46E5 0%, #3730A3 50%, #1E1B4B 100%);
+  display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;
+}
+.right { padding: 56px 60px; display:flex; flex-direction:column; justify-content:center; max-width: 560px; margin: 0 auto; width: 100%; }
+.logo-lg { font-size:24px; font-weight:800; display:flex; align-items:center; gap:12px; letter-spacing:-0.02em; }
+.logo-lg .dot { width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg,#A3E635,#10B981); display:flex; align-items:center; justify-content:center; color:#1E1B4B; font-weight:900; }
+.tagline { font-size: 40px; line-height: 1.1; font-weight: 800; margin-top: 60px; max-width: 460px; letter-spacing:-0.03em; }
+.tagline em { font-style: normal; background: linear-gradient(90deg, #A3E635, #FFFFFF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.feature-list { margin-top: 32px; display:flex; flex-direction:column; gap:14px; max-width:440px; }
+.feature-list .item { display:flex; align-items:flex-start; gap:12px; font-size:14px; line-height:1.45; }
+.feature-list .item .check { width:24px; height:24px; border-radius:8px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#A3E635; }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+</style></head>
+<body>
+<div class="split">
+  <div class="left">
+    <div class="logo-lg"><div class="dot">D</div> DropTrack</div>
+    <div>
+      <div class="tagline">Verified leaflet distribution, <em>powered by AI</em>.</div>
+      <div class="feature-list">
+        <div class="item"><div class="check"><i data-lucide="check" style="width:14px;height:14px;"></i></div><div><strong>Every drop GPS-verified</strong><div style="opacity:.75; font-size:13px;">Fraud Shield blocks spoofed locations in real time</div></div></div>
+        <div class="item"><div class="check"><i data-lucide="check" style="width:14px;height:14px;"></i></div><div><strong>AI sets your zone &amp; price</strong><div style="opacity:.75; font-size:13px;">Smart Zones counts letterboxes and suggests fair cost</div></div></div>
+        <div class="item"><div class="check"><i data-lucide="check" style="width:14px;height:14px;"></i></div><div><strong>Beautiful campaign reports</strong><div style="opacity:.75; font-size:13px;">AI summary delivered when your job completes</div></div></div>
+      </div>
+    </div>
+    <div style="font-size:12px; opacity:.6;">© 2026 DropTrack · Privacy Act 1988 compliant · AU data residency</div>
+  </div>
+
+  <div class="right">
+    <a href="login.html" style="color:var(--text-muted); font-size:13px; text-decoration:none; display:inline-flex; align-items:center; gap:6px; margin-bottom:24px;"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to sign in</a>
+    <h2 style="font-size:28px; margin:0 0 6px; letter-spacing:-0.025em;">Create your account</h2>
+    <p style="color:var(--text-muted); margin:0 0 28px; font-size:14px;">Start your first campaign in under 5 minutes.</p>
+
+    <div class="row2">
+      <div><label class="label">First name</label><input class="input" placeholder="Sarah"></div>
+      <div><label class="label">Last name</label><input class="input" placeholder="Nguyen"></div>
+    </div>
+
+    <div class="row2" style="margin-top:14px;">
+      <div><label class="label">Email</label><input class="input" type="email" placeholder="sarah@belleproperty.com.au"></div>
+      <div><label class="label">Mobile</label><input class="input" placeholder="04xx xxx xxx"></div>
+    </div>
+
+    <div style="margin-top:14px;"><label class="label">Password</label><input class="input" type="password" placeholder="At least 10 characters"></div>
+
+    <label style="display:flex; gap:10px; align-items:flex-start; margin-top:18px; font-size:13px; color:var(--text-secondary); line-height:1.5;">
+      <input type="checkbox" style="margin-top:3px;">
+      <span>I agree to the <a href="#">Terms of Service</a> and acknowledge the <a href="#">Privacy Policy</a>, including that DropTrack owns all GPS and tracking data collected during campaigns.</span>
+    </label>
+
+    <a href="verify.html" class="btn-primary" style="justify-content:center; padding:14px; margin-top:22px; font-size:15px;">Create account <i data-lucide="arrow-right" style="width:16px;height:16px;"></i></a>
+
+    <p style="text-align:center; margin-top: 24px; color:var(--text-muted); font-size:13px;">Already have an account? <a href="login.html" style="color:var(--primary); font-weight:600;">Sign in</a></p>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

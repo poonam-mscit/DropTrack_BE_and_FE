@@ -1,0 +1,161 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Dropper · Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  body { background: #18181B; }
+  .top { display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px; }
+  .top .greet .name { font-size: 22px; font-weight: 800; letter-spacing:-0.02em; }
+  .top .greet .sub { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 2px; }
+  .top .avatar { width:40px; height:40px; border-radius:50%; background: linear-gradient(135deg,#4F46E5,#A3E635); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; }
+
+  .status-card {
+    background: linear-gradient(160deg, rgba(245,158,11,.18), rgba(245,158,11,.06));
+    border: 1px solid rgba(245,158,11,.3);
+    border-radius: 16px; padding: 16px; margin-bottom: 16px;
+  }
+  .status-card.complete {
+    background: linear-gradient(160deg, rgba(163,230,53,.18), rgba(16,185,129,.08));
+    border-color: rgba(163,230,53,.35);
+  }
+  .status-card .head { display:flex; align-items:center; gap:10px; }
+  .status-card .head .ico { width:34px; height:34px; border-radius:10px; background:#F59E0B; color:#0a0a0a; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .status-card.complete .head .ico { background:#A3E635; }
+  .status-card .head strong { font-size:14px; }
+  .status-card p { margin: 8px 0 10px; font-size: 12.5px; color: rgba(255,255,255,.7); line-height: 1.5; }
+  .status-card .bar { height: 6px; background: rgba(255,255,255,.08); border-radius: 999px; overflow: hidden; }
+  .status-card .bar > div { height: 100%; width: 33%; background: linear-gradient(90deg, #F59E0B, #FBBF24); border-radius:999px; }
+  .status-card.complete .bar > div { background: linear-gradient(90deg, #A3E635, #10B981); width: 100%; }
+  .status-card .progress-text { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 6px; }
+
+  .section { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+  .section .head { display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; }
+  .section .head .title { display:flex; align-items:center; gap:10px; font-size: 14px; font-weight: 600; }
+  .section .head .title i { color: rgba(255,255,255,.55); }
+  .section .head .pill { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px; letter-spacing: .04em; text-transform: uppercase; }
+  .pill-todo { background: rgba(245,158,11,.18); color: #FBBF24; }
+  .pill-done { background: rgba(163,230,53,.2); color: #A3E635; }
+
+  .field { margin-bottom: 10px; }
+  .field label { display:block; font-size: 11px; color: rgba(255,255,255,.5); font-weight: 600; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .06em; }
+  .field input, .field select { width: 100%; padding: 11px 13px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 11px; color: #fff; font-family: inherit; font-size: 14px; }
+  .field input::placeholder { color: rgba(255,255,255,.3); }
+  .row2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  .upload-zone { border: 1.5px dashed rgba(255,255,255,.15); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .upload-zone .ico { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,.06); display:flex; align-items:center; justify-content:center; flex-shrink: 0; }
+  .upload-zone .info strong { font-size: 13px; }
+  .upload-zone .info .meta { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 2px; }
+  .save-bar { position: sticky; bottom: 12px; background: rgba(20,20,28,.92); backdrop-filter: blur(12px); padding: 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,.08); margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="phone-notch"></div>
+  <div class="phone-content">
+    <div class="top">
+      <div class="greet">
+        <div class="name">My profile</div>
+        <div class="sub">EMP-0201 · Bondi / Eastern Suburbs · Casual</div>
+      </div>
+      <div class="avatar">LC</div>
+    </div>
+
+    <div class="status-card">
+      <div class="head">
+        <div class="ico"><i data-lucide="alert-circle" style="width:18px;height:18px;"></i></div>
+        <div>
+          <strong>Profile incomplete</strong>
+          <div style="font-size:11px; color: rgba(255,255,255,.55); margin-top:2px;">Admin can't assign jobs until you're done</div>
+        </div>
+      </div>
+      <p>Fill in the sections below — should take about 10 minutes. Save anytime and come back.</p>
+      <div class="bar"><div></div></div>
+      <div class="progress-text">2 of 6 sections complete</div>
+    </div>
+
+    <div class="section">
+      <div class="head">
+        <div class="title"><i data-lucide="user"></i> Personal details</div>
+        <span class="pill pill-done"><i data-lucide="check" style="width:10px;height:10px; margin-right:2px;"></i> Done</span>
+      </div>
+      <div style="font-size:12.5px; color: rgba(255,255,255,.6);">Lin Chen · 28 yo · 14 King St, Bondi NSW 2026<br>Emergency: Sarah Chen · 0412 345 678</div>
+      <button style="background: transparent; border:none; color: #A3E635; font-size:12px; padding: 8px 0 0; font-weight: 600; cursor: pointer;">Edit →</button>
+    </div>
+
+    <div class="section">
+      <div class="head">
+        <div class="title"><i data-lucide="id-card"></i> ID &amp; profile photo</div>
+        <span class="pill pill-done"><i data-lucide="check" style="width:10px;height:10px; margin-right:2px;"></i> Done</span>
+      </div>
+      <div style="font-size:12.5px; color: rgba(255,255,255,.6);">Driver licence verified · Photo uploaded</div>
+    </div>
+
+    <div class="section">
+      <div class="head">
+        <div class="title"><i data-lucide="receipt-text"></i> Tax File Number</div>
+        <span class="pill pill-todo">To do</span>
+      </div>
+      <div class="field"><label>TFN</label><input placeholder="000 000 000"></div>
+      <div class="row2">
+        <div class="field"><label>Residency</label>
+          <select><option>Australian resident</option><option>Foreign resident</option><option>Working holiday maker</option></select>
+        </div>
+        <div class="field"><label>Tax-free threshold</label>
+          <select><option>Yes</option><option>No</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="head">
+        <div class="title"><i data-lucide="piggy-bank"></i> Superannuation</div>
+        <span class="pill pill-todo">To do</span>
+      </div>
+      <div class="field">
+        <label>Fund choice</label>
+        <select><option>Default · Australian Retirement Trust</option><option>My own fund</option></select>
+      </div>
+      <div style="font-size:11.5px; color: rgba(255,255,255,.5);">9.5% of your earnings will be paid into this fund.</div>
+    </div>
+
+    <div class="section">
+      <div class="head">
+        <div class="title"><i data-lucide="landmark"></i> Bank for payroll</div>
+        <span class="pill pill-todo">To do</span>
+      </div>
+      <div class="row2">
+        <div class="field"><label>BSB</label><input placeholder="000-000"></div>
+        <div class="field"><label>Account number</label><input placeholder="0000 0000"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="head">
+        <div class="title"><i data-lucide="file-signature"></i> Employment contract</div>
+        <span class="pill pill-todo">To do</span>
+      </div>
+      <div class="upload-zone">
+        <div class="ico"><i data-lucide="file-text"></i></div>
+        <div class="info"><strong>Casual employment agreement</strong><div class="meta">Review &amp; e-sign · 2 min</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="head">
+        <div class="title"><i data-lucide="shield-check"></i> WWCC <span style="color: rgba(255,255,255,.4); font-weight:400; font-size:11.5px;">(optional)</span></div>
+        <span class="pill pill-todo">Skip if N/A</span>
+      </div>
+      <div class="upload-zone">
+        <div class="ico"><i data-lucide="upload"></i></div>
+        <div class="info"><strong>Upload Working With Children Check</strong><div class="meta">PDF or photo · only needed for school / political jobs</div></div>
+      </div>
+    </div>
+
+    <div class="save-bar">
+      <button class="btn-accent" style="width:100%;">Save progress</button>
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

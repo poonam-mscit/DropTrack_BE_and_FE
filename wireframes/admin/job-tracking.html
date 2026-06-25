@@ -1,0 +1,264 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Job tracking</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 28px 36px 40px; }
+  .back { color: var(--text-muted); font-size: 13px; text-decoration: none; display:inline-flex; align-items:center; gap:6px; }
+  .job-head { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin: 8px 0 22px; flex-wrap:wrap; }
+  .job-head h1 { font-size: 28px; letter-spacing:-0.025em; margin:0; font-weight: 800; }
+  .job-head .meta { color: var(--text-muted); font-size: 13px; margin-top: 6px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .job-head .meta .sep { color: var(--border-strong); }
+  .job-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .badge-live { background: linear-gradient(135deg, #DCFCE7, #BBF7D0); color: #15803D; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing:.04em; display:inline-flex; align-items:center; gap:6px; }
+  .badge-live::before { content:''; width:6px; height:6px; background:#22C55E; border-radius:50%; box-shadow: 0 0 0 3px rgba(34,197,94,.2); animation: pulseDot 1.6s infinite; }
+
+  .layout { display:grid; grid-template-columns: 1fr 360px; gap:16px; }
+  .map-wrap { background: #fff; border:1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-sm); overflow: hidden; }
+  .map-toolbar { padding: 12px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); }
+  .map-toolbar .left { display:flex; gap:8px; }
+  .seg { display:flex; gap:2px; background: var(--bg-muted); padding:4px; border-radius:10px; }
+  .seg button { background:transparent; border:none; padding: 6px 12px; font-size:12px; font-weight:600; color: var(--text-muted); cursor:pointer; border-radius:7px; }
+  .seg button.active { background:#fff; color: var(--text-primary); box-shadow: var(--shadow-xs); }
+  .map-canvas { height: 560px; position: relative; }
+  .map-canvas .map-placeholder { height: 100%; border-radius: 0; }
+  .pip-overlay { position:absolute; top:14px; right:14px; background:#fff; padding:12px 16px; border-radius:14px; box-shadow: var(--shadow-md); font-size:13px; display:flex; gap:18px; }
+  .pip-overlay .item { text-align:center; }
+  .pip-overlay .item .lbl { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:600; }
+  .pip-overlay .item .val { font-size:18px; font-weight:700; letter-spacing:-0.02em; margin-top:2px; }
+
+  .timeline-bar { padding: 12px 16px; border-top:1px solid var(--border); background: var(--bg-muted); display:flex; align-items:center; gap:14px; }
+  .timeline-bar .play { width:34px; height:34px; border-radius:50%; background:var(--primary); color:#fff; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+  .timeline-bar .scrub { flex:1; height:6px; background:#E4E4E7; border-radius:999px; position:relative; }
+  .timeline-bar .scrub > div { height:100%; width:62%; background: linear-gradient(90deg,#4F46E5,#A3E635); border-radius:999px; }
+  .timeline-bar .scrub::after { content:''; position:absolute; left:62%; top:50%; transform:translate(-50%,-50%); width:14px; height:14px; background:#fff; border:2px solid var(--primary); border-radius:50%; box-shadow: var(--shadow-md); }
+  .timeline-bar .stamp { font-size:12px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 80px; text-align:right; }
+
+  .side { display:flex; flex-direction:column; gap:14px; }
+  .side .card { background:#fff; border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow-sm); padding: 18px; }
+  .card-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 10px; }
+  .card-head h3 { font-size: 14px; margin:0; letter-spacing:-0.01em; }
+
+  .dropper-row { display:flex; align-items:center; gap:12px; padding: 10px 0; border-top:1px solid var(--border); }
+  .dropper-row:first-of-type { border-top: none; padding-top: 4px; }
+  .dropper-row .avatar { width:36px; height:36px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex-shrink:0; }
+  .dropper-row .info { flex:1; min-width:0; }
+  .dropper-row .info .name { font-size: 13.5px; font-weight: 600; }
+  .dropper-row .info .meta { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .dropper-row .status-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; letter-spacing: .04em; }
+  .status-tag.live { background:#DCFCE7; color:#15803D; }
+  .status-tag.paused { background:#FEF3C7; color:#92400E; }
+  .dropper-row .more { color:var(--text-muted); cursor:pointer; }
+
+  .progress { height:7px; background: var(--bg-muted); border-radius:999px; overflow:hidden; margin: 10px 0 8px; }
+  .progress > div { height:100%; background: linear-gradient(90deg,#4F46E5,#A3E635); border-radius:999px; }
+
+  .stat-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  .stat-grid .tile { padding: 12px; background: var(--bg-muted); border-radius: 12px; }
+  .stat-grid .tile .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+  .stat-grid .tile .val { font-size: 20px; font-weight: 700; margin-top: 4px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+  .shield-banner { background: linear-gradient(135deg, #EEF2FF, #FAFBFF); border:1px solid rgba(79,70,229,.18); border-radius:14px; padding: 14px; }
+  .shield-banner .head { display:flex; align-items:center; gap:8px; margin-bottom: 6px; }
+  .shield-banner .head .mark { width:28px; height:28px; border-radius:9px; background: linear-gradient(135deg,#4F46E5,#7C3AED); color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink: 0; }
+  .shield-banner .head strong { font-size: 12px; letter-spacing: .04em; }
+  .shield-banner p { margin: 0; font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+  .shield-banner .ok { color: var(--success); font-weight: 600; }
+
+  .anomaly { display:flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); align-items:flex-start; }
+  .anomaly:first-of-type { border-top: none; padding-top: 4px; }
+  .anomaly .ico { width:28px; height:28px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .anomaly.cleared .ico { background: #DCFCE7; color: #15803D; }
+  .anomaly.flagged .ico { background: #FEE2E2; color: #991B1B; }
+  .anomaly .body strong { font-size: 12.5px; }
+  .anomaly .body p { font-size: 11.5px; color: var(--text-muted); margin: 2px 0 0; line-height: 1.4; }
+  .anomaly .time { font-size: 11px; color: var(--text-muted); margin-left: auto; flex-shrink: 0; }
+
+  /* Map elements */
+  .map-canvas .zone-poly { border-color: var(--primary); }
+  .map-canvas .zone-poly.b { background: rgba(16,185,129,.12); border-color: var(--success); border-radius: 40% 35% 50% 30%; }
+  .map-canvas .drop-pin { box-shadow: 0 2px 6px rgba(16,185,129,.5); }
+  .map-canvas .drop-pin.b { background: var(--primary); box-shadow: 0 2px 6px rgba(79,70,229,.5); }
+  .legend-card { position:absolute; bottom:14px; left:14px; background:#fff; padding: 10px 14px; border-radius:12px; box-shadow: var(--shadow-md); font-size:12px; display:flex; flex-direction:column; gap:5px; }
+  .legend-card span { display:inline-flex; align-items:center; gap:8px; }
+  .legend-card span .dot { width:10px; height:10px; border-radius:50%; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" class="active"><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" ><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" ><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" ><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" ><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" ><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" ><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" ><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <a href="jobs.html" class="back"><i data-lucide="arrow-left"></i> All jobs</a>
+
+  <div class="job-head">
+    <div>
+      <h1>Spring Listings — Bondi</h1>
+      <div class="meta">
+        <span><strong style="color:var(--text-primary);">JOB-2841</strong></span><span class="sep">·</span>
+        <span>Belle Property · Real Estate</span><span class="sep">·</span>
+        <span>Bondi Junction NSW 2022</span><span class="sep">·</span>
+        <span>Started 8 May · Due 11 May</span><span class="sep">·</span>
+        <span class="badge-live">Live</span>
+      </div>
+    </div>
+    <div class="job-actions">
+      <button class="btn-ghost"><i data-lucide="user-plus"></i> Add dropper</button>
+      <button class="btn-ghost"><i data-lucide="shuffle"></i> Reassign</button>
+      <button class="btn-ghost"><i data-lucide="message-square"></i> Message client</button>
+      <button class="btn-ghost" style="color:var(--danger); border-color: rgba(239,68,68,.25);"><i data-lucide="pause"></i> Pause job</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="map-wrap">
+      <div class="map-toolbar">
+        <div class="left">
+          <div class="seg">
+            <button class="active">Live</button>
+            <button>Replay</button>
+            <button>Coverage heatmap</button>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-ghost" style="padding:6px 10px;"><i data-lucide="filter"></i> All droppers</button>
+          <button class="btn-ghost" style="padding:6px 10px;"><i data-lucide="download"></i> KML</button>
+        </div>
+      </div>
+
+      <div class="map-canvas">
+        <div class="map-placeholder">
+          <!-- Zones split by dropper -->
+          <div class="zone-poly" style="top:60px; left:60px; width:340px; height:380px;"></div>
+          <div class="zone-poly b" style="top:60px; left:420px; width:340px; height:380px;"></div>
+
+          <!-- Walked routes -->
+          <svg style="position:absolute; inset:0; width:100%; height:100%;">
+            <path d="M 90 380 L 130 340 L 170 340 L 170 290 L 240 290 L 240 240 L 310 240 L 310 200 L 380 200" stroke="#A3E635" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="8 6" filter="drop-shadow(0 2px 4px rgba(163,230,53,.4))"/>
+            <path d="M 450 400 L 490 360 L 540 360 L 540 310 L 600 310 L 600 260 L 670 260 L 670 220" stroke="#10B981" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="8 6" filter="drop-shadow(0 2px 4px rgba(16,185,129,.4))"/>
+          </svg>
+
+          <!-- Drop pins (sample) -->
+          <div class="drop-pin" style="top:380px; left:95px;"></div>
+          <div class="drop-pin" style="top:340px; left:135px;"></div>
+          <div class="drop-pin" style="top:340px; left:175px;"></div>
+          <div class="drop-pin" style="top:290px; left:245px;"></div>
+          <div class="drop-pin" style="top:240px; left:315px;"></div>
+          <div class="drop-pin" style="top:200px; left:385px;"></div>
+          <div class="drop-pin b" style="top:400px; left:455px;"></div>
+          <div class="drop-pin b" style="top:360px; left:495px;"></div>
+          <div class="drop-pin b" style="top:310px; left:545px;"></div>
+          <div class="drop-pin b" style="top:260px; left:605px;"></div>
+          <div class="drop-pin b" style="top:220px; left:675px;"></div>
+
+          <!-- Live dropper markers -->
+          <div class="dropper-marker" style="top:175px; left:455px;"></div>
+          <div class="dropper-marker" style="top:200px; left:725px; background: var(--success);"></div>
+
+          <div class="pip-overlay">
+            <div class="item"><div class="lbl">Drops</div><div class="val">2,156</div></div>
+            <div class="item"><div class="lbl">of</div><div class="val" style="color:var(--text-muted);">2,500</div></div>
+            <div class="item"><div class="lbl">Coverage</div><div class="val" style="color: var(--success);">86%</div></div>
+            <div class="item"><div class="lbl">Pace</div><div class="val">148<span style="font-size:11px; color:var(--text-muted); font-weight:500;">/hr</span></div></div>
+          </div>
+
+          <div class="legend-card">
+            <strong style="font-size:11px;">Legend</strong>
+            <span><span class="dot" style="background:var(--primary);"></span> Zone A · James K.</span>
+            <span><span class="dot" style="background:var(--success);"></span> Zone B · Maya R.</span>
+            <span><span class="dot" style="background:#A3E635; box-shadow:0 0 6px rgba(163,230,53,.6);"></span> Live walked path</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-bar">
+        <button class="play"><i data-lucide="play" style="width:14px;height:14px;"></i></button>
+        <div class="stamp">08:14</div>
+        <div class="scrub"><div></div></div>
+        <div class="stamp" style="text-align:left;">now · 12:48</div>
+        <button class="btn-ghost" style="padding:6px 10px;"><i data-lucide="rewind"></i> Replay</button>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="card">
+        <div class="card-head"><h3>Droppers on this job</h3><a href="#" style="font-size:12px; color:var(--text-muted); text-decoration:none;">Roster</a></div>
+        <div class="dropper-row">
+          <div class="avatar" style="background:var(--primary);">JK</div>
+          <div class="info"><div class="name">James Kowalski</div><div class="meta">Zone A · 1,238 drops · 4.2 km · ★ 4.9</div></div>
+          <div class="status-tag live">Live</div>
+          <i data-lucide="more-horizontal" class="more"></i>
+        </div>
+        <div class="dropper-row">
+          <div class="avatar" style="background:var(--success);">MR</div>
+          <div class="info"><div class="name">Maya Reddy</div><div class="meta">Zone B · 918 drops · 3.6 km · ★ 4.8</div></div>
+          <div class="status-tag live">Live</div>
+          <i data-lucide="more-horizontal" class="more"></i>
+        </div>
+        <button class="btn-soft" style="width:100%; justify-content:center; margin-top:12px; font-size:12px;"><i data-lucide="user-plus"></i> Add another dropper</button>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Progress</h3><span style="font-size:12px; color:var(--success); font-weight:600;">+12% ahead</span></div>
+        <div style="font-size:13px; color:var(--text-secondary);">2,156 / 2,500 leaflets · 86% coverage</div>
+        <div class="progress"><div style="width:86%;"></div></div>
+        <div class="stat-grid" style="margin-top: 12px;">
+          <div class="tile"><div class="lbl">Distance</div><div class="val">7.8 <span style="font-size:11px; color:var(--text-muted); font-weight:500;">km</span></div></div>
+          <div class="tile"><div class="lbl">Time worked</div><div class="val">4h 34m</div></div>
+          <div class="tile"><div class="lbl">Avg pace</div><div class="val">148<span style="font-size:11px; color:var(--text-muted); font-weight:500;">/hr</span></div></div>
+          <div class="tile"><div class="lbl">ETA finish</div><div class="val" style="font-size: 14px;">Tomorrow 11:30</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Fraud Shield</h3></div>
+        <div class="shield-banner">
+          <div class="head"><div class="mark"><i data-lucide="shield-check" style="width:14px;height:14px;"></i></div><strong style="color:var(--primary);">ALL CLEAR</strong></div>
+          <p><span class="ok">GPS integrity 100%.</span> 1 pace anomaly auto-cleared this morning. No mock-location attempts.</p>
+        </div>
+        <div style="margin-top: 12px;">
+          <div class="anomaly cleared">
+            <div class="ico"><i data-lucide="check" style="width:14px;height:14px;"></i></div>
+            <div class="body"><strong>Pace spike on Oxford Rd</strong><p>20 drops in 6 min · cleared (apartment block)</p></div>
+            <div class="time">10:14</div>
+          </div>
+          <div class="anomaly cleared">
+            <div class="ico"><i data-lucide="check" style="width:14px;height:14px;"></i></div>
+            <div class="body"><strong>2 min stationary on Bondi Rd</strong><p>cleared (traffic crossing)</p></div>
+            <div class="time">09:02</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Money</h3></div>
+        <div class="stat-grid">
+          <div class="tile"><div class="lbl">Invoice</div><div class="val" style="font-size: 16px;">$565.00</div></div>
+          <div class="tile"><div class="lbl">Payroll cost</div><div class="val" style="font-size: 16px;">$320.00</div></div>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 10px;">Margin: <strong style="color: var(--success);">$245 · 43%</strong></div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

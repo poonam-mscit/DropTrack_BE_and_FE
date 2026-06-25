@@ -1,0 +1,99 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Create Job · Details</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css"></head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack</div>
+
+  <div class="nav-label">Workspace</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="tracking.html" ><i data-lucide="map-pin"></i> Live Tracking <span class="count">2</span></a>
+  <a href="campaigns.html"><i data-lucide="folder-clock"></i> Campaigns</a>
+
+  <div class="nav-label">Create</div>
+  <a href="create-1.html" class="active"><i data-lucide="plus"></i> New Campaign</a>
+  <a href="ai-assistant.html"><i data-lucide="sparkles"></i> AI Assistant <span class="dot-new"></span></a>
+
+  <div class="nav-label">Account</div>
+  <a href="billing.html"><i data-lucide="credit-card"></i> Billing</a>
+  
+  <a class="user-card" href="profile.html">
+    <div class="avatar">SN</div>
+    <div class="info">
+      <div class="name">Sarah Nguyen</div>
+      <div class="role">Belle Property — Bondi</div>
+    </div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+<main class="main" style="max-width: 900px;">
+  <div class="topbar">
+    <h1>Create New Job</h1>
+    <a href="dashboard.html" class="btn-ghost"><i data-lucide="x" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Cancel</a>
+  </div>
+
+  <div class="step-bar">
+    <div class="step active"></div>
+    <div class="step"></div>
+    <div class="step"></div>
+  </div>
+  <p style="color:var(--text-muted); font-size:13px; margin-top:-16px; margin-bottom:28px;">Step 1 of 3 · Job Details</p>
+
+  <div class="card" style="padding: 24px; margin-bottom:20px;">
+    <div class="ai-banner" style="margin-bottom: 20px;">
+      <div class="ai-icon"><i data-lucide="message-square" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i></div>
+      <div style="flex:1;">
+        <div style="font-weight:600; margin-bottom:4px;">AI Job Creator <span class="badge badge-ai" style="margin-left:6px;">NEW</span></div>
+        <div style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">Describe your campaign in plain English. AI will pre-fill the form for you.</div>
+        <input class="input" placeholder='e.g. "3000 flyers across Surry Hills next Monday, skip apartments, budget $600"'>
+        <button class="btn-primary" style="margin-top:10px;"><i data-lucide="sparkles" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Generate with AI</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="padding: 28px;">
+    <h3 style="margin:0 0 20px; font-size:16px;">Or fill the form manually</h3>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;">
+      <div><label class="label">Campaign name</label><input class="input" placeholder="Spring Listings — Bondi"></div>
+      <div><label class="label">Campaign type</label>
+        <select class="input">
+          <option>Real Estate</option><option>Medical / Clinic</option><option>Political Campaign</option>
+          <option>Food &amp; Restaurant</option><option>Retail Promotion</option><option>Other</option>
+        </select>
+      </div>
+      <div><label class="label">Number of leaflets</label><input class="input" type="number" placeholder="2500"></div>
+      <div><label class="label">Leaflet size</label>
+        <select class="input"><option>DL (99×210mm)</option><option>A5</option><option>A4</option></select>
+      </div>
+      <div><label class="label">Start date</label><input class="input" type="date"></div>
+      <div><label class="label">Deadline</label><input class="input" type="date"></div>
+    </div>
+
+    <div style="margin-top:18px;"><label class="label">Special instructions</label>
+      <textarea class="input" rows="3" placeholder="e.g. Skip apartment buildings. Respect 'No Junk Mail' signs."></textarea>
+    </div>
+
+    <div style="margin-top:18px;">
+      <label class="label">Leaflet artwork</label>
+      <div style="border: 2px dashed var(--border); border-radius: 14px; padding: 32px; text-align: center; background: var(--bg-muted);">
+        <div style="font-size: 32px;"><i data-lucide="file-text" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i></div>
+        <div style="font-weight:600; margin-top:8px;">Drop PDF / image here</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">PDF, PNG or JPG · max 20MB</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 18px; display:flex; gap:10px;">
+      <label style="display:flex; align-items:center; gap:8px; font-size:13px;"><input type="checkbox" checked> Skip "No Junk Mail" letterboxes</label>
+      <label style="display:flex; align-items:center; gap:8px; font-size:13px;"><input type="checkbox"> Skip apartment buildings</label>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; margin-top: 24px;">
+    <a href="dashboard.html" class="btn-ghost">← Back</a>
+    <a href="create-2.html" class="btn-primary">Next: Select Zone →</a>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script>lucide.createIcons();</script>
+</body></html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Create Job · Pay</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css"></head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack</div>
+
+  <div class="nav-label">Workspace</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="tracking.html" ><i data-lucide="map-pin"></i> Live Tracking <span class="count">2</span></a>
+  <a href="campaigns.html"><i data-lucide="folder-clock"></i> Campaigns</a>
+
+  <div class="nav-label">Create</div>
+  <a href="create-1.html" class="active"><i data-lucide="plus"></i> New Campaign</a>
+  <a href="ai-assistant.html"><i data-lucide="sparkles"></i> AI Assistant <span class="dot-new"></span></a>
+
+  <div class="nav-label">Account</div>
+  <a href="billing.html"><i data-lucide="credit-card"></i> Billing</a>
+  
+  <a class="user-card" href="profile.html">
+    <div class="avatar">SN</div>
+    <div class="info">
+      <div class="name">Sarah Nguyen</div>
+      <div class="role">Belle Property — Bondi</div>
+    </div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+<main class="main" style="max-width: 1000px;">
+  <div class="topbar">
+    <h1>Review &amp; Pay</h1>
+    <a href="dashboard.html" class="btn-ghost"><i data-lucide="x" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Cancel</a>
+  </div>
+  <div class="step-bar">
+    <div class="step done"></div><div class="step done"></div><div class="step active"></div>
+  </div>
+  <p style="color:var(--text-muted); font-size:13px; margin-top:-16px; margin-bottom:24px;">Step 3 of 3 · Confirm and pay securely</p>
+
+  <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:20px;">
+    <div>
+      <div class="card" style="padding:24px; margin-bottom:16px;">
+        <h3 style="margin:0 0 16px; font-size:16px;">Campaign Summary</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; font-size:14px;">
+          <div><div style="color:var(--text-muted); font-size:12px;">Campaign</div><strong>Spring Listings — Bondi</strong></div>
+          <div><div style="color:var(--text-muted); font-size:12px;">Type</div><strong>Real Estate</strong></div>
+          <div><div style="color:var(--text-muted); font-size:12px;">Zone</div><strong>Bondi Junction NSW 2022</strong></div>
+          <div><div style="color:var(--text-muted); font-size:12px;">Leaflets</div><strong>2,500</strong></div>
+          <div><div style="color:var(--text-muted); font-size:12px;">Start date</div><strong>20 May 2026</strong></div>
+          <div><div style="color:var(--text-muted); font-size:12px;">Deadline</div><strong>23 May 2026</strong></div>
+        </div>
+        <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border); display:flex; gap:10px; align-items:center;">
+          <div style="width:60px; height:80px; background:var(--bg-muted); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:24px;"><i data-lucide="file-text" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i></div>
+          <div><strong>spring-listings.pdf</strong><div style="font-size:12px; color:var(--text-muted);">1.2MB · uploaded</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:24px; margin-bottom:16px;">
+        <h3 style="margin:0 0 6px; font-size:16px;">Payment</h3>
+        <p style="color:var(--text-muted); font-size:13px; margin: 0 0 18px;">You'll be redirected to Stripe's secure checkout to complete payment.</p>
+        <div style="display:flex; align-items:center; gap:14px; padding:14px 16px; border:1px solid var(--border); border-radius:14px; background:linear-gradient(180deg,#FAFBFC,#FFFFFF);">
+          <div style="width:42px; height:42px; border-radius:12px; background:#635BFF; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; flex-shrink:0;">S</div>
+          <div style="flex:1;">
+            <div style="font-weight:600; font-size:14px;">Stripe Checkout</div>
+            <div style="font-size:12px; color:var(--text-muted);">Card · Apple Pay · Google Pay · Link</div>
+          </div>
+          <i data-lucide="external-link" style="width:18px;height:18px; color:var(--text-muted);"></i>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); margin-top:14px;">
+          <i data-lucide="shield-check" style="width:14px;height:14px; color:var(--success);"></i>
+          PCI-DSS Level 1. DropTrack never sees or stores your card details.
+        </div>
+      </div>
+
+      <div class="card" style="padding:18px; background:#FEF3C7; border-color:#FCD34D;">
+        <strong style="color:#92400E; font-size:14px;"><i data-lucide="alert-triangle" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Cancellation Policy</strong>
+        <p style="font-size:13px; color:#78350F; margin: 8px 0 0; line-height:1.5;">
+          Cancellations >48 hrs before start: refund minus $50 fee.<br>
+          Cancellations within 48 hrs or after job starts: <strong>no refund</strong>.
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="padding:24px; position:sticky; top:24px;">
+        <h3 style="margin:0 0 16px; font-size:16px;">Order Summary</h3>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;"><span>2,500 leaflets × $0.20</span><span>$500.00</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;"><span>Platform fee</span><span>$13.64</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;"><span>GST (10%)</span><span>$51.36</span></div>
+        <div style="border-top:1px solid var(--border); margin: 14px 0; padding-top:14px; display:flex; justify-content:space-between; font-size:18px; font-weight:700;"><span>Total</span><span>$565.00</span></div>
+        <button class="btn-primary" style="width:100%; justify-content:center; padding:14px; font-size:15px;"><i data-lucide="lock" style="width:16px;height:16px;"></i> Continue to Stripe — Pay $565</button>
+        <p style="font-size:11px; color:var(--text-muted); margin-top:12px; text-align:center;">
+          By paying you agree to our <a href="#" style="color:var(--primary);">Terms</a> and confirm DropTrack owns all GPS &amp; tracking data per our <a href="#" style="color:var(--primary);">Privacy Policy</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 24px;">
+    <a href="create-2.html" class="btn-ghost">← Back</a>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script>lucide.createIcons();</script>
+</body></html>

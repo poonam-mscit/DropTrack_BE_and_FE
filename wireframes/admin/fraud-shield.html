@@ -1,0 +1,178 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Fraud Shield</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 22px; gap:24px; flex-wrap:wrap; }
+  .greeting h1 { font-size: 34px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .greeting .meta { color: var(--text-muted); font-size: 13px; margin-top:6px; }
+
+  .hero-card { background:
+    radial-gradient(600px circle at 100% 0%, rgba(124,58,237,.35), transparent 50%),
+    radial-gradient(500px circle at 0% 100%, rgba(163,230,53,.18), transparent 50%),
+    linear-gradient(160deg, #1A1B36 0%, #0F1029 100%);
+    color:#fff; border-radius:24px; padding: 28px 32px; margin-bottom:16px;
+    display:grid; grid-template-columns: 1fr auto; gap:24px; align-items:center; box-shadow: 0 30px 60px -20px rgba(15,16,41,.4);
+  }
+  .hero-card .eyebrow { display: inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform: uppercase; color: #A3E635; }
+  .hero-card .eyebrow::before { content:''; width:6px; height:6px; background:#A3E635; border-radius:50%; box-shadow:0 0 12px rgba(163,230,53,.8); }
+  .hero-card h2 { font-size: 30px; letter-spacing:-0.025em; margin: 12px 0 6px; font-weight:800; }
+  .hero-card p { font-size: 14px; line-height: 1.55; color: rgba(255,255,255,.7); margin: 0; max-width: 540px; }
+  .hero-card .num-row { display:flex; gap: 28px; }
+  .hero-card .num-row .item .lbl { font-size:11px; color:rgba(255,255,255,.55); letter-spacing:.08em; text-transform:uppercase; font-weight:600; }
+  .hero-card .num-row .item .val { font-size: 36px; font-weight: 700; letter-spacing:-0.025em; margin-top: 4px; }
+
+  .kpi-row { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-bottom: 18px; }
+  .kpi-card { padding: 18px 20px; background:#fff; border:1px solid var(--border); border-radius:16px; box-shadow: var(--shadow-sm); }
+  .kpi-card .label { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); font-weight:600; }
+  .kpi-card .value { font-size: 26px; font-weight: 700; letter-spacing:-0.02em; margin-top: 6px; line-height: 1; }
+  .kpi-card .value.good { color: var(--success); }
+  .kpi-card .value.warn { color: var(--warning); }
+  .kpi-card .sub { font-size:11.5px; color:var(--text-muted); margin-top:6px; }
+
+  .filter-bar { display:flex; gap: 8px; padding: 10px 12px; background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow: var(--shadow-xs); margin-bottom: 16px; align-items:center; }
+  .seg { display:flex; gap:2px; background: var(--bg-muted); padding:4px; border-radius:10px; }
+  .seg button { background:transparent; border:none; padding: 6px 12px; border-radius:7px; font-size:12px; font-weight:600; color: var(--text-muted); cursor:pointer; }
+  .seg button.active { background:#fff; color: var(--text-primary); box-shadow: var(--shadow-xs); }
+
+  .alerts-card { background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow: var(--shadow-sm); overflow:hidden; }
+  .alert-row { padding: 16px 22px; display:grid; grid-template-columns: 40px 1fr 1.2fr 1fr 120px 110px; gap:14px; align-items:flex-start; border-bottom: 1px solid var(--border); }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-row:hover { background: var(--bg-muted); }
+  .alert-row .ico { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .alert-row.cleared .ico { background:#DCFCE7; color:#15803D; }
+  .alert-row.flagged .ico { background:#FEE2E2; color:#991B1B; }
+  .alert-row.review .ico { background:#FEF3C7; color:#92400E; }
+  .alert-row .what strong { font-size:14px; display:block; }
+  .alert-row .what p { font-size: 12.5px; color: var(--text-muted); margin: 2px 0 0; line-height:1.45; }
+  .alert-row .who { font-size:13px; }
+  .alert-row .who .sub { font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+  .alert-row .job { font-size:13px; }
+  .alert-row .job .sub { font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+  .alert-row .time { font-size:12px; color:var(--text-muted); font-variant-numeric:tabular-nums; text-align:right; }
+  .alert-row .action { text-align:right; }
+  .pill-cleared { background:#DCFCE7; color:#15803D; padding: 3px 9px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .pill-review { background:#FEF3C7; color:#92400E; padding: 3px 9px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .pill-flagged { background:#FEE2E2; color:#991B1B; padding: 3px 9px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .empty-hint { padding: 14px 22px; font-size: 12px; color: var(--text-muted); background: var(--bg-muted); display:flex; justify-content:space-between; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" ><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" ><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" ><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" ><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" ><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" class="active"><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" ><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" ><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>Fraud Shield <span class="serif">— eyes on every drop.</span></h1>
+      <div class="meta">AI monitoring GPS integrity, mock locations &amp; impossible speeds across 22 live droppers</div>
+    </div>
+    <div style="display:flex; gap:8px;"><button class="btn-ghost"><i data-lucide="settings-2"></i> Thresholds</button><button class="btn-ghost"><i data-lucide="download"></i> Export</button></div>
+  </div>
+
+  <div class="hero-card">
+    <div>
+      <div class="eyebrow">Status · last 24 hours</div>
+      <h2>All systems clear.</h2>
+      <p>No active threats. AI Fraud Shield reviewed 14,820 drops, flagged 4 anomalies — all auto-cleared after review. Network GPS integrity is 100%.</p>
+    </div>
+    <div class="num-row">
+      <div class="item"><div class="lbl">Drops reviewed</div><div class="val">14,820</div></div>
+      <div class="item"><div class="lbl">Flagged</div><div class="val" style="color:#FCD34D;">4</div></div>
+      <div class="item"><div class="lbl">Auto-cleared</div><div class="val" style="color:#A3E635;">4</div></div>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="label">Open investigations</div><div class="value good">0</div><div class="sub">nothing pending review</div></div>
+    <div class="kpi-card"><div class="label">GPS integrity</div><div class="value good">100%</div><div class="sub">no spoofing detected</div></div>
+    <div class="kpi-card"><div class="label">Avg detection latency</div><div class="value">1.2 s</div><div class="sub">drop → review</div></div>
+    <div class="kpi-card"><div class="label">Flagged this week</div><div class="value warn">11</div><div class="sub">10 cleared · 1 manual review</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <i data-lucide="search" style="color:var(--text-muted); margin-left:8px;"></i>
+    <input class="input" style="border:none; box-shadow:none; flex:1;" placeholder="Search by dropper, job or anomaly type">
+    <div class="seg">
+      <button class="active">All</button><button>Mock location</button><button>Speed</button><button>Pace</button><button>Stationary</button>
+    </div>
+    <div class="seg">
+      <button>All</button><button class="active">Cleared</button><button>Manual review</button><button>Confirmed</button>
+    </div>
+  </div>
+
+  <div class="alerts-card">
+    <div class="alert-row cleared">
+      <div class="ico"><i data-lucide="check"></i></div>
+      <div class="what"><strong>Pace spike — 20 drops in 6 minutes</strong><p>Auto-cleared: cluster matched a known apartment block (Oxford Rd · 142)</p></div>
+      <div class="who">James Kowalski<div class="sub">EMP-0124 · Bondi</div></div>
+      <div class="job">Spring Listings — Bondi<div class="sub">JOB-2841</div></div>
+      <div class="time">10:14 today</div>
+      <div class="action"><span class="pill-cleared">Cleared</span></div>
+    </div>
+
+    <div class="alert-row cleared">
+      <div class="ico"><i data-lucide="check"></i></div>
+      <div class="what"><strong>2-minute stationary on Bondi Rd</strong><p>Auto-cleared: matched pedestrian crossing wait</p></div>
+      <div class="who">James Kowalski<div class="sub">EMP-0124 · Bondi</div></div>
+      <div class="job">Spring Listings — Bondi<div class="sub">JOB-2841</div></div>
+      <div class="time">09:02 today</div>
+      <div class="action"><span class="pill-cleared">Cleared</span></div>
+    </div>
+
+    <div class="alert-row review">
+      <div class="ico"><i data-lucide="triangle-alert"></i></div>
+      <div class="what"><strong>Impossible speed — 38 km/h between drops</strong><p>Likely walked past a parked car. Manual review required.</p></div>
+      <div class="who">Maya Reddy<div class="sub">EMP-0098 · Paddington</div></div>
+      <div class="job">Open House Flyers<div class="sub">JOB-2840</div></div>
+      <div class="time">Yesterday · 14:38</div>
+      <div class="action"><span class="pill-review">Reviewing</span></div>
+    </div>
+
+    <div class="alert-row cleared">
+      <div class="ico"><i data-lucide="check"></i></div>
+      <div class="what"><strong>Cluster of 8 drops at single GPS pin</strong><p>Auto-cleared: high-rise mailroom in single-entry building</p></div>
+      <div class="who">Tom Sullivan<div class="sub">EMP-0156 · Newtown</div></div>
+      <div class="job">April Newsletter<div class="sub">JOB-2812</div></div>
+      <div class="time">Sun · 11:22</div>
+      <div class="action"><span class="pill-cleared">Cleared</span></div>
+    </div>
+
+    <div class="alert-row flagged">
+      <div class="ico"><i data-lucide="ban"></i></div>
+      <div class="what"><strong>Mock-location attempt detected</strong><p>Device flagged a developer-mode location override. Job auto-paused, dropper account suspended.</p></div>
+      <div class="who">Alex Brown<div class="sub">EMP-0078 · Glebe · suspended</div></div>
+      <div class="job">March Auctions<div class="sub">JOB-2780</div></div>
+      <div class="time">Fri · 16:11</div>
+      <div class="action"><span class="pill-flagged">Confirmed</span></div>
+    </div>
+
+    <div class="empty-hint">
+      <span>Showing 5 of 47 events · last 7 days</span>
+      <a href="#" style="color:var(--primary); font-weight:600;">Load more</a>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>

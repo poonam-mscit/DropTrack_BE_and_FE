@@ -1,0 +1,86 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Master Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css"></head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" ><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" ><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" class="active"><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" ><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" ><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" ><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" ><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" ><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div>
+      <h1>Master Map</h1>
+      <p style="color:var(--text-muted); margin:4px 0 0;">22 droppers active across 14 jobs · Sydney metro</p>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-ghost"><i data-lucide="search" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Filter</button>
+      <button class="btn-ghost"><i data-lucide="shield-check" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;"></i> Fraud only</button>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 320px; gap:20px;">
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="map-placeholder" style="height: 700px; border-radius:0;">
+        <div class="zone-poly" style="top:60px; left:80px; width:200px; height:200px;"></div>
+        <div class="zone-poly" style="top:120px; left:340px; width:240px; height:180px; background:rgba(16,185,129,.15); border-color:var(--success); border-radius: 40% 35% 50% 45%;"></div>
+        <div class="zone-poly" style="top:380px; left:120px; width:280px; height:220px; background:rgba(245,158,11,.15); border-color:var(--warning); border-radius: 35% 50% 30% 45%;"></div>
+        <div class="zone-poly" style="top:400px; left:480px; width:200px; height:180px; background:rgba(14,165,233,.15); border-color:var(--info); border-radius: 50% 40% 35% 30%;"></div>
+
+        <div class="dropper-marker" style="top:140px; left:170px;"></div>
+        <div class="dropper-marker" style="top:180px; left:220px;"></div>
+        <div class="dropper-marker" style="top:200px; left:420px;"></div>
+        <div class="dropper-marker" style="top:240px; left:480px;"></div>
+        <div class="dropper-marker" style="top:460px; left:240px; background:var(--warning);"></div>
+        <div class="dropper-marker" style="top:500px; left:320px; background:var(--warning);"></div>
+        <div class="dropper-marker" style="top:480px; left:560px; background:var(--info);"></div>
+
+        <div style="position:absolute; bottom:16px; left:16px; background:#fff; padding:12px 16px; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.1); font-size:12px;">
+          <strong>Legend</strong>
+          <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
+            <div><span style="display:inline-block; width:10px; height:10px; background:var(--primary); border-radius:50%;"></span> Real Estate jobs</div>
+            <div><span style="display:inline-block; width:10px; height:10px; background:var(--success); border-radius:50%;"></span> Medical / Clinic</div>
+            <div><span style="display:inline-block; width:10px; height:10px; background:var(--warning); border-radius:50%;"></span> Political</div>
+            <div><span style="display:inline-block; width:10px; height:10px; background:var(--info); border-radius:50%;"></span> Retail / F&amp;B</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="padding:16px; margin-bottom:14px;">
+        <strong style="font-size:14px;">Live droppers</strong>
+        <div style="font-size:30px; font-weight:800; color:var(--primary); margin: 4px 0;">22</div>
+        <div style="font-size:12px; color:var(--text-muted);">of 38 active employees</div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <strong style="font-size:14px;">Active jobs</strong>
+        <div style="margin-top:12px;">
+          <div style="padding:10px; background:var(--bg-muted); border-radius:8px; margin-bottom:6px; font-size:13px;"><strong>Bondi · Real Estate</strong> <span style="float:right; color:var(--success); font-size:11px;">●●</span></div>
+          <div style="padding:10px; background:var(--bg-muted); border-radius:8px; margin-bottom:6px; font-size:13px;"><strong>Paddington · Clinic</strong> <span style="float:right; color:var(--success); font-size:11px;">●●</span></div>
+          <div style="padding:10px; background:var(--bg-muted); border-radius:8px; margin-bottom:6px; font-size:13px;"><strong>Newtown · Political</strong> <span style="float:right; color:var(--warning); font-size:11px;">●●</span></div>
+          <div style="padding:10px; background:var(--bg-muted); border-radius:8px; margin-bottom:6px; font-size:13px;"><strong>Glebe · Pizza</strong> <span style="float:right; color:var(--info); font-size:11px;">●</span></div>
+          <a href="#" style="font-size:12px; color:var(--primary); text-decoration:none; font-weight:600;">View all 14 →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script>lucide.createIcons();</script>
+</body></html>

@@ -1,0 +1,224 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Assignment Queue</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .main { padding: 32px 44px 60px; }
+  .greeting { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 22px; gap:24px; flex-wrap:wrap; }
+  .greeting h1 { font-size: 34px; letter-spacing:-0.03em; margin:0; line-height: 1.1; font-weight: 800; }
+  .greeting h1 .serif { font-family:'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--text-secondary); }
+  .greeting .meta { color: var(--text-muted); font-size: 13px; margin-top:6px; }
+
+  .kpi-row { display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+  .kpi-card { padding: 16px 18px; background: #fff; border:1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-sm); }
+  .kpi-card .label { font-size: 10px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); font-weight:600; }
+  .kpi-card .value { font-size: 24px; font-weight: 700; letter-spacing:-0.02em; margin-top: 4px; line-height: 1; }
+  .kpi-card .value.warn { color: var(--warning); }
+  .kpi-card .sub { font-size:11px; color:var(--text-muted); margin-top:6px; }
+
+  .what-banner { display:flex; gap:14px; padding: 16px 20px; margin-bottom: 16px; background: linear-gradient(135deg, #FFFFFF, #FAFBFF); border: 1px solid rgba(79,70,229,.18); border-radius: 16px; box-shadow: var(--shadow-xs); align-items:flex-start; }
+  .what-banner .ico { width:36px; height:36px; border-radius:11px; background: var(--primary-50); color: var(--primary); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .what-banner p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-secondary); }
+  .what-banner strong { color: var(--text-primary); }
+
+  .filter-bar { display:flex; gap: 8px; padding: 10px 12px; background: #fff; border:1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-xs); margin-bottom: 16px; align-items:center; }
+  .filter-bar .input { border:none; box-shadow:none; flex:1; }
+  .seg { display:flex; gap:2px; background: var(--bg-muted); padding:4px; border-radius:10px; }
+  .seg button { background:transparent; border:none; padding: 6px 12px; border-radius: 7px; font-size:12px; font-weight:600; color: var(--text-muted); cursor:pointer; }
+  .seg button.active { background:#fff; color: var(--text-primary); box-shadow: var(--shadow-xs); }
+
+  .queue-card { background:#fff; border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow-sm); overflow:hidden; }
+  .qhead { display:grid; grid-template-columns: 1.6fr 1.1fr 1.1fr 110px 130px 140px; gap:14px; padding: 14px 22px; background: #FAFBFC; border-bottom: 1px solid var(--border); font-size:11px; text-transform:uppercase; color: var(--text-muted); font-weight:600; letter-spacing:.06em; }
+  .qrow { display:grid; grid-template-columns: 1.6fr 1.1fr 1.1fr 110px 130px 140px; gap:14px; padding: 16px 22px; border-bottom: 1px solid var(--border); align-items:center; transition: background .15s; }
+  .qrow:last-child { border-bottom: none; }
+  .qrow:hover { background: var(--bg-muted); }
+  .qrow .name { font-weight:600; font-size:14.5px; letter-spacing:-0.01em; }
+  .qrow .name-meta { font-size:12px; color:var(--text-muted); margin-top:2px; }
+  .qrow .client { font-size:13.5px; }
+  .qrow .client .industry { font-size:11.5px; color:var(--text-muted); margin-top: 2px; }
+  .qrow .zone { font-size:13.5px; }
+  .qrow .zone .houses { font-size:11.5px; color:var(--text-muted); margin-top: 2px; }
+  .qrow .leaflets { text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; }
+  .qrow .waiting { text-align:right; font-size:12.5px; color:var(--text-muted); font-variant-numeric: tabular-nums; display:inline-flex; flex-direction:column; align-items:flex-end; gap:4px; }
+  .qrow .waiting.urgent { color: var(--warning); }
+  .qrow .waiting .pill { padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
+  .qrow .waiting.urgent .pill { background: rgba(239,68,68,.12); color: var(--danger); }
+  .qrow .waiting .pill.soon { background: rgba(245,158,11,.12); color: var(--warning); }
+  .qrow .waiting .pill.normal { background: var(--bg-muted); color: var(--text-muted); }
+  .qrow .action { text-align:right; }
+
+  .ai-hint { display:inline-flex; align-items:center; gap:4px; font-size: 11px; font-weight: 600; color: var(--primary); margin-top: 4px; }
+  .ai-hint .pill { background: linear-gradient(135deg,#4F46E5,#7C3AED 50%,#A3E635); color:#fff; padding: 2px 7px; border-radius: 999px; font-size: 9px; letter-spacing: .04em; }
+
+  .empty-hint { padding: 14px 22px; font-size: 12px; color: var(--text-muted); background: var(--bg-muted); display:flex; justify-content:space-between; align-items:center; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">D</div> DropTrack <span style="margin-left:4px; font-size:9px; background:var(--primary); color:#fff; padding:2px 7px; border-radius:5px; letter-spacing:.08em;">OPS</span></div>
+  <div class="nav-label">Operations</div>
+  <a href="dashboard.html" ><i data-lucide="layout-dashboard"></i> Dashboard</a>
+  <a href="jobs.html" ><i data-lucide="briefcase"></i> Jobs <span class="count">38</span></a>
+  <a href="assign.html" class="active"><i data-lucide="inbox"></i> Assignment Queue <span class="count">8</span></a>
+  <a href="master-map.html" ><i data-lucide="map"></i> Master Map</a>
+  <div class="nav-label">People</div>
+  <a href="droppers.html" ><i data-lucide="users"></i> Droppers</a>
+  <a href="clients.html" ><i data-lucide="building-2"></i> Clients</a>
+  <div class="nav-label">Trust &amp; Money</div>
+  <a href="fraud-shield.html" ><i data-lucide="shield-check"></i> Fraud Shield <span class="dot-new"></span></a>
+  <a href="finance.html" ><i data-lucide="wallet"></i> Finance</a>
+  <a href="reports.html" ><i data-lucide="bar-chart-3"></i> Reports</a>
+  <a class="user-card" href="#">
+    <div class="avatar">OP</div>
+    <div class="info"><div class="name">Ops Console</div><div class="role">Super Admin · Sydney</div></div>
+    <div class="chev"><i data-lucide="chevron-right"></i></div>
+  </a>
+</aside>
+
+<main class="main">
+  <div class="greeting">
+    <div>
+      <h1>Assignment Queue <span class="serif">— 8 jobs need a dropper.</span></h1>
+      <div class="meta">Paid &amp; unassigned only · sorted by oldest first · Tuesday 12 May, 09:42 AEST</div>
+    </div>
+    <button class="btn-ghost"><i data-lucide="rotate-ccw"></i> Refresh</button>
+  </div>
+
+  <div class="what-banner">
+    <div class="ico"><i data-lucide="info"></i></div>
+    <p><strong>What you see here:</strong> only jobs the client has paid for and you haven't rostered a dropper to yet. For every other status (drafts, upcoming, active, completed, cancelled) use <a href="jobs.html" style="color:var(--primary); font-weight:600;">Jobs</a>. Click <strong>Assign</strong> on any row to open the assignment workspace with map &amp; AI Dropper Match.</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="label">In queue</div><div class="value warn">8</div><div class="sub">total paid &amp; unassigned</div></div>
+    <div class="kpi-card"><div class="label">Total leaflets</div><div class="value">19,400</div><div class="sub">across 8 jobs</div></div>
+    <div class="kpi-card"><div class="label">Oldest waiting</div><div class="value warn">1 d</div><div class="sub">Auction List · Coogee</div></div>
+    <div class="kpi-card"><div class="label">Revenue</div><div class="value">$4,280</div><div class="sub">locked-in payments</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <i data-lucide="search" style="color:var(--text-muted); margin-left:8px;"></i>
+    <input class="input" placeholder="Search by campaign, client or suburb">
+    <div class="seg">
+      <button class="active">All</button><button>Real Estate</button><button>Medical</button><button>Political</button><button>Retail</button>
+    </div>
+    <button class="btn-ghost"><i data-lucide="sliders-horizontal"></i> Sort</button>
+  </div>
+
+  <div class="queue-card">
+    <div class="qhead">
+      <div>Campaign</div>
+      <div>Client</div>
+      <div>Zone</div>
+      <div style="text-align:right;">Leaflets</div>
+      <div style="text-align:right;">Waiting</div>
+      <div></div>
+    </div>
+
+    <div class="qrow">
+      <div>
+        <div class="name">Auction List</div>
+        <div class="name-meta">JOB-2810 · paid 8 May, 11:18</div>
+      </div>
+      <div class="client">Belle Property<div class="industry">Real Estate</div></div>
+      <div class="zone">Coogee NSW<div class="houses">~2,950 letterboxes</div></div>
+      <div class="leaflets">2,800</div>
+      <div class="waiting urgent"><span class="pill">Overdue</span><span>1 day</span></div>
+      <div class="action"><a href="assign-job.html" class="btn-primary" style="padding:7px 14px; font-size:12px;">Assign <i data-lucide="arrow-right" style="width:13px;height:13px;"></i></a></div>
+    </div>
+
+    <div class="qrow">
+      <div>
+        <div class="name">Pizza Tuesdays</div>
+        <div class="name-meta">JOB-2839 · paid 03:42 today</div>
+      </div>
+      <div class="client">Crust Co.<div class="industry">Food &amp; Restaurant</div></div>
+      <div class="zone">Glebe NSW<div class="houses">~1,280 letterboxes</div></div>
+      <div class="leaflets">1,200</div>
+      <div class="waiting"><span class="pill soon">Soon</span><span>6 hr</span></div>
+      <div class="action"><a href="assign-job.html" class="btn-primary" style="padding:7px 14px; font-size:12px;">Assign <i data-lucide="arrow-right" style="width:13px;height:13px;"></i></a></div>
+    </div>
+
+    <div class="qrow">
+      <div>
+        <div class="name">Election Push</div>
+        <div class="name-meta">JOB-2843 · paid 05:42 today</div>
+        <div class="ai-hint"><span class="pill">AI</span> 5 strong dropper matches in Newtown</div>
+      </div>
+      <div class="client">Local Greens<div class="industry">Political Campaign</div></div>
+      <div class="zone">Newtown NSW<div class="houses">~5,700 letterboxes</div></div>
+      <div class="leaflets">5,400</div>
+      <div class="waiting urgent"><span class="pill">Today</span><span>4 hr</span></div>
+      <div class="action"><a href="assign-job.html" class="btn-primary" style="padding:7px 14px; font-size:12px;">Assign <i data-lucide="arrow-right" style="width:13px;height:13px;"></i></a></div>
+    </div>
+
+    <div class="qrow">
+      <div>
+        <div class="name">Clinic Reopening</div>
+        <div class="name-meta">JOB-2845 · paid 07:42 today</div>
+        <div class="ai-hint"><span class="pill">AI</span> James K. + Maya R. recommended</div>
+      </div>
+      <div class="client">Paddington Health<div class="industry">Medical / Clinic</div></div>
+      <div class="zone">Paddington NSW<div class="houses">~3,210 letterboxes</div></div>
+      <div class="leaflets">3,000</div>
+      <div class="waiting"><span class="pill soon">Today</span><span>2 hr</span></div>
+      <div class="action"><a href="assign-job.html" class="btn-primary" style="padding:7px 14px; font-size:12px;">Assign <i data-lucide="arrow-right" style="width:13px;height:13px;"></i></a></div>
+    </div>
+
+    <div class="qrow">
+      <div>
+        <div class="name">Open Day Posters</div>
+        <div class="name-meta">JOB-2846 · paid 08:30 today</div>
+      </div>
+      <div class="client">Sydney Grammar<div class="industry">Education</div></div>
+      <div class="zone">Darlinghurst NSW<div class="houses">~1,840 letterboxes</div></div>
+      <div class="leaflets">1,700</div>
+      <div class="waiting"><span class="pill normal">Tomorrow</span><span>1 hr</span></div>
+      <div class="action"><a href="assign-job.html" class="btn-primary" style="padding:7px 14px; font-size:12px;">Assign <i data-lucide="arrow-right" style="width:13px;height:13px;"></i></a></div>
+    </div>
+
+    <div class="qrow">
+      <div>
+        <div class="name">Saturday Specials</div>
+        <div class="name-meta">JOB-2847 · paid 09:01 today</div>
+      </div>
+      <div class="client">Three Blue Ducks<div class="industry">Food &amp; Restaurant</div></div>
+      <div class="zone">Bronte NSW<div class="houses">~1,120 letterboxes</div></div>
+      <div class="leaflets">1,000</div>
+      <div class="waiting"><span class="pill normal">Sat</span><span>30 min</span></div>
+      <div class="action"><a href="assign-job.html" class="btn-primary" style="padding:7px 14px; font-size:12px;">Assign <i data-lucide="arrow-right" style="width:13px;height:13px;"></i></a></div>
+    </div>
+
+    <div class="qrow">
+      <div>
+        <div class="name">Council Notice</div>
+        <div class="name-meta">JOB-2848 · paid 09:15 today</div>
+      </div>
+      <div class="client">Inner West Council<div class="industry">Government</div></div>
+      <div class="zone">Marrickville NSW<div class="houses">~2,400 letterboxes</div></div>
+      <div class="leaflets">2,300</div>
+      <div class="waiting"><span class="pill normal">Mon</span><span>15 min</span></div>
+      <div class="action"><a href="assign-job.html" class="btn-primary" style="padding:7px 14px; font-size:12px;">Assign <i data-lucide="arrow-right" style="width:13px;height:13px;"></i></a></div>
+    </div>
+
+    <div class="qrow">
+      <div>
+        <div class="name">Mid-year Promo</div>
+        <div class="name-meta">JOB-2849 · paid 09:32 today</div>
+      </div>
+      <div class="client">Anytime Fitness<div class="industry">Retail</div></div>
+      <div class="zone">Randwick NSW<div class="houses">~2,150 letterboxes</div></div>
+      <div class="leaflets">2,000</div>
+      <div class="waiting"><span class="pill normal">Next week</span><span>10 min</span></div>
+      <div class="action"><a href="assign-job.html" class="btn-primary" style="padding:7px 14px; font-size:12px;">Assign <i data-lucide="arrow-right" style="width:13px;height:13px;"></i></a></div>
+    </div>
+
+    <div class="empty-hint">
+      <span>Showing all 8 jobs awaiting assignment</span>
+      <a href="jobs.html" style="color:var(--primary); font-weight:600;">See all 38 jobs →</a>
+    </div>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body></html>
