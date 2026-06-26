@@ -15,7 +15,7 @@ import { z } from 'zod';
 import { ZodValidationPipe, createZodDto } from 'nestjs-zod';
 import { eq } from 'drizzle-orm';
 import type { Database } from '@droptrack/db';
-import { businessProfiles, users } from '@droptrack/db';
+import { businessProfiles, dropperProfiles, users } from '@droptrack/db';
 import { DB } from '../db/db.module.js';
 import { CurrentUser, Roles, type AuthedUser } from '../auth/auth.decorators.js';
 
@@ -41,6 +41,26 @@ const AU_STATE = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'] as const;
 
 const NOTIFICATION_KEYS = ['campaignLaunched', 'campaignCompleted', 'paymentReceipts', 'weeklySummary', 'productUpdates'] as const;
 
+const DropperPatchSchema = z.object({
+  firstName: z.string().min(1).max(60).optional(),
+  lastName: z.string().min(1).max(60).optional(),
+  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  addressLine1: z.string().max(200).optional().nullable(),
+  suburb: z.string().max(80).optional().nullable(),
+  state: z.enum(AU_STATE).optional().nullable(),
+  postcode: z.string().max(8).optional().nullable(),
+  emergencyContactName: z.string().max(120).optional().nullable(),
+  emergencyContactPhone: z.string().max(20).optional().nullable(),
+  tfn: z.string().regex(/^\d{8,9}$/).optional().nullable(),
+  superFundName: z.string().max(80).optional().nullable(),
+  superMemberNumber: z.string().max(40).optional().nullable(),
+  bankBsb: z.string().regex(/^\d{3}-?\d{3}$/).optional().nullable(),
+  bankAccountNumber: z.string().regex(/^\d{4,12}$/).optional().nullable(),
+  wwccNumber: z.string().max(40).optional().nullable(),
+  wwccExpiresAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  primaryZone: z.string().max(80).optional().nullable(),
+}).partial();
+
 const ProfilePatchSchema = z.object({
   // user fields
   mobile: z.string().max(20).optional().nullable(),
@@ -58,7 +78,7 @@ const ProfilePatchSchema = z.object({
 });
 class ProfilePatchDto extends createZodDto(ProfilePatchSchema) {}
 
-@Roles('client', 'admin')
+@Roles('client', 'dropper', 'admin')
 @Controller('me')
 export class MeProfileController {
   private readonly logger = new Logger(MeProfileController.name);
@@ -85,6 +105,40 @@ export class MeProfileController {
       .where(eq(businessProfiles.userId, user.id))
       .limit(1);
 
+    // Dropper-side profile — full field set so the mobile profile editor can
+    // hydrate every section. Sensitive fields (TFN, bank account) are masked.
+    const [dp] = await this.db
+      .select()
+      .from(dropperProfiles)
+      .where(eq(dropperProfiles.userId, user.id))
+      .limit(1);
+
+    const dpView = dp
+      ? {
+          employeeId: dp.employeeId,
+          firstName: dp.firstName,
+          lastName: dp.lastName,
+          dob: dp.dob,
+          photoS3Key: dp.photoS3Key,
+          addressLine1: dp.addressLine1,
+          suburb: dp.suburb,
+          state: dp.state,
+          postcode: dp.postcode,
+          emergencyContactName: dp.emergencyContactName,
+          emergencyContactPhone: dp.emergencyContactPhone,
+          tfnLast4: dp.tfnEncrypted ? dp.tfnEncrypted.slice(-4) : null,
+          superFundName: dp.superFundName,
+          superMemberNumber: dp.superMemberNumber,
+          bankBsb: dp.bankBsb,
+          bankAccountLast4: dp.bankAccountLast4,
+          wwccNumber: dp.wwccNumber,
+          wwccExpiresAt: dp.wwccExpiresAt,
+          primaryZone: dp.primaryZone,
+          onboardingStatus: dp.onboardingStatus,
+          contractSignedAt: dp.contractSignedAt,
+        }
+      : null;
+
     return {
       user: u,
       business: bp
@@ -93,7 +147,77 @@ export class MeProfileController {
             logoUrl: bp.logoS3Key ? `${PUBLIC_BASE}/${bp.logoS3Key}` : null,
           }
         : null,
+      dropper: dpView,
     };
+  }
+
+  /**
+   * PATCH /api/me/dropper-profile — partial update of the dropper's own row.
+   * For MVP: TFN and full bank-account number are stored in the *_encrypted
+   * columns as plaintext (TODO: real envelope encryption with KMS), and we
+   * derive the public `*Last4` columns alongside.
+   */
+  @Patch('dropper-profile')
+  async patchDropper(
+    @CurrentUser() user: AuthedUser,
+    @Body(new ZodValidationPipe(DropperPatchSchema)) body: z.infer<typeof DropperPatchSchema>,
+  ) {
+    const patch: Record<string, unknown> = {};
+    if (body.firstName !== undefined) patch.firstName = body.firstName;
+    if (body.lastName !== undefined) patch.lastName = body.lastName;
+    if (body.dob !== undefined) patch.dob = body.dob;
+    if (body.addressLine1 !== undefined) patch.addressLine1 = body.addressLine1;
+    if (body.suburb !== undefined) patch.suburb = body.suburb;
+    if (body.state !== undefined) patch.state = body.state;
+    if (body.postcode !== undefined) patch.postcode = body.postcode;
+    if (body.emergencyContactName !== undefined) patch.emergencyContactName = body.emergencyContactName;
+    if (body.emergencyContactPhone !== undefined) patch.emergencyContactPhone = body.emergencyContactPhone;
+    if (body.superFundName !== undefined) patch.superFundName = body.superFundName;
+    if (body.superMemberNumber !== undefined) patch.superMemberNumber = body.superMemberNumber;
+    if (body.wwccNumber !== undefined) patch.wwccNumber = body.wwccNumber;
+    if (body.wwccExpiresAt !== undefined) patch.wwccExpiresAt = body.wwccExpiresAt;
+    if (body.primaryZone !== undefined) patch.primaryZone = body.primaryZone;
+
+    // TFN — store plain (TODO encrypt). Only update when supplied & non-empty.
+    if (body.tfn) patch.tfnEncrypted = body.tfn;
+    if (body.tfn === null) patch.tfnEncrypted = null;
+
+    // Bank — store full digits in *_encrypted, last 4 in *_last4. Both nullable.
+    if (body.bankBsb !== undefined) patch.bankBsb = body.bankBsb?.replace('-', '') ?? null;
+    if (body.bankAccountNumber) {
+      patch.bankAccountEncrypted = body.bankAccountNumber;
+      patch.bankAccountLast4 = body.bankAccountNumber.slice(-4);
+    } else if (body.bankAccountNumber === null) {
+      patch.bankAccountEncrypted = null;
+      patch.bankAccountLast4 = null;
+    }
+
+    if (Object.keys(patch).length === 0) return this.get(user);
+
+    const [existing] = await this.db
+      .select({ userId: dropperProfiles.userId })
+      .from(dropperProfiles)
+      .where(eq(dropperProfiles.userId, user.id))
+      .limit(1);
+
+    if (existing) {
+      await this.db
+        .update(dropperProfiles)
+        .set({ ...patch })
+        .where(eq(dropperProfiles.userId, user.id));
+    } else {
+      // Bare-minimum required fields for an insert; the rest are nullable.
+      await this.db.insert(dropperProfiles).values({
+        userId: user.id,
+        employeeId: `EMP-${user.id.slice(0, 4)}`,
+        firstName: (patch.firstName as string) ?? (user.email.split('@')[0] ?? 'Dropper'),
+        lastName: (patch.lastName as string) ?? '',
+        ...patch,
+      } as never);
+    }
+
+    this.logger.log(`dropper profile patched · user=${user.id} fields=${Object.keys(patch).join(',')}`);
+    return this.get(user);
   }
 
   /**

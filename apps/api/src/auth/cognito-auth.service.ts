@@ -450,6 +450,47 @@ export class CognitoAuthService {
     }
   }
 
+  /**
+   * Create a Cognito user with the password the invitee chose, mark email
+   * verified, set the password permanent so first login works. Returns the
+   * Cognito `sub` for the new user.
+   */
+  async adminCreateConfirmedUser(email: string, password: string): Promise<string> {
+    const client = this.requireClient();
+    if (!this.userPoolId) {
+      throw new ServiceUnavailableException('COGNITO_USER_POOL_ID not configured');
+    }
+    try {
+      const createRes = await client.send(
+        new AdminCreateUserCommand({
+          UserPoolId: this.userPoolId,
+          Username: email,
+          MessageAction: 'SUPPRESS',
+          UserAttributes: [
+            { Name: 'email', Value: email },
+            { Name: 'email_verified', Value: 'true' },
+          ],
+        }),
+      );
+      await client.send(
+        new AdminSetUserPasswordCommand({
+          UserPoolId: this.userPoolId,
+          Username: email,
+          Password: password,
+          Permanent: true,
+        }),
+      );
+      const sub = createRes.User?.Attributes?.find((a) => a.Name === 'sub')?.Value;
+      if (!sub) throw new Error('Cognito did not return a sub for the new user');
+      return sub;
+    } catch (err) {
+      if (err instanceof UsernameExistsException) {
+        throw new BadRequestException(`A Cognito account for ${email} already exists.`);
+      }
+      throw err;
+    }
+  }
+
   async adminDisableUser(email: string) {
     const client = this.requireClient();
     if (!this.userPoolId) {

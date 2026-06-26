@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "DropTrack Dropper",
+    "slug": "droptrack-dropper",
+    "scheme": "droptrackdropper",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#18181B"
+    },
+    "ios": {
+      "bundleIdentifier": "au.com.droptrack.dropper",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "DropTrack uses your location to track drops you make during your shift and confirm coverage of the campaign zone.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "DropTrack records your route in the background while a delivery is active so the client can verify coverage and you can pause/resume any time.",
+        "UIBackgroundModes": ["location", "fetch"]
+      }
+    },
+    "android": {
+      "package": "au.com.droptrack.dropper",
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#18181B"
+      }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow DropTrack to record your route while a delivery is active.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ]
+    ],
+    "extra": {
+      "apiBaseUrl": "http://192.168.1.27:3001"
+    }
+  }
+}

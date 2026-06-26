@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { EmailModule } from './email/email.module.js';
 import { FraudShieldModule } from './fraud/fraud-shield.module.js';
 import { DbModule } from './db/db.module.js';
+import { InvitesModule } from './invites/invites.module.js';
 import { HealthController } from './health/health.controller.js';
 import { JobsModule } from './jobs/jobs.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
@@ -30,6 +31,7 @@ import { UsersModule } from './users/users.module.js';
     AssignmentsModule,
     SettingsModule,
     UsersModule,
+    InvitesModule,
   ],
   controllers: [HealthController],
 })
