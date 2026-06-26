@@ -16,11 +16,9 @@ interface AssignmentRow {
     id: string;
     jobId: string;
     status: 'pending' | 'started' | 'paused' | 'completed' | 'abandoned';
-    targetLeaflets: number;
     dropsCompleted: number;
     startedAt: string | null;
-    pausedTotalSec?: number | null;
-    label?: string | null;
+    pausedTotalSeconds?: number | null;
   };
   job: {
     id: string;
@@ -28,8 +26,15 @@ interface AssignmentRow {
     title: string;
     startDate: string | null;
     status: string;
+    /** Whole-job total — used when there's no sub-zone carving. */
+    leafletCount?: number;
   };
   subZone: { id: string; label: string; targetLeaflets: number } | null;
+}
+
+/** Sub-zone target if carved, otherwise the whole-job count. */
+function targetOf(r: AssignmentRow): number {
+  return r.subZone?.targetLeaflets ?? r.job.leafletCount ?? 0;
 }
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Jobs'>;
@@ -171,11 +176,11 @@ export function JobsScreen() {
                     <View style={{ alignItems: 'flex-end' }}>
                       <Text style={s.statLabel}>Progress</Text>
                       <Text style={[s.cardValue, { color: colors.accent }]}>
-                        {active.assignment.dropsCompleted} / {active.assignment.targetLeaflets}
+                        {active.assignment.dropsCompleted} / {targetOf(active)}
                       </Text>
                     </View>
                   </View>
-                  <Progress value={active.assignment.dropsCompleted / Math.max(1, active.assignment.targetLeaflets)} />
+                  <Progress value={active.assignment.dropsCompleted / Math.max(1, targetOf(active))} />
                   <View style={s.metaRow}>
                     <Meta icon="pin" text={active.subZone?.label ?? extractSuburb(active.job.title)} />
                     <Meta icon="timer" text={`${formatWorked(active)} worked`} />
@@ -200,7 +205,7 @@ export function JobsScreen() {
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                       <Text style={s.statLabel}>Leaflets</Text>
-                      <Text style={s.cardValue}>{r.assignment.targetLeaflets.toLocaleString()}</Text>
+                      <Text style={s.cardValue}>{targetOf(r).toLocaleString()}</Text>
                     </View>
                   </View>
                   <View style={s.metaRow}>
@@ -232,7 +237,7 @@ export function JobsScreen() {
                       <Text style={s.cardTitle}>{r.job.title}</Text>
                       <View style={[s.metaRow, { marginTop: 4 }]}>
                         <Meta icon="alarm" text={r.job.startDate ?? ''} />
-                        <Meta icon="pin" text={`${r.assignment.targetLeaflets.toLocaleString()} leaflets`} />
+                        <Meta icon="pin" text={`${targetOf(r).toLocaleString()} leaflets`} />
                       </View>
                     </View>
                   </Pressable>
@@ -253,7 +258,7 @@ export function JobsScreen() {
                       <Text style={s.cardTitle}>{r.job.title}</Text>
                       <View style={[s.metaRow, { marginTop: 4 }]}>
                         <Meta icon="alarm" text={r.job.startDate ?? ''} />
-                        <Meta icon="pin" text={`${r.assignment.targetLeaflets.toLocaleString()} leaflets`} />
+                        <Meta icon="pin" text={`${targetOf(r).toLocaleString()} leaflets`} />
                       </View>
                     </View>
                   </Pressable>
@@ -334,7 +339,7 @@ function extractSuburb(title: string): string {
 function formatWorked(r: AssignmentRow): string {
   if (!r.assignment.startedAt) return '0m';
   const startedMs = new Date(r.assignment.startedAt).getTime();
-  const pausedMs = (r.assignment.pausedTotalSec ?? 0) * 1000;
+  const pausedMs = (r.assignment.pausedTotalSeconds ?? 0) * 1000;
   const ms = Math.max(0, Date.now() - startedMs - pausedMs);
   const totalMin = Math.floor(ms / 60_000);
   const h = Math.floor(totalMin / 60);
@@ -346,7 +351,7 @@ function totalHours(rows: AssignmentRow[]): string {
     if (!r.assignment.startedAt) return acc;
     const end = r.assignment.status === 'completed' ? Date.now() : Date.now();
     const startedMs = new Date(r.assignment.startedAt).getTime();
-    return acc + Math.max(0, (end - startedMs) / 1000 - (r.assignment.pausedTotalSec ?? 0));
+    return acc + Math.max(0, (end - startedMs) / 1000 - (r.assignment.pausedTotalSeconds ?? 0));
   }, 0);
   return totalSec > 0 ? (totalSec / 3600).toFixed(1) : '0';
 }

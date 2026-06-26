@@ -52,6 +52,15 @@ export class MyAssignmentsController {
     return this.svc.listForDropper(user.id);
   }
 
+  /** GET /api/me/assignments/:id — single row in the same shape as the list. */
+  @Get('assignments/:id')
+  async myAssignment(@Param('id') id: string, @CurrentUser() user: AuthedUser) {
+    const rows = await this.svc.listForDropper(user.id);
+    const row = rows.find((r) => r.assignment.id === id);
+    if (!row) throw new BadRequestException(`Assignment ${id} not found for this dropper.`);
+    return row;
+  }
+
   @Post('assignments/:id/start')
   @HttpCode(200)
   start(@Param('id') id: string, @CurrentUser() user: AuthedUser) {

@@ -14,14 +14,14 @@ type Nav = NativeStackNavigationProp<RootStackParamList, 'JobDetail'>;
 type Route = RouteProp<RootStackParamList, 'JobDetail'>;
 
 interface Detail {
-  id: string;
-  jobTitle: string;
-  jobCode: string;
-  targetLeaflets: number;
-  campaignType: string;
-  specialInstructions?: string | null;
-  startDate?: string | null;
+  assignment: { id: string; status: string };
+  job: { id: string; code: string; title: string; leafletCount: number; startDate: string | null };
+  subZone: { id: string; label: string; targetLeaflets: number } | null;
 }
+const titleOf = (d: Detail | null) => d?.job.title ?? '…';
+const codeOf = (d: Detail | null) => d?.job.code ?? '';
+const targetOf = (d: Detail | null) =>
+  d?.subZone?.targetLeaflets ?? d?.job.leafletCount ?? 0;
 
 export function JobDetailScreen() {
   const nav = useNavigation<Nav>();
@@ -30,8 +30,8 @@ export function JobDetailScreen() {
 
   useEffect(() => {
     void api
-      .get<{ data?: Detail } | Detail>(`/api/me/assignments/${params.assignmentId}`)
-      .then((res) => setD((res as { data?: Detail }).data ?? (res as Detail)))
+      .get<Detail>(`/api/me/assignments/${params.assignmentId}`)
+      .then(setD)
       .catch(() => null);
   }, [params.assignmentId]);
 
@@ -39,22 +39,15 @@ export function JobDetailScreen() {
     <SafeAreaView style={s.safe} edges={['top']}>
       <BrandHeader />
       <ScrollView contentContainerStyle={s.scroll}>
-        <Text style={s.title}>{d?.jobTitle ?? '…'}</Text>
+        <Text style={s.title}>{titleOf(d)}</Text>
         <Text style={s.sub}>
-          {d?.jobCode ?? ''} · {d?.targetLeaflets.toLocaleString() ?? '—'} leaflets
+          {codeOf(d)} · {targetOf(d).toLocaleString()} leaflets
         </Text>
 
         <View style={s.statsRow}>
-          <Stat label="Leaflets" value={(d?.targetLeaflets ?? 0).toLocaleString()} />
-          <Stat label="Start" value={d?.startDate ?? '—'} />
+          <Stat label="Leaflets" value={targetOf(d).toLocaleString()} />
+          <Stat label="Start" value={d?.job.startDate ?? '—'} />
         </View>
-
-        {d?.specialInstructions ? (
-          <View style={s.card}>
-            <Text style={s.cardHead}>Instructions</Text>
-            <Text style={s.cardBody}>{d.specialInstructions}</Text>
-          </View>
-        ) : null}
 
         <GradientButton
           onPress={() => nav.replace('Active', { assignmentId: params.assignmentId })}

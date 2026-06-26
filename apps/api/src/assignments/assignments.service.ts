@@ -129,7 +129,14 @@ export class AssignmentsService {
     return this.db
       .select({
         assignment: assignments,
-        job: { id: jobs.id, code: jobs.jobCode, title: jobs.title, startDate: jobs.startDate, status: jobs.status },
+        job: {
+          id: jobs.id,
+          code: jobs.jobCode,
+          title: jobs.title,
+          startDate: jobs.startDate,
+          status: jobs.status,
+          leafletCount: jobs.leafletCount,
+        },
         subZone: subZones,
       })
       .from(assignments)

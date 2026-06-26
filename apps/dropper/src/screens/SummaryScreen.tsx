@@ -14,12 +14,15 @@ type Nav = NativeStackNavigationProp<RootStackParamList, 'Summary'>;
 type Route = RouteProp<RootStackParamList, 'Summary'>;
 
 interface AssignmentSummary {
-  id: string;
-  jobTitle: string;
-  dropsCompleted: number;
-  targetLeaflets: number;
-  distanceKm?: number | null;
-  durationMin?: number | null;
+  assignment: {
+    id: string;
+    dropsCompleted: number;
+    distanceWalkedM?: number | null;
+    startedAt?: string | null;
+    completedAt?: string | null;
+  };
+  job: { id: string; title: string; leafletCount: number };
+  subZone: { id: string; targetLeaflets: number } | null;
 }
 
 export function SummaryScreen() {
@@ -30,15 +33,19 @@ export function SummaryScreen() {
 
   useEffect(() => {
     void api
-      .get<{ data?: AssignmentSummary } | AssignmentSummary>(`/api/me/assignments/${params.assignmentId}`)
-      .then((res) => {
-        const next = (res as { data?: AssignmentSummary }).data ?? (res as AssignmentSummary);
-        setData(next);
-      })
+      .get<AssignmentSummary>(`/api/me/assignments/${params.assignmentId}`)
+      .then(setData)
       .catch(() => null);
   }, [params.assignmentId]);
 
-  const coverage = data ? Math.round((data.dropsCompleted / Math.max(1, data.targetLeaflets)) * 100) : 0;
+  const target = data ? (data.subZone?.targetLeaflets ?? data.job.leafletCount) : 0;
+  const dropsCompleted = data?.assignment.dropsCompleted ?? 0;
+  const coverage = target ? Math.round((dropsCompleted / target) * 100) : 0;
+  const distanceKm = data?.assignment.distanceWalkedM ? data.assignment.distanceWalkedM / 1000 : null;
+  const durationMin =
+    data?.assignment.startedAt && data?.assignment.completedAt
+      ? (new Date(data.assignment.completedAt).getTime() - new Date(data.assignment.startedAt).getTime()) / 60_000
+      : null;
 
   function done() {
     nav.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Jobs' }] }));
@@ -52,21 +59,21 @@ export function SummaryScreen() {
           <Text style={{ fontSize: 32 }}>✨</Text>
         </View>
         <Text style={s.heroTitle}>Great work!</Text>
-        <Text style={s.heroSub}>{data?.jobTitle ?? 'Shift'} complete</Text>
+        <Text style={s.heroSub}>{data?.job.title ?? 'Shift'} complete</Text>
 
         <View style={s.statsRow}>
-          <Stat label="Drops" value={(data?.dropsCompleted ?? 0).toLocaleString()} accent />
+          <Stat label="Drops" value={dropsCompleted.toLocaleString()} accent />
           <Stat label="Coverage" value={`${coverage}%`} accent />
         </View>
         <View style={s.statsRow}>
-          <Stat label="Distance" value={data?.distanceKm ? `${data.distanceKm.toFixed(1)} km` : '—'} />
-          <Stat label="Duration" value={data?.durationMin ? formatMin(data.durationMin) : '—'} />
+          <Stat label="Distance" value={distanceKm ? `${distanceKm.toFixed(1)} km` : '—'} />
+          <Stat label="Duration" value={durationMin ? formatMin(durationMin) : '—'} />
         </View>
 
         <View style={s.shieldCard}>
           <Text style={s.shieldHead}>🛡 AI Fraud Shield · VERIFIED</Text>
           <Text style={s.shieldBody}>
-            All {(data?.dropsCompleted ?? 0).toLocaleString()} drops verified. GPS integrity 100%. Client
+            All {dropsCompleted.toLocaleString()} drops verified. GPS integrity 100%. Client
             will see authenticated report.
           </Text>
         </View>

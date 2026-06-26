@@ -158,10 +158,12 @@ export function LoginScreen() {
               <Text style={s.btnGhostText}>Use demo account (dev)</Text>
             </Pressable>
 
-            <Text style={s.inviteHint}>
-              New here? Tap the link in your invite email — it opens this app
-              and creates your account.
-            </Text>
+            <View style={s.registerRow}>
+              <Text style={s.registerText}>New here? </Text>
+              <Pressable onPress={() => nav.navigate('EnterInviteCode')} hitSlop={6}>
+                <Text style={s.registerLink}>Register with invite code</Text>
+              </Pressable>
+            </View>
           </View>
 
           <Text style={s.fineprint}>
@@ -223,6 +225,8 @@ const s = StyleSheet.create({
     borderColor: colors.border,
   },
   btnGhostText: { color: colors.text, fontWeight: '600', fontSize: 14 },
-  inviteHint: { color: colors.textMuted, fontSize: 12, marginTop: spacing.lg, textAlign: 'center', lineHeight: 18 },
+  registerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: spacing.xl },
+  registerText: { color: colors.textMuted, fontSize: 13 },
+  registerLink: { color: colors.accent, fontSize: 13, fontWeight: '700' },
   fineprint: { color: colors.textFaint, fontSize: 10, marginTop: spacing.xxl, textAlign: 'center', lineHeight: 14 },
 });

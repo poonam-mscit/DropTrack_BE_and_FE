@@ -27,18 +27,26 @@ import type { RootStackParamList } from '@/nav/types';
  * background-location task) so the app works correctly even when minimised.
  */
 
-interface JobView {
-  id: string;
-  status: string;
-  targetLeaflets: number;
-  dropsCompleted: number;
-  jobId: string;
-  jobTitle: string;
-  startedAt: string | null;
+/** Single assignment row in the same shape as the list endpoint. */
+interface AssignmentRow {
+  assignment: {
+    id: string;
+    jobId: string;
+    status: 'pending' | 'started' | 'paused' | 'completed' | 'abandoned';
+    dropsCompleted: number;
+    startedAt: string | null;
+  };
+  job: { id: string; code: string; title: string; leafletCount: number };
+  subZone: { id: string; label: string; targetLeaflets: number } | null;
 }
 interface MapData {
   zone: { polygon: { type: 'Polygon'; coordinates: number[][][] }; areaSqm: number } | null;
   drops: Array<{ id: string; lat: number; lng: number; insideZone: boolean }>;
+}
+
+function targetOf(r: AssignmentRow | null): number {
+  if (!r) return 0;
+  return r.subZone?.targetLeaflets ?? r.job.leafletCount ?? 0;
 }
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Active'>;
@@ -51,7 +59,7 @@ export function ActiveScreen() {
   const { params } = useRoute<Route>();
   const { assignmentId } = params;
 
-  const [assignment, setAssignment] = useState<JobView | null>(null);
+  const [assignment, setAssignment] = useState<AssignmentRow | null>(null);
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number; heading?: number; speed?: number } | null>(null);
   const [permissionDenied, setPermissionDenied] = useState(false);
@@ -63,20 +71,14 @@ export function ActiveScreen() {
 
   // ── Initial load + start assignment ─────────────────────────────
   const refresh = useCallback(async () => {
-    const [a, m] = await Promise.all([
-      api
-        .get<{ data?: JobView; assignment?: JobView } | JobView>(`/api/me/assignments/${assignmentId}`)
-        .catch(() => null),
-      api.get<MapData>(`/api/jobs/byAssignment/${assignmentId}/map`).catch(() => null),
-    ]);
-    const aj =
-      a && typeof a === 'object'
-        ? ((a as { data?: JobView }).data ?? (a as { assignment?: JobView }).assignment ?? (a as JobView))
-        : null;
-    if (aj) setAssignment(aj);
-    if (m) {
-      setMapData(m);
-      setDrops(m.drops ?? []);
+    const a = await api.get<AssignmentRow>(`/api/me/assignments/${assignmentId}`).catch(() => null);
+    if (a) {
+      setAssignment(a);
+      const m = await api.get<MapData>(`/api/jobs/${a.job.id}/map`).catch(() => null);
+      if (m) {
+        setMapData(m);
+        setDrops(m.drops ?? []);
+      }
     }
   }, [assignmentId]);
 
@@ -146,12 +148,20 @@ export function ActiveScreen() {
       return;
     }
     try {
-      const res = await api.post<{ drop: { id: string; insideZone: boolean }; assignment: JobView }>('/api/me/drops', {
+      const res = await api.post<{
+        drop: { id: string; insideZone: boolean };
+        dropsCompleted: number;
+      }>('/api/me/drops', {
         assignmentId,
         location: { lat: location.lat, lng: location.lng },
         accuracyM: 10,
       });
-      setAssignment(res.assignment);
+      // Merge the new counter into the existing row shape.
+      setAssignment((prev) =>
+        prev
+          ? { ...prev, assignment: { ...prev.assignment, dropsCompleted: res.dropsCompleted } }
+          : prev,
+      );
       setDrops((prev) => [...prev, { id: res.drop.id, lat: location.lat, lng: location.lng, insideZone: res.drop.insideZone }]);
     } catch (err) {
       Alert.alert('Drop not saved', (err as Error).message);
@@ -195,7 +205,7 @@ export function ActiveScreen() {
   // ── Derived stats ───────────────────────────────────────────────
   const pct = useMemo(() => {
     if (!assignment) return 0;
-    return Math.max(0, Math.min(1, assignment.dropsCompleted / Math.max(1, assignment.targetLeaflets)));
+    return Math.max(0, Math.min(1, assignment.assignment.dropsCompleted / Math.max(1, targetOf(assignment))));
   }, [assignment]);
 
   const region = useMemo(() => {
@@ -223,7 +233,7 @@ export function ActiveScreen() {
         <View>
           <Text style={s.liveLabel}>● {paused ? 'PAUSED' : 'LIVE · TRACKING'}</Text>
           <Text style={s.title} numberOfLines={1}>
-            {assignment?.jobTitle ?? 'Loading…'}
+            {assignment?.job.title ?? 'Loading…'}
           </Text>
         </View>
       </View>
@@ -274,9 +284,9 @@ export function ActiveScreen() {
       {/* Drops counter */}
       <View style={s.counterWrap}>
         <Text style={s.counterLabel}>Drops completed</Text>
-        <Text style={s.counterValue}>{assignment?.dropsCompleted ?? 0}</Text>
+        <Text style={s.counterValue}>{assignment?.assignment.dropsCompleted ?? 0}</Text>
         <Text style={s.counterSub}>
-          of {(assignment?.targetLeaflets ?? 0).toLocaleString()} · {Math.round(pct * 100)}%
+          of {targetOf(assignment).toLocaleString()} · {Math.round(pct * 100)}%
         </Text>
         <View style={s.progressTrack}>
           <View style={[s.progressFill, { width: `${pct * 100}%` }]} />

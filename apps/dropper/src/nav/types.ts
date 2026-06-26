@@ -6,6 +6,7 @@
  */
 export type AuthStackParamList = {
   Login: undefined;
+  EnterInviteCode: undefined;
   AcceptInvite: { token: string };
 };
 

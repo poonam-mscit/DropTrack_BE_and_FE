@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { LoginScreen } from '@/screens/LoginScreen';
 import { AcceptInviteScreen } from '@/screens/AcceptInviteScreen';
+import { EnterInviteCodeScreen } from '@/screens/EnterInviteCodeScreen';
 import { JobsScreen } from '@/screens/JobsScreen';
 import { JobDetailScreen } from '@/screens/JobDetailScreen';
 import { ActiveScreen } from '@/screens/ActiveScreen';
@@ -70,6 +71,7 @@ export function RootStack() {
     return (
       <AuthStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
         <AuthStack.Screen name="Login" component={LoginScreen} />
+        <AuthStack.Screen name="EnterInviteCode" component={EnterInviteCodeScreen} />
         <AuthStack.Screen name="AcceptInvite">
           {({ route, navigation }) => (
             <AcceptInviteScreen
