@@ -14,10 +14,10 @@ import {
 } from '@nestjs/common';
 import { JobsService } from '../jobs/jobs.service.js';
 import type { Request, Response } from 'express';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, lte } from 'drizzle-orm';
 import { Inject } from '@nestjs/common';
 import type { Database } from '@droptrack/db';
-import { jobs, payments as paymentsTable, webhookEvents } from '@droptrack/db';
+import { businessProfiles, jobs, payments as paymentsTable, users, webhookEvents } from '@droptrack/db';
 import { DB } from '../db/db.module.js';
 import { CurrentUser, Public, Roles, type AuthedUser } from '../auth/auth.decorators.js';
 import { PaymentsService } from './payments.service.js';
@@ -115,6 +115,60 @@ export class PaymentsController {
     const result = await this.jobsService.adminMarkPaid(id);
     if (!result) throw new NotFoundException(`Payment ${id} not found`);
     return result;
+  }
+
+  /**
+   * GET /api/me/invoices/:id — full data needed to render a printable invoice
+   * (business profile + job + line items). Owners/admins only.
+   */
+  @Get('me/invoices/:id')
+  @Roles('client', 'admin')
+  async invoice(@Param('id') id: string, @CurrentUser() user: AuthedUser) {
+    const [row] = await this.db
+      .select({
+        paymentId: paymentsTable.id,
+        clientUserId: paymentsTable.clientUserId,
+        amountNetCents: paymentsTable.amountNetCents,
+        gstCents: paymentsTable.gstCents,
+        platformFeeCents: paymentsTable.platformFeeCents,
+        amountTotalCents: paymentsTable.amountTotalCents,
+        status: paymentsTable.status,
+        currency: paymentsTable.currency,
+        createdAt: paymentsTable.createdAt,
+        updatedAt: paymentsTable.updatedAt,
+        jobCode: jobs.jobCode,
+        jobTitle: jobs.title,
+        leafletCount: jobs.leafletCount,
+        clientEmail: users.email,
+        businessName: businessProfiles.businessName,
+        abn: businessProfiles.abn,
+        gstRegistered: businessProfiles.gstRegistered,
+        addressLine1: businessProfiles.addressLine1,
+        suburb: businessProfiles.suburb,
+        state: businessProfiles.state,
+        postcode: businessProfiles.postcode,
+      })
+      .from(paymentsTable)
+      .innerJoin(jobs, eq(jobs.id, paymentsTable.jobId))
+      .innerJoin(users, eq(users.id, paymentsTable.clientUserId))
+      .leftJoin(businessProfiles, eq(businessProfiles.userId, paymentsTable.clientUserId))
+      .where(eq(paymentsTable.id, id))
+      .limit(1);
+
+    if (!row) throw new NotFoundException(`Invoice ${id} not found`);
+    if (user.role !== 'admin' && row.clientUserId !== user.id) {
+      throw new NotFoundException(`Invoice ${id} not found`);
+    }
+
+    // Same per-user chronological numbering as the list endpoint.
+    const earlier = await this.db
+      .select({ id: paymentsTable.id })
+      .from(paymentsTable)
+      .where(and(eq(paymentsTable.clientUserId, row.clientUserId), lte(paymentsTable.createdAt, row.createdAt)))
+      .orderBy(desc(paymentsTable.createdAt));
+    const invoiceNumber = `INV-${String(earlier.length).padStart(5, '0')}`;
+
+    return { ...row, invoiceNumber };
   }
 
   /**

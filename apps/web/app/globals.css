@@ -62,6 +62,29 @@
   }
   .btn-ghost:hover { background: var(--color-bg-muted); }
 
+  .pill-btn-ghost {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.15);
+    color: #fff;
+    font-size: 0.8125rem; font-weight: 600;
+    backdrop-filter: blur(10px);
+  }
+  .pill-btn-ghost:hover { background: rgba(255,255,255,.18); }
+
+  .pill-btn-solid {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border-radius: 999px;
+    background: #A3E635;
+    border: 1px solid #A3E635;
+    color: #0a0a0a;
+    font-size: 0.8125rem; font-weight: 600;
+  }
+  .pill-btn-solid:hover { filter: brightness(1.05); }
+
   .card {
     background: var(--color-bg-surface);
     border: 1px solid var(--color-border);

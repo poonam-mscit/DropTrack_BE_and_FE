@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
@@ -16,7 +16,6 @@ import {
   Save,
   ShieldAlert,
   Users as UsersIcon,
-  Zap,
 } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
 import { api } from '@/lib/api';
@@ -25,6 +24,15 @@ import { getSession } from '@/lib/auth';
 type Industry = 'real_estate' | 'medical' | 'political' | 'food' | 'retail' | 'education' | 'government' | 'other';
 type BusinessSize = 'solo' | '2_10' | '11_50' | '50_plus';
 type AuState = 'NSW' | 'VIC' | 'QLD' | 'WA' | 'SA' | 'TAS' | 'ACT' | 'NT';
+type NotificationKey = 'campaignLaunched' | 'campaignCompleted' | 'paymentReceipts' | 'weeklySummary' | 'productUpdates';
+type NotificationPrefs = Partial<Record<NotificationKey, boolean>>;
+const NOTIFICATION_DEFAULTS: Record<NotificationKey, boolean> = {
+  campaignLaunched: true,
+  campaignCompleted: true,
+  paymentReceipts: true,
+  weeklySummary: false,
+  productUpdates: false,
+};
 
 interface Profile {
   user: {
@@ -33,6 +41,7 @@ interface Profile {
     mobile: string | null;
     role: 'client' | 'dropper' | 'admin';
     createdAt: string;
+    notificationPrefs: NotificationPrefs | null;
   };
   business: {
     businessName: string;
@@ -45,6 +54,7 @@ interface Profile {
     state: AuState | null;
     postcode: string | null;
     logoS3Key: string | null;
+    logoUrl?: string | null;
   } | null;
 }
 
@@ -85,7 +95,6 @@ const SECTIONS: SectionDef[] = [
   { key: 'sessions',     group: 'Security',    label: 'Active sessions',   icon: Monitor },
 
   { key: 'members',      group: 'Team',        label: 'Members',           icon: UsersIcon },
-  { key: 'integrations', group: 'Team',        label: 'Integrations',      icon: Zap },
 
   { key: 'privacy',      group: 'Data',        label: 'Privacy & data',    icon: ShieldAlert },
   { key: 'danger',       group: 'Data',        label: 'Danger zone',       icon: AlertTriangle },
@@ -94,11 +103,15 @@ const SECTIONS: SectionDef[] = [
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [form, setForm] = useState<Partial<Profile['business'] & { mobile: string | null }>>({});
+  const [form, setForm] = useState<
+    Partial<NonNullable<Profile['business']> & { mobile: string | null; notificationPrefs: NotificationPrefs }>
+  >({});
   const [active, setActive] = useState<string>('business');
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!getSession()) {
@@ -123,6 +136,7 @@ export default function ProfilePage() {
         suburb: p.business?.suburb ?? '',
         state: p.business?.state ?? null,
         postcode: p.business?.postcode ?? '',
+        notificationPrefs: { ...NOTIFICATION_DEFAULTS, ...(p.user.notificationPrefs ?? {}) },
       });
     } catch (err) {
       setError((err as Error).message);
@@ -151,6 +165,46 @@ export default function ProfilePage() {
       setError(typeof body === 'string' ? body : (err as Error).message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function removeLogo() {
+    if (!window.confirm('Remove your logo? You can upload a new one any time.')) return;
+    setError(null);
+    setLogoUploading(true);
+    try {
+      const next = await api.delete<Profile>('/api/me/profile/logo');
+      setProfile(next);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLogoUploading(false);
+    }
+  }
+
+  async function uploadLogo(file: File) {
+    setError(null);
+    setLogoUploading(true);
+    try {
+      if (file.size > 2 * 1024 * 1024) throw new Error('Logo is too large — max 2 MB.');
+      const presign = await api.post<{ s3Key: string; uploadUrl: string; publicUrl: string; contentType: string }>(
+        '/api/me/profile/logo/presign',
+        { contentType: file.type, byteSize: file.size },
+      );
+      // Direct browser PUT to S3.
+      const put = await fetch(presign.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': presign.contentType },
+        body: file,
+      });
+      if (!put.ok) throw new Error(`S3 upload failed (${put.status})`);
+      const next = await api.post<Profile>('/api/me/profile/logo/commit', { s3Key: presign.s3Key });
+      setProfile(next);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
     }
   }
 
@@ -254,12 +308,21 @@ export default function ProfilePage() {
                 <section className="bg-white rounded-2xl border border-border shadow-[0_2px_6px_rgba(11,13,18,.04)] p-5 lg:p-6">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex items-center gap-4">
-                      <div
-                        className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shrink-0"
-                        style={{ background: 'linear-gradient(135deg,#6366f1 0%,#7c3aed 60%,#a3e635 100%)' }}
-                      >
-                        {initial}
-                      </div>
+                      {profile.business?.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={profile.business.logoUrl}
+                          alt="Logo"
+                          className="w-16 h-16 rounded-2xl object-cover border border-border bg-white shrink-0"
+                        />
+                      ) : (
+                        <div
+                          className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shrink-0"
+                          style={{ background: 'linear-gradient(135deg,#6366f1 0%,#7c3aed 60%,#a3e635 100%)' }}
+                        >
+                          {initial}
+                        </div>
+                      )}
                       <div>
                         <h2 className="font-bold text-lg">
                           {form.businessName || profile.user.email.split('@')[0]}
@@ -269,8 +332,16 @@ export default function ProfilePage() {
                         </p>
                       </div>
                     </div>
-                    <button className="btn-ghost text-xs" type="button" disabled>
-                      Change logo
+                    <button
+                      className="btn-ghost text-xs"
+                      type="button"
+                      onClick={() => {
+                        setActive('branding');
+                        // Defer click so React renders the Branding card first.
+                        setTimeout(() => logoInputRef.current?.click(), 0);
+                      }}
+                    >
+                      {profile.business?.logoUrl ? 'Change logo' : 'Add logo'}
                     </button>
                   </div>
                 </section>
@@ -411,19 +482,54 @@ export default function ProfilePage() {
 
                 {active === 'branding' && (
                   <Card title="Branding" hint="Logo shown on tax invoices &amp; the client dashboard.">
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) void uploadLogo(f);
+                      }}
+                    />
                     <div className="flex items-center gap-5">
-                      <div
-                        className="w-20 h-20 rounded-2xl flex items-center justify-center text-white font-bold text-3xl"
-                        style={{ background: 'linear-gradient(135deg,#6366f1 0%,#7c3aed 60%,#a3e635 100%)' }}
-                      >
-                        {initial}
-                      </div>
+                      {profile.business?.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={profile.business.logoUrl}
+                          alt="Business logo"
+                          className="w-20 h-20 rounded-2xl object-cover border border-border bg-white"
+                        />
+                      ) : (
+                        <div
+                          className="w-20 h-20 rounded-2xl flex items-center justify-center text-white font-bold text-3xl"
+                          style={{ background: 'linear-gradient(135deg,#6366f1 0%,#7c3aed 60%,#a3e635 100%)' }}
+                        >
+                          {initial}
+                        </div>
+                      )}
                       <div className="text-sm">
                         <p className="font-semibold">Upload your logo</p>
-                        <p className="text-text-muted mt-1">PNG or SVG, ≤ 2 MB, square works best.</p>
+                        <p className="text-text-muted mt-1">PNG, JPEG, WebP or SVG · ≤ 2 MB · square works best.</p>
                         <div className="mt-3 flex gap-2">
-                          <button className="btn-primary text-xs" disabled>Choose file…</button>
-                          <button className="btn-ghost text-xs" disabled>Remove</button>
+                          <button
+                            type="button"
+                            onClick={() => logoInputRef.current?.click()}
+                            disabled={logoUploading}
+                            className="btn-primary text-xs disabled:opacity-50"
+                          >
+                            {logoUploading ? 'Uploading…' : profile.business?.logoUrl ? 'Replace…' : 'Choose file…'}
+                          </button>
+                          {profile.business?.logoUrl && (
+                            <button
+                              type="button"
+                              onClick={removeLogo}
+                              disabled={logoUploading}
+                              className="btn-ghost text-xs disabled:opacity-50"
+                            >
+                              Remove
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -431,12 +537,37 @@ export default function ProfilePage() {
                 )}
 
                 {active === 'notifications' && (
-                  <Card title="Notifications" hint="Choose what lands in your inbox.">
-                    <Toggle label="Campaign launched" hint="A worker is en-route." defaultChecked />
-                    <Toggle label="Campaign completed" hint="All zones delivered + photo proof attached." defaultChecked />
-                    <Toggle label="Payment receipts" hint="Stripe receipts forwarded to your billing email." defaultChecked />
-                    <Toggle label="Weekly summary" hint="Spend, reach, suburbs covered." />
-                    <Toggle label="Product updates" hint="New features &amp; tips, no spam." />
+                  <Card title="Notifications" hint="Choose what lands in your inbox. Saves with the top-right button.">
+                    <Toggle
+                      label="Campaign launched"
+                      hint="A worker is en-route."
+                      checked={form.notificationPrefs?.campaignLaunched ?? NOTIFICATION_DEFAULTS.campaignLaunched}
+                      onChange={(v) => field('notificationPrefs', { ...form.notificationPrefs, campaignLaunched: v })}
+                    />
+                    <Toggle
+                      label="Campaign completed"
+                      hint="All zones delivered + photo proof attached."
+                      checked={form.notificationPrefs?.campaignCompleted ?? NOTIFICATION_DEFAULTS.campaignCompleted}
+                      onChange={(v) => field('notificationPrefs', { ...form.notificationPrefs, campaignCompleted: v })}
+                    />
+                    <Toggle
+                      label="Payment receipts"
+                      hint="Stripe receipts forwarded to your billing email."
+                      checked={form.notificationPrefs?.paymentReceipts ?? NOTIFICATION_DEFAULTS.paymentReceipts}
+                      onChange={(v) => field('notificationPrefs', { ...form.notificationPrefs, paymentReceipts: v })}
+                    />
+                    <Toggle
+                      label="Weekly summary"
+                      hint="Spend, reach, suburbs covered."
+                      checked={form.notificationPrefs?.weeklySummary ?? NOTIFICATION_DEFAULTS.weeklySummary}
+                      onChange={(v) => field('notificationPrefs', { ...form.notificationPrefs, weeklySummary: v })}
+                    />
+                    <Toggle
+                      label="Product updates"
+                      hint="New features &amp; tips, no spam."
+                      checked={form.notificationPrefs?.productUpdates ?? NOTIFICATION_DEFAULTS.productUpdates}
+                      onChange={(v) => field('notificationPrefs', { ...form.notificationPrefs, productUpdates: v })}
+                    />
                   </Card>
                 )}
 
@@ -506,7 +637,17 @@ export default function ProfilePage() {
                 )}
 
                 {active === 'members' && (
-                  <Card title="Members" hint="Invite teammates to share campaigns &amp; billing.">
+                  <Card
+                    title={
+                      <span className="inline-flex items-center gap-2">
+                        Members
+                        <span className="text-[10px] font-bold uppercase tracking-[.12em] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                          Coming soon
+                        </span>
+                      </span>
+                    }
+                    hint="Invite teammates to share campaigns &amp; billing."
+                  >
                     <div className="p-6 border-2 border-dashed border-border rounded-xl text-center">
                       <UsersIcon size={20} className="inline-block text-text-muted mb-2" />
                       <p className="text-sm font-semibold">You are the only member</p>
@@ -516,17 +657,18 @@ export default function ProfilePage() {
                   </Card>
                 )}
 
-                {active === 'integrations' && (
-                  <Card title="Integrations" hint="Connected services for your workspace.">
-                    <Integration name="Stripe" status="Connected" detail="Sandbox · receipts &amp; portal." ok />
-                    <Integration name="AWS Cognito" status="Connected" detail="Sign-in &amp; email verification." ok />
-                    <Integration name="Mapbox" status="Connected" detail="Geocoding &amp; maps." ok />
-                    <Integration name="HubSpot" status="Not connected" detail="Sync leads from campaigns." />
-                  </Card>
-                )}
-
                 {active === 'privacy' && (
-                  <Card title="Privacy &amp; data" hint="Australian Privacy Principles apply.">
+                  <Card
+                    title={
+                      <span className="inline-flex items-center gap-2">
+                        Privacy &amp; data
+                        <span className="text-[10px] font-bold uppercase tracking-[.12em] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                          Coming soon
+                        </span>
+                      </span>
+                    }
+                    hint="Australian Privacy Principles apply."
+                  >
                     <div className="flex items-center justify-between p-4 bg-bg-muted/40 rounded-xl">
                       <div>
                         <p className="font-semibold text-sm">Export my data</p>
@@ -570,7 +712,7 @@ export default function ProfilePage() {
 // Reusable bits
 // ──────────────────────────────────────────────────────────────
 
-function Card({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+function Card({ title, hint, children }: { title: React.ReactNode; hint?: string; children: React.ReactNode }) {
   return (
     <section className="bg-white rounded-2xl border border-border shadow-[0_2px_6px_rgba(11,13,18,.04)] p-5 lg:p-6">
       <h3 className="font-bold text-base">{title}</h3>
@@ -585,18 +727,29 @@ function Toggle({
   label,
   hint,
   defaultChecked = false,
+  checked,
+  onChange,
   inline = false,
 }: {
   label?: string;
   hint?: string;
   defaultChecked?: boolean;
+  /** Controlled — pass with onChange to lift state to the parent. */
+  checked?: boolean;
+  onChange?: (next: boolean) => void;
   inline?: boolean;
 }) {
-  const [on, setOn] = useState(defaultChecked);
+  const [internal, setInternal] = useState(defaultChecked);
+  const isControlled = checked !== undefined;
+  const on = isControlled ? checked : internal;
   const knob = (
     <button
       type="button"
-      onClick={() => setOn((v) => !v)}
+      onClick={() => {
+        const next = !on;
+        if (!isControlled) setInternal(next);
+        onChange?.(next);
+      }}
       className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${on ? 'bg-primary' : 'bg-border'}`}
       aria-pressed={on}
     >
@@ -617,19 +770,6 @@ function Toggle({
   );
 }
 
-function Integration({ name, status, detail, ok = false }: { name: string; status: string; detail: string; ok?: boolean }) {
-  return (
-    <div className="flex items-center justify-between p-4 bg-bg-muted/40 rounded-xl">
-      <div>
-        <p className="font-semibold text-sm">{name}</p>
-        <p className="text-xs text-text-muted mt-0.5" dangerouslySetInnerHTML={{ __html: detail }} />
-      </div>
-      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${ok ? 'bg-emerald-50 text-emerald-700' : 'bg-bg-muted text-text-muted'}`}>
-        {status}
-      </span>
-    </div>
-  );
-}
 
 function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (

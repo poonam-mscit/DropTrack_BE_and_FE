@@ -45,7 +45,23 @@ export interface FraudAlertEvent {
   at: string;
 }
 
-export type RealtimeEvent = DropEvent | AssignmentEvent | JobEvent | FraudAlertEvent;
+export interface LocationEvent {
+  type: 'dropper.location';
+  jobId: string;
+  assignmentId: string;
+  dropperUserId: string;
+  location: { lat: number; lng: number };
+  speedMps: number | null;
+  heading: number | null;
+  at: string;
+}
+
+export type RealtimeEvent =
+  | DropEvent
+  | AssignmentEvent
+  | JobEvent
+  | FraudAlertEvent
+  | LocationEvent;
 
 @WebSocketGateway({
   cors: { origin: '*' }, // dev only; restrict to droptrack.au domains in prod

@@ -39,7 +39,14 @@ export default function CampaignsPage() {
   const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<ApiJob[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<(typeof TABS)[number]['key']>('all');
+  const urlTab = (searchParams.get('tab') as (typeof TABS)[number]['key']) || 'all';
+  const [tab, setTab] = useState<(typeof TABS)[number]['key']>(urlTab);
+  // Sync state when the URL ?tab=… changes (Next reuses the page on same-route nav,
+  // so useState's initial value isn't re-evaluated; without this, clicking the
+  // sidebar "Live Tracking" link from /campaigns wouldn't switch tabs).
+  useEffect(() => {
+    setTab(urlTab);
+  }, [urlTab]);
   const [q, setQ] = useState('');
   // Banner shown after Stripe sends the user back here on success.
   const justPaid = searchParams.get('paid') === '1';
@@ -236,7 +243,7 @@ export default function CampaignsPage() {
                   if (j.status === 'draft') {
                     router.push(`/campaigns/${j.id}/edit`);
                   } else {
-                    router.push(`/admin/track/${j.id}`);
+                    router.push(`/campaigns/${j.id}`);
                   }
                 }}
               />

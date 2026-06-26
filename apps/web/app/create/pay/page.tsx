@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { wizardPath } from '@/lib/wizard-nav';
 import { CheckCircle2, TriangleAlert } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
 import { StepBar } from '@/components/StepBar';
@@ -10,6 +11,7 @@ import { api, type ApiJob } from '@/lib/api';
 
 export default function CreatePay() {
   const router = useRouter();
+  const pathname = usePathname();
   const [draft, setDraft] = useState<ReturnType<typeof loadDraft>>({});
   const [estimate, setEstimate] = useState<SmartZoneEstimate | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -60,7 +62,9 @@ export default function CreatePay() {
       // Create a pending invoice that admin will mark paid.
       await api.post(`/api/jobs/${job.id}/confirm`);
       clearDraft();
-      router.push(`/campaigns?created=1&job=${job.id}`);
+      // replace, not push — after creation the edit/pay URL is meaningless and
+      // we don't want the browser Back button to land the user back here.
+      router.replace(`/campaigns?created=1&job=${job.id}`);
     } catch (err) {
       const msg = (err as { body?: { message?: unknown } }).body?.message;
       setError(typeof msg === 'string' ? msg : (err as Error).message);
@@ -149,7 +153,13 @@ export default function CreatePay() {
                 className="btn-primary w-full justify-center mt-2 py-3.5 text-[15px] disabled:opacity-50"
               >
                 <CheckCircle2 size={16} />
-                {submitting ? 'Creating campaign…' : 'Confirm & Create Campaign'}
+                {draft.id
+                  ? submitting
+                    ? 'Saving changes…'
+                    : 'Save Changes'
+                  : submitting
+                    ? 'Creating campaign…'
+                    : 'Confirm & Create Campaign'}
               </button>
 
               {error && (
@@ -167,7 +177,7 @@ export default function CreatePay() {
         </div>
 
         <div className="mt-6">
-          <a href="/create/zone" className="btn-ghost">← Back</a>
+          <a href={wizardPath(pathname, 'zone')} className="btn-ghost">← Back</a>
         </div>
       </main>
     </div>

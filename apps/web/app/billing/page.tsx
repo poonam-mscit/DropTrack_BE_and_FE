@@ -9,7 +9,6 @@ import {
   ExternalLink,
   Loader2,
   RotateCcw,
-  Shield,
   XCircle,
 } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -50,7 +49,6 @@ export default function BillingPage() {
   const [rows, setRows] = useState<PaymentRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>('all');
-  const [openingPortal, setOpeningPortal] = useState(false);
 
   useEffect(() => {
     if (!getSession()) {
@@ -66,19 +64,6 @@ export default function BillingPage() {
       setRows(res.data ?? []);
     } catch (err) {
       setError((err as Error).message);
-    }
-  }
-
-  async function openStripePortal() {
-    setOpeningPortal(true);
-    setError(null);
-    try {
-      const { url } = await api.post<{ url: string }>('/api/me/billing-portal');
-      window.location.href = url;
-    } catch (err) {
-      const body = (err as { body?: { message?: unknown } }).body?.message;
-      setError(typeof body === 'string' ? body : (err as Error).message);
-      setOpeningPortal(false);
     }
   }
 
@@ -149,11 +134,17 @@ export default function BillingPage() {
               </span>
             </h1>
             <p className="mt-3 text-sm text-text-muted">
-              All payments processed by Stripe · GST registered
+              Tax invoices issued in AUD · GST registered (10%)
             </p>
           </div>
-          <button className="btn-ghost h-11" type="button" disabled>
-            <Download size={14} /> Download statements
+          <button
+            className="btn-ghost h-11 disabled:opacity-50"
+            type="button"
+            onClick={() => downloadStatementCsv(filtered)}
+            disabled={!rows || filtered.length === 0}
+            title={!rows || filtered.length === 0 ? 'Nothing to download yet' : 'Download CSV of the current view'}
+          >
+            <Download size={14} /> Download statement
           </button>
         </header>
 
@@ -183,52 +174,6 @@ export default function BillingPage() {
             hint="10% incl. in totals"
             loading={rows === null}
           />
-        </section>
-
-        {/* ── Stripe portal card ── */}
-        <section className="bg-white rounded-2xl border border-border shadow-[0_2px_6px_rgba(11,13,18,.04)] mb-7 overflow-hidden">
-          <div className="p-5 lg:p-6 flex items-start gap-4 flex-wrap">
-            <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shrink-0"
-              style={{
-                background: 'linear-gradient(135deg,#6366f1 0%,#7c3aed 60%,#a3e635 100%)',
-              }}
-            >
-              S
-            </div>
-            <div className="flex-1 min-w-[280px]">
-              <h3 className="font-bold text-base">Payment methods are managed by Stripe</h3>
-              <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                For your security, DropTrack never sees or stores your card details. Update cards,
-                change your default, or download receipts in Stripe's hosted Customer Portal.
-              </p>
-            </div>
-            <button
-              onClick={openStripePortal}
-              disabled={!stats.hasAnySucceeded || openingPortal}
-              className="btn-primary disabled:opacity-50 shrink-0"
-              title={!stats.hasAnySucceeded ? 'Pay for a campaign first to enable the portal' : ''}
-            >
-              {openingPortal ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <ExternalLink size={14} />
-              )}
-              Open Stripe portal
-            </button>
-          </div>
-
-          {stats.defaultCardBrand && stats.defaultCardLast4 && (
-            <div className="px-5 lg:px-6 py-3 border-t border-border bg-bg-muted/30 flex items-center gap-3 text-xs">
-              <Shield size={13} className="text-emerald-600 shrink-0" />
-              <span className="text-text-secondary">
-                <strong className="text-text-primary">Current default:</strong>{' '}
-                {capitalise(stats.defaultCardBrand)} ending {stats.defaultCardLast4}
-              </span>
-              <span className="text-text-muted">·</span>
-              <span className="text-text-muted">PCI-DSS Level 1 compliant</span>
-            </div>
-          )}
         </section>
 
         {/* ── Invoice history ── */}
@@ -300,14 +245,12 @@ export default function BillingPage() {
                       )}
                     </td>
                     <td className="px-5 lg:px-6 py-4 text-right">
-                      {p.receiptUrl ? (
+                      {p.status === 'succeeded' || p.status === 'pending' ? (
                         <a
-                          href={p.receiptUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href={`/billing/invoice/${p.id}`}
                           className="text-sm font-semibold text-primary hover:underline inline-flex items-center gap-1"
                         >
-                          PDF <ExternalLink size={11} />
+                          {p.status === 'pending' ? 'View / Pay' : 'Invoice'} <ExternalLink size={11} />
                         </a>
                       ) : (
                         <span className="text-xs text-text-muted">—</span>
@@ -321,9 +264,8 @@ export default function BillingPage() {
         </section>
 
         <p className="mt-5 text-xs text-text-muted leading-relaxed">
-          Invoices are hosted by Stripe (AU). They include a 10% GST line and a full payment
-          breakdown — accepted by the ATO for tax purposes. Need an ABN-format invoice? Open the
-          receipt on Stripe and download the PDF.
+          Click <strong>Invoice</strong> on any paid row to open a printable PDF-ready tax invoice
+          with full GST breakdown. Use your browser&rsquo;s Print → Save as PDF to keep a copy.
         </p>
       </main>
     </div>
@@ -390,6 +332,32 @@ function fmtCents(cents: number): string {
   return (cents / 100).toLocaleString('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
 }
 
-function capitalise(s: string): string {
-  return s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : s;
+/**
+ * Stream the current view as a CSV that Excel / Google Sheets / Xero opens
+ * cleanly. Amount is decimal AUD (e.g. 226.60), not cents.
+ */
+function downloadStatementCsv(rows: PaymentRow[]) {
+  const header = ['Invoice', 'Campaign', 'Job code', 'Date', 'Status', 'Amount (AUD)'];
+  const body = rows.map((r) => [
+    r.invoiceNumber || '',
+    r.jobTitle,
+    r.jobCode,
+    new Date(r.createdAt).toISOString().slice(0, 10),
+    r.status,
+    (r.amountTotalCents / 100).toFixed(2),
+  ]);
+  const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+  const csv = [header, ...body].map((row) => row.map(escape).join(',')).join('\n');
+
+  // BOM keeps Excel happy with UTF-8 (so $ and emoji-suburb names don't garble).
+  const blob = new Blob(['﻿', csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const stamp = new Date().toISOString().slice(0, 10);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `droptrack-statement-${stamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

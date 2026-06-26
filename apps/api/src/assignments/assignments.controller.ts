@@ -8,7 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { CurrentUser, Roles, type AuthedUser } from '../auth/auth.decorators.js';
-import { createAssignmentsSchema, markDropSchema } from './assignments.dto.js';
+import { createAssignmentsSchema, markDropSchema, markLocationSchema } from './assignments.dto.js';
 import { AssignmentsService } from './assignments.service.js';
 
 /* ─────────────── admin: create + list per job ─────────────── */
@@ -21,6 +21,13 @@ export class JobAssignmentsController {
   @Get()
   list(@Param('jobId') jobId: string) {
     return this.svc.listForJob(jobId);
+  }
+
+  /** GET /api/jobs/:jobId/assignments/live — current dropper positions for the client tracking page. */
+  @Get('live')
+  @Roles('admin', 'client')
+  live(@Param('jobId') jobId: string) {
+    return this.svc.liveState(jobId);
   }
 
   @Post()
@@ -76,5 +83,15 @@ export class MyAssignmentsController {
       throw new BadRequestException({ message: 'Invalid input', issues: parsed.error.issues });
     }
     return this.svc.markDrop(parsed.data, user.id);
+  }
+
+  /** POST /api/me/locations — dropper GPS ping (~every 5s while assignment is started). */
+  @Post('locations')
+  location(@Body() body: unknown, @CurrentUser() user: AuthedUser) {
+    const parsed = markLocationSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({ message: 'Invalid input', issues: parsed.error.issues });
+    }
+    return this.svc.recordLocation(parsed.data, user.id);
   }
 }

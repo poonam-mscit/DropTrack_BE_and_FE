@@ -25,7 +25,7 @@ export default function EditCampaignEntry() {
     (async () => {
       try {
         await loadDraftFromServer(id);
-        router.replace('/create/details');
+        router.replace(`/campaigns/${id}/edit/details`);
       } catch (err) {
         setError((err as Error).message);
       }

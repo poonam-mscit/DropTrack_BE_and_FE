@@ -54,7 +54,7 @@ export function AppSidebar({ active, badges, aiNotify }: Props) {
           Dashboard
         </NavLink>
         <NavLink
-          href="/dashboard#live-tracking"
+          href="/tracking"
           icon={MapPin}
           active={active === 'tracking'}
           badge={badges?.tracking}

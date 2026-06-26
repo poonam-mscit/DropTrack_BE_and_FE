@@ -11,6 +11,7 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { Database } from '@droptrack/db';
 import {
   assignments,
+  dropperLocations,
   dropperProfiles,
   drops,
   events,
@@ -22,7 +23,7 @@ import { CampaignReportService } from '../ai/campaign-report.service.js';
 import { DB } from '../db/db.module.js';
 import { FraudShieldService } from '../fraud/fraud-shield.service.js';
 import { RealtimeGateway } from '../realtime/realtime.gateway.js';
-import type { CreateAssignmentsInput, MarkDropInput } from './assignments.dto.js';
+import type { CreateAssignmentsInput, MarkDropInput, MarkLocationInput } from './assignments.dto.js';
 
 @Injectable()
 export class AssignmentsService {
@@ -349,5 +350,128 @@ export class AssignmentsService {
     });
 
     return updated;
+  }
+
+  // ───────────────────── live tracking ─────────────────────
+
+  /**
+   * Dropper-app GPS ping. Inserts a row + broadcasts on the job's room so the
+   * client's live-tracking page sees the marker move in real time.
+   *
+   * Throttling: we don't dedup here — the dropper app should ping every ~5 s,
+   * which is small enough to be cheap and large enough to look "smooth".
+   */
+  async recordLocation(input: MarkLocationInput, dropperUserId: string) {
+    const [assignment] = await this.db
+      .select({
+        id: assignments.id,
+        jobId: assignments.jobId,
+        status: assignments.status,
+        ownerUserId: assignments.dropperUserId,
+      })
+      .from(assignments)
+      .where(eq(assignments.id, input.assignmentId))
+      .limit(1);
+    if (!assignment) throw new NotFoundException(`Assignment ${input.assignmentId} not found`);
+    if (assignment.ownerUserId !== dropperUserId) {
+      throw new ForbiddenException('Not your assignment');
+    }
+    if (assignment.status !== 'started') {
+      throw new ConflictException(`Assignment is in status "${assignment.status}" — start it first`);
+    }
+
+    const recordedAt = input.recordedAt ? new Date(input.recordedAt) : new Date();
+    await this.db.insert(dropperLocations).values({
+      assignmentId: input.assignmentId,
+      dropperUserId,
+      location: { lat: input.location.lat, lng: input.location.lng },
+      accuracyM: input.accuracyM,
+      speedMps: input.speedMps?.toString(),
+      heading: input.heading,
+      recordedAt,
+    });
+
+    this.realtime.emit({
+      type: 'dropper.location',
+      jobId: assignment.jobId,
+      assignmentId: assignment.id,
+      dropperUserId,
+      location: input.location,
+      speedMps: input.speedMps ?? null,
+      heading: input.heading ?? null,
+      at: recordedAt.toISOString(),
+    });
+
+    return { ok: true };
+  }
+
+  /**
+   * Client-facing snapshot for the live-tracking page: every active assignment
+   * on a job + each dropper's latest known position + drop count + pace.
+   */
+  async liveState(jobId: string) {
+    const rows = await this.db.execute<{
+      assignment_id: string;
+      dropper_user_id: string;
+      dropper_name: string | null;
+      dropper_email: string;
+      status: string;
+      target_leaflets: number;
+      drops_completed: number;
+      started_at: string | null;
+      last_lat: number | null;
+      last_lng: number | null;
+      last_at: string | null;
+      last_heading: number | null;
+      last_speed_mps: number | null;
+    }>(sql`
+      SELECT
+        a.id                         AS assignment_id,
+        a.dropper_user_id            AS dropper_user_id,
+        COALESCE(dp.legal_name, u.email) AS dropper_name,
+        u.email                      AS dropper_email,
+        a.status::text               AS status,
+        a.target_leaflets            AS target_leaflets,
+        a.drops_completed            AS drops_completed,
+        a.started_at                 AS started_at,
+        ST_Y(l.location::geometry)::float AS last_lat,
+        ST_X(l.location::geometry)::float AS last_lng,
+        l.recorded_at                AS last_at,
+        l.heading                    AS last_heading,
+        l.speed_mps::float           AS last_speed_mps
+      FROM assignments a
+      JOIN users u ON u.id = a.dropper_user_id
+      LEFT JOIN dropper_profiles dp ON dp.user_id = a.dropper_user_id
+      LEFT JOIN LATERAL (
+        SELECT location, recorded_at, heading, speed_mps
+        FROM dropper_locations
+        WHERE assignment_id = a.id
+        ORDER BY recorded_at DESC
+        LIMIT 1
+      ) l ON TRUE
+      WHERE a.job_id = ${jobId}
+        AND a.status IN ('started', 'paused')
+      ORDER BY a.started_at NULLS LAST;
+    `);
+
+    return rows.map((r) => ({
+      assignmentId: r.assignment_id,
+      dropperUserId: r.dropper_user_id,
+      dropperName: r.dropper_name ?? r.dropper_email,
+      status: r.status,
+      targetLeaflets: r.target_leaflets,
+      dropsCompleted: r.drops_completed,
+      startedAt: r.started_at,
+      lastLocation:
+        r.last_lat != null && r.last_lng != null
+          ? {
+              lat: r.last_lat,
+              lng: r.last_lng,
+              at: r.last_at,
+              heading: r.last_heading,
+              speedMps: r.last_speed_mps,
+            }
+          : null,
+    }));
   }
 }

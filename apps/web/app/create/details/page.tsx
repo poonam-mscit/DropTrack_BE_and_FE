@@ -1,12 +1,14 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { wizardPath } from '@/lib/wizard-nav';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
 import { StepBar } from '@/components/StepBar';
 import { api } from '@/lib/api';
 import { getSession } from '@/lib/auth';
-import { loadDraft, saveDraft, type JobDraft } from '@/lib/draft';
+import { clearDraft, loadDraft, saveDraft, type JobDraft } from '@/lib/draft';
 
 interface JobCreatorResult {
   title: string;
@@ -41,6 +43,7 @@ interface ChatTurn {
 
 export default function CreateDetails() {
   const router = useRouter();
+  const pathname = usePathname();
   const [draft, setDraft] = useState<Partial<JobDraft>>({});
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
@@ -52,9 +55,19 @@ export default function CreateDetails() {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     if (!getSession()) router.replace('/login');
-    setDraft(loadDraft());
+    // Sidebar/menu "New Campaign" lands on /create/details — defensively wipe
+    // any leftover edit-session draft (id, zone, prefilled fields) so the form
+    // starts fresh. The edit URL (/campaigns/:id/edit/details) leaves it alone.
+    const isNewFlow = !pathname?.startsWith('/campaigns/');
+    const stale = loadDraft();
+    if (isNewFlow && stale.id) {
+      clearDraft();
+      setDraft({});
+    } else {
+      setDraft(stale);
+    }
     setHydrated(true);
-  }, [router]);
+  }, [router, pathname]);
 
   // Auto-save on every change after the initial hydration. Means clicking Back
   // (or even closing the tab) never loses what was typed.
@@ -120,7 +133,7 @@ export default function CreateDetails() {
 
   function next() {
     saveDraft(draft);
-    router.push('/create/zone');
+    router.push(wizardPath(pathname, 'zone'));
   }
 
   const ready =

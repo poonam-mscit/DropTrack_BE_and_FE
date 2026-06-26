@@ -167,6 +167,7 @@ export const users = pgTable(
     mobile: text('mobile'),
     role: userRoleEnum('role').notNull(),
     status: userStatusEnum('status').notNull().default('active'),
+    notificationPrefs: jsonb('notification_prefs').$type<Record<string, boolean>>(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
   },

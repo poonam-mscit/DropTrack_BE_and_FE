@@ -42,6 +42,17 @@ export interface RealtimeFraudAlert {
   at: string;
 }
 
+export interface RealtimeLocation {
+  type: 'dropper.location';
+  jobId: string;
+  assignmentId: string;
+  dropperUserId: string;
+  location: { lat: number; lng: number };
+  speedMps: number | null;
+  heading: number | null;
+  at: string;
+}
+
 let socket: Socket | null = null;
 
 /**

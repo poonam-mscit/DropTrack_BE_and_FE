@@ -7,7 +7,6 @@ import {
   Bell,
   Download,
   Plus,
-  Sparkles,
   TrendingUp,
 } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -15,20 +14,10 @@ import { getSession } from '@/lib/auth';
 import { api, type ApiJob } from '@/lib/api';
 import { clearDraft } from '@/lib/draft';
 
-interface DashboardInsight {
-  headline: string;
-  body: string;
-  link?: { href: string; label: string };
-  generatedAt: string;
-  stubbed: boolean;
-  model: string;
-}
-
 export default function Dashboard() {
   const router = useRouter();
   const [jobs, setJobs] = useState<ApiJob[] | null>(null);
   const [session, setSessionState] = useState<ReturnType<typeof getSession>>(null);
-  const [insight, setInsight] = useState<DashboardInsight | null>(null);
 
   useEffect(() => {
     const s = getSession();
@@ -46,12 +35,6 @@ export default function Dashboard() {
         setJobs(list);
       } catch {
         setJobs([]);
-      }
-      try {
-        const i = await api.get<DashboardInsight>('/api/ai/dashboard-insight');
-        setInsight(i);
-      } catch {
-        // Insight is optional — render a sensible default below.
       }
     })();
   }, [router]);
@@ -86,7 +69,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#f3f4f6] pl-[264px]">
-      <AppSidebar active="dashboard" badges={{ tracking: liveCount }} aiNotify={Boolean(insight)} />
+      <AppSidebar active="dashboard" badges={{ tracking: liveCount }} />
 
       <main className="p-8 lg:p-10 max-w-[1280px]">
         {/* ─── Header ─── */}
@@ -131,7 +114,6 @@ export default function Dashboard() {
           <div className="flex flex-col gap-5">
             <LeafletsCard count={leafletsInField} pace={pacePerHour} />
             <SpentCard spentCents={spentCents} budgetCents={budgetCents} />
-            <AIInsightCard insight={insight} />
           </div>
         </div>
 
@@ -293,39 +275,6 @@ function SpentCard({ spentCents, budgetCents }: { spentCents: number; budgetCent
           }}
         />
       </div>
-    </div>
-  );
-}
-
-// ───────────────── AI Insight ─────────────────
-
-function AIInsightCard({ insight }: { insight: DashboardInsight | null }) {
-  const headline = insight?.headline ?? 'Your Bondi Junction campaign hit 96% coverage — your best yet.';
-  const body = insight?.body ?? 'Re-running it in 3 weeks could compound 22% more uplift.';
-  const linkLabel = insight?.link?.label ?? 'Schedule re-run';
-  const linkHref = insight?.link?.href ?? '#';
-  return (
-    <div
-      className="rounded-2xl p-5 border"
-      style={{
-        background: 'linear-gradient(135deg, rgba(79,70,229,0.08) 0%, rgba(163,230,53,0.06) 100%)',
-        borderColor: 'rgba(79,70,229,0.18)',
-      }}
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg,#4f46e5,#7c3aed,#a3e635)' }}
-        >
-          <Sparkles size={13} className="text-white" />
-        </div>
-        <span className="text-xs font-bold uppercase tracking-[.18em] text-primary">AI insight</span>
-      </div>
-      <p className="text-sm text-text-primary leading-relaxed font-medium">{headline}</p>
-      <p className="text-sm text-text-secondary leading-relaxed mt-1">{body}</p>
-      <a href={linkHref} className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline mt-3">
-        {linkLabel} <ArrowRight size={13} />
-      </a>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { wizardPath } from '@/lib/wizard-nav';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { ArrowRight, MapPin, Sparkles, Wand2 } from 'lucide-react';
@@ -14,6 +15,7 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
 export default function CreateZone() {
   const router = useRouter();
+  const pathname = usePathname();
   const mapRef = useRef<HTMLDivElement>(null);
   const drawRef = useRef<unknown>(null);
   const mapInstanceRef = useRef<unknown>(null);
@@ -96,11 +98,14 @@ export default function CreateZone() {
             if (feat.center) suburbCenterRef.current = feat.center;
             // Auto-draw a polygon sized for the requested drops, once we know the centre.
             if (!loadDraft().zone && feat.center && (loadDraft().leafletCount ?? 0) > 0) {
-              const poly = buildSquarePolygonAroundCentre(feat.center, loadDraft().leafletCount!);
+              const drops = loadDraft().leafletCount!;
+              const poly = buildSquarePolygonAroundCentre(feat.center, drops);
               map.once('load', () => {
                 draw.deleteAll();
                 draw.add({ type: 'Feature', geometry: poly, properties: {} });
                 setPolygon(poly);
+                fitMapToPolygon(map, poly);
+                refreshEstimate(poly, drops);
               });
             }
           })
@@ -120,7 +125,9 @@ export default function CreateZone() {
         const fc = draw.getAll();
         const feat = fc.features[fc.features.length - 1];
         if (feat?.geometry?.type === 'Polygon') {
-          setPolygon(feat.geometry as DraftPolygon);
+          const newPoly = feat.geometry as DraftPolygon;
+          setPolygon(newPoly);
+          refreshEstimate(newPoly, loadDraft().leafletCount ?? 0);
         }
       };
       map.on('draw.create', onUpdate);
@@ -143,30 +150,41 @@ export default function CreateZone() {
     return () => cleanup?.();
   }, []);
 
-  // ─── Smart Zones estimate on polygon change ───
-  useEffect(() => {
-    if (!polygon) {
-      setEstimate(null);
-      return;
-    }
+  // Estimate is fetched on user action — manual draw, auto-draw, Re-draw — and
+  // once on mount IF we have a polygon but no cached estimate (e.g. first time
+  // editing a campaign loaded from the server).
+  const refreshEstimate = (poly: DraftPolygon, dropTarget: number) => {
     setEstimating(true);
     api
-      .post<SmartZoneEstimate>('/api/jobs/estimate', { polygon, leafletCount: draftCount || undefined })
+      .post<SmartZoneEstimate>('/api/jobs/estimate', { polygon: poly, leafletCount: dropTarget || undefined })
       .then((e) => {
         setEstimate(e);
-        // Persist alongside the polygon so a back-nav repaints instantly.
-        saveDraft({ zoneEstimate: e });
+        saveDraft({ zoneEstimate: e, zone: poly, leafletCount: dropTarget || undefined });
       })
       .catch((err) => console.error('estimate failed', err))
       .finally(() => setEstimating(false));
-  }, [polygon, draftCount]);
+  };
+
+  // One-shot mount fetch: polygon present + no cached estimate → fetch once.
+  const didInitialFetch = useRef(false);
+  useEffect(() => {
+    if (didInitialFetch.current || estimating || !polygon) return;
+    // Refresh on mount if:
+    //   1. No estimate yet (first visit after server-load edit), or
+    //   2. Drop count was changed on step 1 (cached estimate is stale).
+    const stale = estimate && draftCount && estimate.clientDropCount !== draftCount;
+    if (!estimate || stale) {
+      didInitialFetch.current = true;
+      refreshEstimate(polygon, draftCount || 0);
+    }
+  }, [polygon, estimate, estimating, draftCount]);
 
   function next() {
     if (!polygon) return;
     // Preserve the user's original leafletCount — don't clamp to clientDropCount.
     // If the zone is too small to fit the target, the user can re-draw or shrink target.
     saveDraft({ zone: polygon, leafletCount: draftCount || estimate?.zoneLetterboxes });
-    router.push('/create/pay');
+    router.push(wizardPath(pathname, 'pay'));
   }
 
   function autoDraw() {
@@ -192,6 +210,8 @@ export default function CreateZone() {
       draw.add({ type: 'Feature', geometry: poly, properties: {} });
     }
     setPolygon(poly);
+    fitMapToPolygon(mapInstanceRef.current, poly);
+    refreshEstimate(poly, drops);
   }
 
   function pasteGeoJSON() {
@@ -204,7 +224,9 @@ export default function CreateZone() {
       if (parsed?.type !== 'Polygon' || !Array.isArray(parsed.coordinates)) {
         throw new Error('Not a Polygon');
       }
-      setPolygon(parsed as DraftPolygon);
+      const parsedPoly = parsed as DraftPolygon;
+      setPolygon(parsedPoly);
+      refreshEstimate(parsedPoly, draftCount || 0);
     } catch (err) {
       window.alert(`Invalid polygon: ${(err as Error).message}`);
     }
@@ -293,8 +315,18 @@ export default function CreateZone() {
                   />
                   <button
                     onClick={autoDraw}
-                    disabled={!draftCount || draftCount < 50}
-                    className="btn-primary text-xs h-8 px-3 disabled:opacity-50"
+                    disabled={
+                      !draftCount ||
+                      draftCount < 50 ||
+                      // Disable when input matches the count the current polygon was sized for.
+                      draftCount === (estimate?.clientDropCount ?? -1)
+                    }
+                    title={
+                      draftCount === (estimate?.clientDropCount ?? -1)
+                        ? 'Change the target drops to enable re-draw'
+                        : 'Resize the polygon for the new target'
+                    }
+                    className="btn-primary text-xs h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Wand2 size={12} /> Re-draw
                   </button>
@@ -362,13 +394,23 @@ export default function CreateZone() {
                     above to grow the zone, or proceed and we&rsquo;ll deliver what fits.
                   </div>
                 )}
+                {estimate.zoneLetterboxes > estimate.clientDropCount && (
+                  <div className="mt-3 p-3 rounded-xl border bg-amber-50 border-amber-200 text-[11px] leading-relaxed text-amber-900">
+                    <strong>Heads-up:</strong> AI found{' '}
+                    <strong>{estimate.zoneLetterboxes.toLocaleString()}</strong> letterboxes inside this
+                    polygon, but you&rsquo;re only paying for{' '}
+                    <strong>{estimate.clientDropCount.toLocaleString()}</strong>. You&rsquo;ll leave{' '}
+                    {(estimate.zoneLetterboxes - estimate.clientDropCount).toLocaleString()} homes
+                    untouched. Bump your target drops above to cover the whole zone.
+                  </div>
+                )}
               </div>
             )}
           </aside>
         </div>
 
         <div className="flex justify-between mt-6">
-          <a href="/create/details" className="btn-ghost">← Back</a>
+          <a href={wizardPath(pathname, 'details')} className="btn-ghost">← Back</a>
           <button onClick={next} disabled={!polygon || !estimate} className="btn-primary disabled:opacity-50">
             Next: Review &amp; Pay <ArrowRight size={16} />
           </button>
@@ -432,6 +474,29 @@ function buildSquarePolygonAroundCentre(
       ],
     ],
   };
+}
+
+/**
+ * Re-frame the map so the polygon fills ~80% of the viewport.
+ * Padding is 10% of the smaller container dimension on each side → polygon
+ * occupies the middle 80% of both width and height.
+ */
+function fitMapToPolygon(rawMap: unknown, poly: DraftPolygon) {
+  const map = rawMap as {
+    fitBounds: (b: [[number, number], [number, number]], o: { padding: number; animate: boolean; duration?: number }) => void;
+    getContainer: () => { clientWidth: number; clientHeight: number };
+  } | null;
+  if (!map?.fitBounds) return;
+  const container = map.getContainer();
+  const padding = Math.round(Math.min(container.clientWidth, container.clientHeight) * 0.1);
+  const bbox = polygonBbox(poly);
+  map.fitBounds(
+    [
+      [bbox.minLng, bbox.minLat],
+      [bbox.maxLng, bbox.maxLat],
+    ],
+    { padding, animate: true, duration: 350 },
+  );
 }
 
 /**

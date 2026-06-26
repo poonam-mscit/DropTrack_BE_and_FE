@@ -14,7 +14,9 @@
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1045.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.1045.0",
+    "@aws-sdk/client-s3": "^3.1075.0",
     "@aws-sdk/client-sesv2": "^3.1045.0",
+    "@aws-sdk/s3-request-presigner": "^3.1075.0",
     "@droptrack/db": "workspace:*",
     "@nestjs/common": "^10.4.0",
     "@nestjs/config": "^3.3.0",
