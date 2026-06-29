@@ -106,14 +106,21 @@ export function AllJobsScreen() {
   }, [rows]);
 
   function openCard(r: AssignmentRow) {
-    if (r.assignment.status === 'started' || r.assignment.status === 'paused') {
-      nav.navigate('Active', { assignmentId: r.assignment.id });
-    } else if (r.assignment.status === 'pending') {
-      nav.navigate('JobDetail', { assignmentId: r.assignment.id });
-    } else {
-      // completed / abandoned — read-only summary route
-      nav.navigate('Summary', { assignmentId: r.assignment.id });
-    }
+    // The destination screens live inside the Home tab's nested stack
+    // (JobsStackNav), so we have to switch to that tab and then specify
+    // which screen within the stack to open. React Navigation doesn't
+    // auto-traverse nested navigators for plain `navigate(name, params)`.
+    const target =
+      r.assignment.status === 'started' || r.assignment.status === 'paused'
+        ? 'Active'
+        : r.assignment.status === 'pending'
+          ? 'JobDetail'
+          : 'Summary';
+
+    nav.navigate('Jobs', {
+      screen: target,
+      params: { assignmentId: r.assignment.id },
+    } as never);
   }
 
   return (
