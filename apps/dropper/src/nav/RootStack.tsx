@@ -9,6 +9,7 @@ import { JobDetailScreen } from '@/screens/JobDetailScreen';
 import { ActiveScreen } from '@/screens/ActiveScreen';
 import { SummaryScreen } from '@/screens/SummaryScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
+import { AllJobsScreen } from '@/screens/AllJobsScreen';
 import { useAuth } from '@/auth/AuthContext';
 import type { AuthStackParamList, AppTabParamList, JobsStackParamList } from './types';
 import { colors } from '@/theme';
@@ -47,19 +48,18 @@ function AppTabs() {
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarIcon: ({ color, size, focused }) => {
-          const name: keyof typeof Ionicons.glyphMap =
-            route.name === 'Jobs'
-              ? focused
-                ? 'home'
-                : 'home-outline'
-              : focused
-                ? 'person-circle'
-                : 'person-circle-outline';
-          return <Ionicons name={name} size={size} color={color} />;
+          const map: Record<string, [keyof typeof Ionicons.glyphMap, keyof typeof Ionicons.glyphMap]> = {
+            Jobs: ['home-outline', 'home'],
+            AllJobs: ['list-outline', 'list'],
+            Profile: ['person-circle-outline', 'person-circle'],
+          };
+          const [out, on] = map[route.name] ?? ['ellipse-outline', 'ellipse'];
+          return <Ionicons name={focused ? on : out} size={size} color={color} />;
         },
       })}
     >
       <Tabs.Screen name="Jobs" component={JobsStackNav} options={{ title: 'Home' }} />
+      <Tabs.Screen name="AllJobs" component={AllJobsScreen} options={{ title: 'Jobs' }} />
       <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
     </Tabs.Navigator>
   );

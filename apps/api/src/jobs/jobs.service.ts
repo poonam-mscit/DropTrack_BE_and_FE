@@ -213,6 +213,35 @@ export class JobsService {
       ORDER BY d.marked_at;
     `);
 
+    // Strava-style routes — one ordered polyline per dropper from GPS pings.
+    // `coords` comes back as a JSON array of [lng, lat] pairs ready for Mapbox.
+    const routeRows = await this.db.execute<{
+      assignment_id: string;
+      dropper_user_id: string;
+      coords: Array<[number, number]>;
+      points: number;
+      first_at: string;
+      last_at: string;
+    }>(sql`
+      SELECT
+        l.assignment_id,
+        l.dropper_user_id,
+        json_agg(
+          json_build_array(
+            ST_X(l.location::geometry),
+            ST_Y(l.location::geometry)
+          )
+          ORDER BY l.recorded_at
+        ) AS coords,
+        count(*)::int AS points,
+        min(l.recorded_at) AS first_at,
+        max(l.recorded_at) AS last_at
+      FROM dropper_locations l
+      JOIN assignments a ON a.id = l.assignment_id
+      WHERE a.job_id = ${jobId}
+      GROUP BY l.assignment_id, l.dropper_user_id;
+    `);
+
     return {
       zone: zoneRow
         ? {
@@ -236,6 +265,14 @@ export class JobsService {
         lng: Number(r.lng),
         insideZone: r.inside_zone,
         markedAt: r.marked_at,
+      })),
+      routes: routeRows.map((r) => ({
+        assignmentId: r.assignment_id,
+        dropperUserId: r.dropper_user_id,
+        coords: r.coords,
+        points: r.points,
+        firstAt: r.first_at,
+        lastAt: r.last_at,
       })),
     };
   }

@@ -35,8 +35,11 @@ export class JobsController {
     return { data: job };
   }
 
-  /** GET /api/jobs/:id/map — GeoJSON zone + sub-zones + drops (lat/lng) for the browser. */
+  /** GET /api/jobs/:id/map — GeoJSON zone + sub-zones + drops (lat/lng).
+   *  Used by both the client's tracking page and the dropper's Active screen,
+   *  so droppers are allowed too. */
   @Get(':id/map')
+  @Roles('client', 'dropper', 'admin')
   async map(@Param('id') id: string) {
     return this.jobsService.getMapData(id);
   }

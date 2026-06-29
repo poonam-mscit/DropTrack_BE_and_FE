@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import MapView, { Marker, Polygon, PROVIDER_DEFAULT } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import { api } from '@/api/client';
 import { BrandHeader } from '@/components/BrandHeader';
 import { GradientButton } from '@/components/GradientButton';
@@ -68,6 +69,16 @@ export function ActiveScreen() {
   const [drops, setDrops] = useState<MapData['drops']>([]);
   const lastPingRef = useRef(0);
   const watcherRef = useRef<Location.LocationSubscription | null>(null);
+  const mapRef = useRef<MapView | null>(null);
+
+  /** Recenter the map on the dropper's current GPS. */
+  const recenterOnMe = useCallback(() => {
+    if (!location || !mapRef.current) return;
+    mapRef.current.animateToRegion(
+      { latitude: location.lat, longitude: location.lng, latitudeDelta: 0.005, longitudeDelta: 0.005 },
+      350,
+    );
+  }, [location]);
 
   // ── Initial load + start assignment ─────────────────────────────
   const refresh = useCallback(async () => {
@@ -148,8 +159,10 @@ export function ActiveScreen() {
       return;
     }
     try {
+      // API returns { id, insideZone, flaggedAnomaly, accuracyM, markedAt, dropsCompleted } — flat shape.
       const res = await api.post<{
-        drop: { id: string; insideZone: boolean };
+        id: string;
+        insideZone: boolean;
         dropsCompleted: number;
       }>('/api/me/drops', {
         assignmentId,
@@ -162,7 +175,10 @@ export function ActiveScreen() {
           ? { ...prev, assignment: { ...prev.assignment, dropsCompleted: res.dropsCompleted } }
           : prev,
       );
-      setDrops((prev) => [...prev, { id: res.drop.id, lat: location.lat, lng: location.lng, insideZone: res.drop.insideZone }]);
+      setDrops((prev) => [
+        ...prev,
+        { id: res.id, lat: location.lat, lng: location.lng, insideZone: res.insideZone },
+      ]);
     } catch (err) {
       Alert.alert('Drop not saved', (err as Error).message);
     }
@@ -208,7 +224,27 @@ export function ActiveScreen() {
     return Math.max(0, Math.min(1, assignment.assignment.dropsCompleted / Math.max(1, targetOf(assignment))));
   }, [assignment]);
 
-  const region = useMemo(() => {
+  // Auto-pan to the dropper once their first GPS fix lands — but only if the
+  // map initialised before GPS was ready (otherwise we'd already be centred).
+  const recenteredOnceRef = useRef(false);
+  useEffect(() => {
+    if (!recenteredOnceRef.current && location && mapRef.current) {
+      recenteredOnceRef.current = true;
+      mapRef.current.animateToRegion(
+        { latitude: location.lat, longitude: location.lng, latitudeDelta: 0.005, longitudeDelta: 0.005 },
+        450,
+      );
+    }
+  }, [location]);
+
+  // Initial region — prefer the dropper's current GPS so the map opens on
+  // where they actually are. Fall back to the zone centroid if GPS hasn't
+  // come in yet. `initialRegion` (not `region`) lets the user pan/zoom
+  // freely without the map snapping back on every state change.
+  const initialRegion = useMemo(() => {
+    if (location) {
+      return { latitude: location.lat, longitude: location.lng, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+    }
     const ring = mapData?.zone?.polygon.coordinates[0];
     if (ring?.length) {
       let lat = 0, lng = 0;
@@ -218,11 +254,11 @@ export function ActiveScreen() {
       }
       return { latitude: lat / ring.length, longitude: lng / ring.length, latitudeDelta: 0.01, longitudeDelta: 0.01 };
     }
-    if (location) {
-      return { latitude: location.lat, longitude: location.lng, latitudeDelta: 0.01, longitudeDelta: 0.01 };
-    }
     return undefined;
-  }, [mapData, location]);
+    // Once initialRegion resolves the first time, we don't update it again —
+    // user retains full pan/zoom control.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!location, !!mapData]);
 
   // ── Render ──────────────────────────────────────────────────────
   return (
@@ -240,11 +276,12 @@ export function ActiveScreen() {
 
       {/* Map */}
       <View style={s.mapBox}>
-        {region ? (
+        {initialRegion ? (
           <MapView
+            ref={mapRef}
             provider={PROVIDER_DEFAULT}
             style={s.map}
-            region={region}
+            initialRegion={initialRegion}
             showsUserLocation
             showsMyLocationButton={false}
           >
@@ -278,6 +315,11 @@ export function ActiveScreen() {
               Location permission denied. Enable it in Settings to record drops.
             </Text>
           </View>
+        )}
+        {location && (
+          <Pressable onPress={recenterOnMe} style={s.recenterBtn}>
+            <Ionicons name="navigate" size={18} color={colors.accent} />
+          </Pressable>
         )}
       </View>
 
@@ -337,6 +379,24 @@ const s = StyleSheet.create({
   map: { flex: 1, backgroundColor: '#222' },
   permWarn: { position: 'absolute', bottom: 8, left: 8, right: 8, backgroundColor: 'rgba(239,68,68,0.85)', borderRadius: radii.md, padding: spacing.sm },
   permWarnText: { color: '#fff', fontSize: 11 },
+  recenterBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1A1B36',
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
 
   counterWrap: { alignItems: 'center', marginBottom: spacing.md },
   counterLabel: { color: colors.textMuted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.6 },

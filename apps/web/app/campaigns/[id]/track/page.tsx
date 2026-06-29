@@ -34,6 +34,7 @@ interface MapData {
     estimatedLetterboxes: number | null;
   } | null;
   drops: Array<{ id: string; dropperUserId: string; lat: number; lng: number; insideZone: boolean; markedAt: string }>;
+  routes: Array<{ assignmentId: string; dropperUserId: string; coords: Array<[number, number]>; points: number }>;
 }
 
 const DROPPER_COLOURS = ['#4F46E5', '#10B981', '#F59E0B', '#EC4899', '#06B6D4', '#A3E635'];
@@ -48,6 +49,7 @@ export default function CampaignTrack() {
   const [job, setJob] = useState<ApiJob | null>(null);
   const [map, setMap] = useState<MapData | null>(null);
   const [droppers, setDroppers] = useState<LiveDropper[]>([]);
+  const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // ── Initial load ─────────────────────────────────────────────────
@@ -99,6 +101,25 @@ export default function CampaignTrack() {
             : d,
         ),
       );
+      // Append the new point to that dropper's route so the line grows live.
+      setMap((prev) => {
+        if (!prev) return prev;
+        const coord: [number, number] = [e.location.lng, e.location.lat];
+        const idx = prev.routes.findIndex((r) => r.assignmentId === e.assignmentId);
+        if (idx >= 0) {
+          const next = [...prev.routes];
+          const r = next[idx];
+          next[idx] = { ...r, coords: [...r.coords, coord], points: r.points + 1 };
+          return { ...prev, routes: next };
+        }
+        return {
+          ...prev,
+          routes: [
+            ...prev.routes,
+            { assignmentId: e.assignmentId, dropperUserId: e.dropperUserId, coords: [coord], points: 1 },
+          ],
+        };
+      });
     };
     const onDrop = (e: RealtimeDrop) => {
       setDroppers((prev) =>
@@ -150,6 +171,7 @@ export default function CampaignTrack() {
       });
       mapInstance.current = m;
       m.on('load', () => {
+        setMapReady(true);
         m.addSource('zone', {
           type: 'geojson',
           data: { type: 'Feature', properties: {}, geometry: map.zone!.polygon },
@@ -176,7 +198,7 @@ export default function CampaignTrack() {
     const m = mapInstance.current as
       | { getSource: (id: string) => unknown; addSource: (...args: unknown[]) => void; addLayer: (...args: unknown[]) => void; isStyleLoaded: () => boolean }
       | null;
-    if (!m || !m.isStyleLoaded?.()) return;
+    if (!m || !mapReady) return;
 
     // Drops layer
     const dropsData = {
@@ -204,14 +226,52 @@ export default function CampaignTrack() {
         },
       });
     }
-  }, [map?.drops]);
+
+    // Strava-style walking-path layer — one MultiLineString feature per dropper
+    // with its colour baked in as a feature property. Mapbox draws a thick
+    // semi-transparent stroke so overlapping passes (back-and-forth on the
+    // same street) accumulate to the Strava "heatmap" look.
+    const routesData = {
+      type: 'FeatureCollection',
+      features: (map?.routes ?? [])
+        .filter((r) => r.coords && r.coords.length >= 2)
+        .map((r, i) => {
+          // Stable colour per assignment so the path matches the side-panel pin.
+          const idx = (map?.routes ?? []).findIndex((x) => x.assignmentId === r.assignmentId);
+          const colour = DROPPER_COLOURS[(idx >= 0 ? idx : i) % DROPPER_COLOURS.length];
+          return {
+            type: 'Feature' as const,
+            geometry: { type: 'LineString' as const, coordinates: r.coords },
+            properties: { colour, dropperUserId: r.dropperUserId },
+          };
+        }),
+    };
+    const existingRoutes = m.getSource('routes') as { setData: (d: unknown) => void } | undefined;
+    if (existingRoutes) {
+      existingRoutes.setData(routesData);
+    } else if (m.getSource('zone')) {
+      m.addSource('routes', { type: 'geojson', data: routesData });
+      // Drawn BEFORE the drops layer so drop dots sit on top of the line.
+      m.addLayer(
+        {
+          id: 'routes-line',
+          type: 'line',
+          source: 'routes',
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: {
+            'line-color': ['get', 'colour'],
+            'line-width': 3.5,
+            'line-opacity': 0.85,
+          },
+        },
+        'drops-circle',
+      );
+    }
+  }, [map?.drops, map?.routes, mapReady]);
 
   // ── Dropper live pins (markers, animated by setLngLat) ───────────
   useEffect(() => {
-    const m = mapInstance.current as
-      | { getSource?: (id: string) => unknown; isStyleLoaded?: () => boolean }
-      | null;
-    if (!m || !m.isStyleLoaded?.()) return;
+    if (!mapInstance.current || !mapReady) return;
     (async () => {
       const mapboxgl = (await import('mapbox-gl')).default;
       droppers.forEach((d, i) => {
@@ -246,7 +306,7 @@ export default function CampaignTrack() {
         }
       }
     })();
-  }, [droppers]);
+  }, [droppers, mapReady]);
 
   // ── Derived stats ────────────────────────────────────────────────
   const totals = useMemo(() => {

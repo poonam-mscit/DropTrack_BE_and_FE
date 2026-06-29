@@ -19,6 +19,7 @@ export type JobsStackParamList = {
 
 export type AppTabParamList = {
   Jobs: undefined;
+  AllJobs: undefined;
   Profile: undefined;
 };
 

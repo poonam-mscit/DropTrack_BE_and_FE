@@ -435,10 +435,10 @@ export class AssignmentsService {
       SELECT
         a.id                         AS assignment_id,
         a.dropper_user_id            AS dropper_user_id,
-        COALESCE(dp.legal_name, u.email) AS dropper_name,
+        COALESCE(NULLIF(trim(coalesce(dp.first_name,'') || ' ' || coalesce(dp.last_name,'')), ''), u.email) AS dropper_name,
         u.email                      AS dropper_email,
         a.status::text               AS status,
-        a.target_leaflets            AS target_leaflets,
+        COALESCE(sz.target_leaflets, j.leaflet_count, 0) AS target_leaflets,
         a.drops_completed            AS drops_completed,
         a.started_at                 AS started_at,
         ST_Y(l.location::geometry)::float AS last_lat,
@@ -448,7 +448,9 @@ export class AssignmentsService {
         l.speed_mps::float           AS last_speed_mps
       FROM assignments a
       JOIN users u ON u.id = a.dropper_user_id
+      JOIN jobs j ON j.id = a.job_id
       LEFT JOIN dropper_profiles dp ON dp.user_id = a.dropper_user_id
+      LEFT JOIN sub_zones sz ON sz.id = a.sub_zone_id
       LEFT JOIN LATERAL (
         SELECT location, recorded_at, heading, speed_mps
         FROM dropper_locations
