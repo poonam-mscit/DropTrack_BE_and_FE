@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { JobsModule } from '../jobs/jobs.module.js';
 import { PaymentsController } from './payments.controller.js';
-import { PaymentsService } from './payments.service.js';
-import { stripeProvider } from './stripe.provider.js';
 
+/**
+ * Payments module — invoice listing only. We dropped Stripe in favour of
+ * admin-marked bank-transfer invoices, so this module just exposes the
+ * read endpoints. Payment-state transitions live in JobsService.adminMarkPaid().
+ */
 @Module({
   imports: [JobsModule],
   controllers: [PaymentsController],
-  providers: [PaymentsService, stripeProvider],
-  exports: [PaymentsService],
 })
 export class PaymentsModule {}

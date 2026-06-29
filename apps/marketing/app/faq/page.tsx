@@ -21,7 +21,7 @@ const GENERAL: FaqItem[] = [
   },
   {
     q: 'Which Australian cities does DropTrack operate in?',
-    a: 'DropTrack is launching in Sydney first. Melbourne, Brisbane and Perth are on the immediate roadmap, with regional NSW and the Gold Coast following soon after. All campaigns are handled from our AU-hosted infrastructure in AWS Sydney.',
+    a: 'DropTrack currently operates in Canberra and the surrounding region. We’ll be expanding to other capital cities soon — get in touch if you’d like to be notified when we launch in yours.',
   },
   {
     q: 'Who uses DropTrack?',

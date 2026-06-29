@@ -63,8 +63,29 @@ export type RealtimeEvent =
   | FraudAlertEvent
   | LocationEvent;
 
+/** Same origin policy as the HTTP API — driven by NODE_ENV + CORS_ORIGIN. */
+function gatewayOrigins(): Array<string | RegExp> {
+  const explicit = (process.env.CORS_ORIGIN ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (explicit.length) return explicit;
+  if (process.env.NODE_ENV === 'production') {
+    return [
+      'https://portal.droptrack.com.au',
+      'https://droptrack.com.au',
+      'https://www.droptrack.com.au',
+    ];
+  }
+  return [
+    'http://localhost:3002',
+    'http://127.0.0.1:3002',
+    /^http:\/\/192\.168\.\d+\.\d+:3002$/,
+  ];
+}
+
 @WebSocketGateway({
-  cors: { origin: '*' }, // dev only; restrict to droptrack.au domains in prod
+  cors: { origin: gatewayOrigins() as never, credentials: true },
 })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   @WebSocketServer() server!: Server;

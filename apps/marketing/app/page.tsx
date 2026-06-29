@@ -103,7 +103,7 @@ const FAQ: FaqItem[] = [
   },
   {
     q: 'Which Australian cities does DropTrack operate in?',
-    a: 'DropTrack is launching in Sydney first, with Melbourne, Brisbane and Perth on the immediate roadmap. All data is hosted in AWS Sydney (ap-southeast-2) for Privacy Act 1988 compliance and Australian data residency.',
+    a: 'DropTrack currently operates in Canberra and the surrounding region. We’ll be expanding to other capital cities soon — get in touch if you’d like to be notified when we launch in yours.',
   },
   {
     q: 'Can I get a report I can show clients or compliance officers?',

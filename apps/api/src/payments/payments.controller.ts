@@ -1,43 +1,27 @@
 import {
-  BadRequestException,
   Controller,
   Get,
-  Headers,
-  HttpCode,
+  Inject,
   Logger,
   NotFoundException,
   Param,
   Patch,
-  Post,
-  Req,
-  Res,
 } from '@nestjs/common';
 import { JobsService } from '../jobs/jobs.service.js';
-import type { Request, Response } from 'express';
 import { and, desc, eq, lte } from 'drizzle-orm';
-import { Inject } from '@nestjs/common';
 import type { Database } from '@droptrack/db';
-import { businessProfiles, jobs, payments as paymentsTable, users, webhookEvents } from '@droptrack/db';
+import { businessProfiles, jobs, payments as paymentsTable, users } from '@droptrack/db';
 import { DB } from '../db/db.module.js';
-import { CurrentUser, Public, Roles, type AuthedUser } from '../auth/auth.decorators.js';
-import { PaymentsService } from './payments.service.js';
+import { CurrentUser, Roles, type AuthedUser } from '../auth/auth.decorators.js';
 
 @Controller()
 export class PaymentsController {
   private readonly logger = new Logger(PaymentsController.name);
 
   constructor(
-    private readonly payments: PaymentsService,
     private readonly jobsService: JobsService,
     @Inject(DB) private readonly db: Database,
   ) {}
-
-  /** POST /api/jobs/:id/checkout — returns a Stripe Checkout URL. */
-  @Post('jobs/:id/checkout')
-  @Roles('client')
-  async checkout(@Param('id') id: string) {
-    return this.payments.createCheckoutSession(id);
-  }
 
   /**
    * GET /api/me/payments — list the signed-in agent's payments (their billing/invoice history).
@@ -171,61 +155,4 @@ export class PaymentsController {
     return { ...row, invoiceNumber };
   }
 
-  /**
-   * POST /api/me/billing-portal — create a Stripe Customer Portal session.
-   * Returns `{ url }` for the client to redirect into; Stripe handles card updates,
-   * receipts, billing-history downloads, etc. — all PCI-compliant on their side.
-   */
-  @Post('me/billing-portal')
-  @Roles('client', 'admin')
-  @HttpCode(200)
-  async billingPortal(@CurrentUser() user: AuthedUser) {
-    return this.payments.createCustomerPortalSession(user.id);
-  }
-
-  /**
-   * POST /webhooks/stripe — receives signed events from Stripe.
-   * Public — Stripe signs the body; we verify with the webhook secret.
-   */
-  @Public()
-  @Post('/webhooks/stripe')
-  @HttpCode(200)
-  async stripeWebhook(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Headers('stripe-signature') signature: string | undefined,
-  ) {
-    const raw = (req as Request & { rawBody?: Buffer }).rawBody;
-    if (!raw) throw new BadRequestException('Raw body missing — check middleware');
-
-    let event: import('stripe').Stripe.Event;
-    try {
-      event = this.payments.verifyWebhook(raw, signature);
-    } catch (err) {
-      this.logger.error(`Webhook signature verification failed: ${(err as Error).message}`);
-      res.status(400).send({ error: 'invalid signature' });
-      return;
-    }
-
-    // Idempotency — log it.
-    try {
-      await this.db.insert(webhookEvents).values({
-        id: event.id,
-        source: 'stripe',
-        payload: event as unknown as Record<string, unknown>,
-      });
-    } catch (err) {
-      // Duplicate — Stripe re-delivered. Ack and exit.
-      this.logger.log(`Duplicate webhook ${event.id} — ignored`);
-      res.status(200).send({ received: true, duplicate: true });
-      return;
-    }
-
-    await this.payments.handleWebhookEvent(event);
-    await this.db
-      .update(webhookEvents)
-      .set({ processedAt: new Date() })
-      .where(eq(webhookEvents.id, event.id));
-    res.status(200).send({ received: true });
-  }
 }

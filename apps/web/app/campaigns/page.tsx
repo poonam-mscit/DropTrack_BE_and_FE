@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   CheckCircle2,
@@ -34,7 +34,18 @@ const TABS: Array<{ key: 'all' | 'active' | 'draft' | 'completed'; label: string
   { key: 'completed', label: 'Completed' },
 ];
 
+// useSearchParams() forces this page to bail out of static prerendering, so
+// Next 15 requires it (or any parent) to be wrapped in <Suspense>. The default
+// export is a thin Suspense wrapper around the real component.
 export default function CampaignsPage() {
+  return (
+    <Suspense fallback={null}>
+      <CampaignsContent />
+    </Suspense>
+  );
+}
+
+function CampaignsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<ApiJob[] | null>(null);

@@ -320,45 +320,47 @@ export default function Login() {
           </form>
         )}
 
-        <div className="mt-8 pt-6 border-t border-border">
-          <button
-            type="button"
-            onClick={() => setShowDev((v) => !v)}
-            className="text-xs text-text-muted hover:text-text-primary font-medium"
-          >
-            {showDev ? '↑ Hide' : '↓ Show'} dev shortcuts
-          </button>
-          {showDev && (
-            <div className="flex flex-col gap-2 mt-4">
-              {DEV_USERS.map((u) => (
-                <button
-                  key={u.email}
-                  type="button"
-                  onClick={() => devPick(u)}
-                  className="card p-3 flex items-center gap-3 text-left hover:border-primary/30 transition-colors"
-                >
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold shrink-0 text-xs"
-                    style={{ background: u.bg }}
+        {process.env.NODE_ENV !== 'production' && (
+          <div className="mt-8 pt-6 border-t border-border">
+            <button
+              type="button"
+              onClick={() => setShowDev((v) => !v)}
+              className="text-xs text-text-muted hover:text-text-primary font-medium"
+            >
+              {showDev ? '↑ Hide' : '↓ Show'} dev shortcuts
+            </button>
+            {showDev && (
+              <div className="flex flex-col gap-2 mt-4">
+                {DEV_USERS.map((u) => (
+                  <button
+                    key={u.email}
+                    type="button"
+                    onClick={() => devPick(u)}
+                    className="card p-3 flex items-center gap-3 text-left hover:border-primary/30 transition-colors"
                   >
-                    {u.initials}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm truncate">{u.name}</div>
-                    <div className="text-[11px] text-text-muted truncate">{u.context}</div>
-                  </div>
-                  <span className="text-[10px] uppercase tracking-wider font-semibold text-primary px-1.5 py-0.5 rounded bg-primary-50">
-                    {u.role}
-                  </span>
-                </button>
-              ))}
-              <p className="text-[10px] text-text-muted mt-1 leading-relaxed">
-                Dev shortcuts skip Cognito and use the API's <code>x-dev-user-id</code> fallback.
-                Only works while <code>NODE_ENV !== production</code>.
-              </p>
-            </div>
-          )}
-        </div>
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold shrink-0 text-xs"
+                      style={{ background: u.bg }}
+                    >
+                      {u.initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm truncate">{u.name}</div>
+                      <div className="text-[11px] text-text-muted truncate">{u.context}</div>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-primary px-1.5 py-0.5 rounded bg-primary-50">
+                      {u.role}
+                    </span>
+                  </button>
+                ))}
+                <p className="text-[10px] text-text-muted mt-1 leading-relaxed">
+                  Dev shortcuts skip Cognito and use the API&rsquo;s <code>x-dev-user-id</code> fallback.
+                  Only works while <code>NODE_ENV !== production</code>.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );

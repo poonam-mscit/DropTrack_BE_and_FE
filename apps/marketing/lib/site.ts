@@ -7,12 +7,12 @@ export const SITE = {
   tagline: 'GPS-verified leaflet distribution for Australian agents',
   url: 'https://droptrack.com.au',
   domain: 'droptrack.com.au',
-  // The agent web app. In production this is app.droptrack.com.au; in dev it
-  // points to the local Next.js webapp on :3002.
+  // The agent web app. In production this is portal.droptrack.com.au; in dev
+  // it points to the local Next.js webapp on :3002.
   appUrl:
     process.env.NEXT_PUBLIC_APP_URL ??
     (process.env.NODE_ENV === 'production'
-      ? 'https://app.droptrack.com.au'
+      ? 'https://portal.droptrack.com.au'
       : 'http://localhost:3002'),
   description:
     'Australia\'s AI-native letterbox distribution platform. Every flyer GPS-verified, every campaign reported, every dollar accounted for.',
