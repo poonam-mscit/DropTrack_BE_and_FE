@@ -100,6 +100,20 @@ const SECTIONS: SectionDef[] = [
   { key: 'danger',       group: 'Data',        label: 'Danger zone',       icon: AlertTriangle },
 ];
 
+function restrictName(v: string): string {
+  return v.replace(/[^A-Za-z\s'\-]/g, '');
+}
+
+function restrictPhone(v: string): string {
+  const clean = v.replace(/[^\d\s]/g, '');
+  return clean.slice(0, 14);
+}
+
+function restrictDigits(v: string, maxLen?: number): string {
+  const clean = v.replace(/\D/g, '');
+  return maxLen ? clean.slice(0, maxLen) : clean;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -150,6 +164,53 @@ export default function ProfilePage() {
   async function save() {
     setSaving(true);
     setError(null);
+    setSavedAt(null);
+
+    if (!form.businessName?.trim()) {
+      setError('Business name is required.');
+      setSaving(false);
+      return;
+    }
+
+    if (form.abn?.trim()) {
+      const abnDigits = form.abn.replace(/\D/g, '');
+      if (abnDigits.length !== 11) {
+        setError('ABN must be 11 numeric digits.');
+        setSaving(false);
+        return;
+      }
+    }
+
+    if (form.mobile?.trim()) {
+      const mobileDigits = form.mobile.replace(/\D/g, '');
+      if (mobileDigits.length !== 10) {
+        setError('Mobile number must be 10 digits (e.g. 0412 345 678).');
+        setSaving(false);
+        return;
+      }
+    }
+
+    if (active === 'billing' && !form.addressLine1?.trim()) {
+      setError('Street address is required.');
+      setSaving(false);
+      return;
+    }
+
+    if (form.suburb?.trim() && !/^[A-Za-z\s'\-]+$/.test(form.suburb.trim())) {
+      setError('Suburb may only contain letters, spaces, hyphens, and apostrophes.');
+      setSaving(false);
+      return;
+    }
+
+    if (form.postcode?.trim()) {
+      const postcodeDigits = form.postcode.replace(/\D/g, '');
+      if (postcodeDigits.length !== 4) {
+        setError('Postcode must be 4 digits.');
+        setSaving(false);
+        return;
+      }
+    }
+
     try {
       const patch = { ...form };
       // Clean empty strings to null where the API expects nullable text.
@@ -389,7 +450,7 @@ export default function ProfilePage() {
                           className="input w-full"
                           placeholder="11 222 333 444"
                           value={form.abn ?? ''}
-                          onChange={(e) => field('abn', e.target.value)}
+                          onChange={(e) => field('abn', restrictDigits(e.target.value, 11))}
                         />
                       </Field>
                       <Field label="GST registered">
@@ -425,7 +486,7 @@ export default function ProfilePage() {
                           className="input w-full"
                           placeholder="04xx xxx xxx"
                           value={form.mobile ?? ''}
-                          onChange={(e) => field('mobile', e.target.value)}
+                          onChange={(e) => field('mobile', restrictPhone(e.target.value))}
                         />
                       </Field>
                     </div>
@@ -451,7 +512,7 @@ export default function ProfilePage() {
                           className="input w-full"
                           placeholder="Bondi"
                           value={form.suburb ?? ''}
-                          onChange={(e) => field('suburb', e.target.value)}
+                          onChange={(e) => field('suburb', restrictName(e.target.value))}
                         />
                       </Field>
                       <Field label="State">
@@ -473,7 +534,7 @@ export default function ProfilePage() {
                           className="input w-full"
                           placeholder="2026"
                           value={form.postcode ?? ''}
-                          onChange={(e) => field('postcode', e.target.value)}
+                          onChange={(e) => field('postcode', restrictDigits(e.target.value, 4))}
                         />
                       </Field>
                     </div>
