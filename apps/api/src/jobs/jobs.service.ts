@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { Database } from '@droptrack/db';
-import { jobs, payments, users, zones, type Job } from '@droptrack/db';
+import { assignments, jobs, payments, users, zones, type Job } from '@droptrack/db';
 import { DB } from '../db/db.module.js';
 import type { CreateJobInput } from './jobs.dto.js';
 import { SETTING_KEYS, SettingsService } from '../settings/settings.service.js';
@@ -25,7 +25,7 @@ export class JobsService {
     return { basePerLeafletCents: base, platformFeePct: fee, gstPct: gst };
   }
 
-  async list(): Promise<(Job & { paymentStatus: string | null; amountTotalCents: number | null })[]> {
+  async list(): Promise<(Job & { paymentStatus: string | null; amountTotalCents: number | null; assignedLeaflets: number; dropsCompleted: number })[]> {
     // A job with multiple payment attempts (e.g. pending → succeeded) would
     // duplicate via the LEFT JOIN. Fetch all rows then collapse client-side,
     // preferring succeeded > pending > anything else, ties broken by recency.
@@ -62,12 +62,34 @@ export class JobsService {
       }
     }
 
+    // Sum assigned leaflets AND drops-completed per job — one pass across
+    // assignments so the client can render real progress without a fake
+    // day-based coverage estimate.
+    const jobIds = Array.from(bestPerJob.keys());
+    const assignedRows = jobIds.length
+      ? await this.db
+          .select({
+            jobId: assignments.jobId,
+            target: assignments.targetLeaflets,
+            dropsCompleted: assignments.dropsCompleted,
+          })
+          .from(assignments)
+      : [];
+    const assignedByJob = new Map<string, number>();
+    const doneByJob = new Map<string, number>();
+    for (const r of assignedRows) {
+      assignedByJob.set(r.jobId, (assignedByJob.get(r.jobId) ?? 0) + (r.target ?? 0));
+      doneByJob.set(r.jobId, (doneByJob.get(r.jobId) ?? 0) + (r.dropsCompleted ?? 0));
+    }
+
     return Array.from(bestPerJob.values())
       .sort((a, b) => b.job.createdAt.getTime() - a.job.createdAt.getTime())
       .map(({ job, paymentStatus, amountTotalCents }) => ({
         ...job,
         paymentStatus,
         amountTotalCents,
+        assignedLeaflets: assignedByJob.get(job.id) ?? 0,
+        dropsCompleted: doneByJob.get(job.id) ?? 0,
       }));
   }
 
@@ -453,13 +475,60 @@ export class JobsService {
     });
   }
 
-  async deleteDraft(id: string) {
+  async deleteDraft(id: string, actorUserId: string, isAdmin: boolean) {
     const [job] = await this.db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
     if (!job) throw new NotFoundException(`Job ${id} not found`);
+    if (!isAdmin && job.clientUserId !== actorUserId) {
+      throw new ForbiddenException('Not your campaign');
+    }
     if (job.status !== 'draft') {
-      throw new BadRequestException(`Cannot delete a job in status "${job.status}"`);
+      throw new BadRequestException(`Cannot delete a job in status "${job.status}" — cancel it instead.`);
     }
     await this.db.delete(jobs).where(eq(jobs.id, id));
     return { deleted: true };
+  }
+
+  /**
+   * Cancel a campaign in any non-terminal state. Draft cancellations are
+   * treated as delete (no invoice exists). Paid campaigns flip to cancelled
+   * and any pending/started/paused assignments are marked abandoned so the
+   * droppers stop tracking. Refunds are handled manually by an admin.
+   */
+  async cancelCampaign(id: string, actorUserId: string, isAdmin: boolean) {
+    const [job] = await this.db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
+    if (!job) throw new NotFoundException(`Job ${id} not found`);
+    if (!isAdmin && job.clientUserId !== actorUserId) {
+      throw new ForbiddenException('Not your campaign');
+    }
+    if (job.status === 'completed' || job.status === 'cancelled') {
+      throw new BadRequestException(`Job is already ${job.status}`);
+    }
+
+    // Draft → hard delete (nothing was paid for).
+    if (job.status === 'draft') {
+      await this.db.delete(jobs).where(eq(jobs.id, id));
+      return { cancelled: true, deleted: true, refundRequired: false };
+    }
+
+    // Anything paid → flip status + abandon live assignments in one txn.
+    const wasPaid = ['paid_unassigned', 'assigned', 'upcoming', 'active'].includes(job.status);
+    await this.db.transaction(async (tx) => {
+      await tx.update(jobs).set({ status: 'cancelled' }).where(eq(jobs.id, id));
+      await tx
+        .update(assignments)
+        .set({ status: 'abandoned' })
+        .where(
+          and(
+            eq(assignments.jobId, id),
+            inArray(assignments.status, ['pending', 'started', 'paused']),
+          ),
+        );
+    });
+
+    // Open dropper screens will pick up the abandoned assignment status on
+    // their next poll (15s) or navigation. Not wiring realtime here to keep
+    // the service dependency-free; assignments.service handles those pushes
+    // for its own actions.
+    return { cancelled: true, deleted: false, refundRequired: wasPaid };
   }
 }

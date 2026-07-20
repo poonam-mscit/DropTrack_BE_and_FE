@@ -26,6 +26,7 @@ import { dropperProfiles, invites, users } from '@droptrack/db';
 import { DB } from '../db/db.module.js';
 import { CurrentUser, Public, Roles, type AuthedUser } from '../auth/auth.decorators.js';
 import { CognitoAuthService } from '../auth/cognito-auth.service.js';
+import { EmailService } from '../email/email.service.js';
 
 const APP_BASE_URL = process.env.WEB_BASE_URL || 'http://localhost:3002';
 const DROPPER_DEEP_LINK = process.env.DROPPER_DEEP_LINK_BASE || 'droptrackdropper://accept';
@@ -54,6 +55,7 @@ export class InvitesController {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly cognito: CognitoAuthService,
+    private readonly email: EmailService,
   ) {}
 
   // ───────────────────── admin ─────────────────────
@@ -95,9 +97,58 @@ export class InvitesController {
     const deepLink = `${DROPPER_DEEP_LINK}?token=${token}`;
     this.logger.log(`dropper invite created · email=${body.email} token=…${token.slice(-6)}`);
 
-    // TODO: send email via SES once that's wired. For MVP we return the URLs
-    // so admin can copy/paste into Slack/SMS.
+    try {
+      await this.email.sendDropperInvite({
+        to: body.email,
+        firstName: body.firstName,
+        acceptUrl,
+        deepLink,
+        expiresAt,
+      });
+    } catch (err) {
+      this.logger.error(`invite email failed for ${body.email}: ${(err as Error).message}`);
+    }
+
     return { invite: row, acceptUrl, deepLink };
+  }
+
+  /**
+   * POST /api/admin/dropper-invites/:id/resend — re-email the invite. Reuses
+   * the existing token (link stays the same) and pushes out the expiry by the
+   * original expiresInDays window. Refuses on already-accepted invites.
+   */
+  @Post('admin/dropper-invites/:id/resend')
+  @Roles('admin')
+  async resend(@Param('id') id: string) {
+    const [row] = await this.db.select().from(invites).where(eq(invites.id, id)).limit(1);
+    if (!row) throw new NotFoundException('Invite not found');
+    if (row.acceptedAt) throw new BadRequestException('This invite has already been accepted.');
+
+    const acceptUrl = `${APP_BASE_URL}/accept-invite?token=${row.token}`;
+    const deepLink = `${DROPPER_DEEP_LINK}?token=${row.token}`;
+    // Refresh expiry: 14 days from now if the existing one is < 14 days out.
+    const minExpires = new Date(Date.now() + 14 * 86_400_000);
+    if (row.expiresAt < minExpires) {
+      await this.db.update(invites).set({ expiresAt: minExpires }).where(eq(invites.id, row.id));
+    }
+
+    let emailed = false;
+    let emailError: string | null = null;
+    try {
+      await this.email.sendDropperInvite({
+        to: row.email,
+        firstName: (row.prefill as { firstName?: string } | null)?.firstName ?? 'there',
+        acceptUrl,
+        deepLink,
+        expiresAt: row.expiresAt < minExpires ? minExpires : row.expiresAt,
+      });
+      emailed = true;
+    } catch (err) {
+      emailError = (err as Error).message;
+      this.logger.error(`resend invite email failed for ${row.email}: ${emailError}`);
+    }
+
+    return { emailed, emailError, acceptUrl, deepLink, email: row.email };
   }
 
   /** GET /api/admin/dropper-invites — outstanding + recently accepted. */

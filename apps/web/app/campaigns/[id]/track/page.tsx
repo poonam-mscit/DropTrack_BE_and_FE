@@ -78,6 +78,31 @@ export default function CampaignTrack() {
     void load();
   }, [router, load]);
 
+  // Poll the live-assignments endpoint every 15s as a safety net. The
+  // websocket pushes real-time updates but if it silently disconnects or
+  // reconnects to a different node, counts would stall. Cheap enough — this
+  // is a per-agent live-tracking screen with 1–5 rows of state.
+  useEffect(() => {
+    if (!id) return;
+    const t = setInterval(() => {
+      api
+        .get<LiveDropper[]>(`/api/jobs/${id}/assignments/live`)
+        .then((rows) => {
+          setDroppers((prev) => {
+            // Keep any newer per-row info the socket may have written
+            // (last GPS at, coords) but replace the stat counters.
+            const byId = new Map(prev.map((d) => [d.assignmentId, d]));
+            return rows.map((r) => {
+              const cached = byId.get(r.assignmentId);
+              return cached ? { ...r, lastLocation: cached.lastLocation ?? r.lastLocation } : r;
+            });
+          });
+        })
+        .catch(() => {});
+    }, 15_000);
+    return () => clearInterval(t);
+  }, [id]);
+
   // ── Socket subscription ──────────────────────────────────────────
   useEffect(() => {
     if (!id) return;

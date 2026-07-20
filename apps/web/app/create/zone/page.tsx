@@ -84,7 +84,15 @@ export default function CreateZone() {
           .then((j) => {
             const feat = j.features?.[0];
             if (!feat) return;
-            if (feat.bbox) {
+            // If the bbox is small (a real suburb, <0.15°), fit it. Otherwise
+            // (a city or region like "Sydney"/"Melbourne") the bbox covers
+            // 60+ km and fitBounds would zoom out uselessly — jump to the
+            // centroid at zoom 12 instead.
+            const bboxTooBig =
+              !feat.bbox ||
+              feat.bbox[2] - feat.bbox[0] > 0.15 ||
+              feat.bbox[3] - feat.bbox[1] > 0.15;
+            if (feat.bbox && !bboxTooBig) {
               map.fitBounds(
                 [
                   [feat.bbox[0], feat.bbox[1]],
@@ -93,7 +101,7 @@ export default function CreateZone() {
                 { padding: 40, animate: false },
               );
             } else if (feat.center) {
-              map.flyTo({ center: feat.center, zoom: 13.5, animate: false });
+              map.jumpTo({ center: feat.center, zoom: 12 });
             }
             if (feat.center) suburbCenterRef.current = feat.center;
             // Auto-draw a polygon sized for the requested drops, once we know the centre.

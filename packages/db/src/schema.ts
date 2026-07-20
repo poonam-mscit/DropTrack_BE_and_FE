@@ -395,6 +395,9 @@ export const assignments = pgTable(
     pausedTotalSeconds: integer('paused_total_seconds').notNull().default(0),
     completedAt: timestamp('completed_at', { withTimezone: true }),
 
+    /** Leaflets this dropper is expected to cover. Nullable for very old
+     * rows before the column was added; new inserts always set it. */
+    targetLeaflets: integer('target_leaflets'),
     dropsCompleted: integer('drops_completed').notNull().default(0),
     distanceWalkedM: integer('distance_walked_m').notNull().default(0),
     payrollCostCents: integer('payroll_cost_cents').notNull().default(0),

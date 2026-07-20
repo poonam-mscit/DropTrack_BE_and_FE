@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, CheckCircle2, KeyRound, Loader2, Mail } from 'lucide-react';
 import { setSession, type Role } from '@/lib/auth';
 import { Logo } from '@/components/Logo';
+import { PasswordInput } from '@/components/PasswordInput';
 
 type Step = 'form' | 'verify';
 
@@ -199,7 +200,7 @@ export default function Signup() {
               </div>
 
               <Field label="Password">
-                <input type="password" required minLength={10} value={password} onChange={(e) => setPassword(e.target.value)} className="input" placeholder="At least 10 characters" autoComplete="new-password" />
+                <PasswordInput required minLength={10} value={password} onChange={(e) => setPassword(e.target.value)} className="input pr-11" placeholder="At least 10 characters" autoComplete="new-password" />
               </Field>
 
               <label className="flex items-start gap-3 cursor-pointer mt-2">

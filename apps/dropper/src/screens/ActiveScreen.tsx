@@ -35,6 +35,7 @@ interface AssignmentRow {
     jobId: string;
     status: 'pending' | 'started' | 'paused' | 'completed' | 'abandoned';
     dropsCompleted: number;
+    targetLeaflets: number | null;
     startedAt: string | null;
   };
   job: { id: string; code: string; title: string; leafletCount: number };
@@ -47,7 +48,9 @@ interface MapData {
 
 function targetOf(r: AssignmentRow | null): number {
   if (!r) return 0;
-  return r.subZone?.targetLeaflets ?? r.job.leafletCount ?? 0;
+  // Per-assignment target is authoritative — set when admin assigns. Fall
+  // back only for legacy rows that predate the assignments.target_leaflets col.
+  return r.assignment.targetLeaflets ?? r.subZone?.targetLeaflets ?? r.job.leafletCount ?? 0;
 }
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Active'>;
@@ -64,6 +67,7 @@ export function ActiveScreen() {
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number; heading?: number; speed?: number } | null>(null);
   const [permissionDenied, setPermissionDenied] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [paused, setPaused] = useState(false);
   const [stopping, setStopping] = useState(false);
   const [drops, setDrops] = useState<MapData['drops']>([]);
@@ -109,24 +113,43 @@ export function ActiveScreen() {
   useEffect(() => {
     let mounted = true;
     void (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setPermissionDenied(true);
-        return;
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (!mounted) return;
+        if (status !== 'granted') {
+          setPermissionDenied(true);
+          return;
+        }
+        // Balanced accuracy is enough for street-level tracking and does NOT
+        // require the Android foreground-service dance that High triggers on
+        // Android 14+ — that path can throw a native
+        // ForegroundServiceStartNotAllowedException and force-close the app
+        // before we get a chance to catch anything in JS. Keeping accuracy
+        // conservative + wrapping every async call in try/catch so the screen
+        // always renders instead of the whole process dying.
+        const sub = await Location.watchPositionAsync(
+          { accuracy: Location.Accuracy.Balanced, distanceInterval: 8, timeInterval: 3_000 },
+          (pos) => {
+            if (!mounted) return;
+            setLocation({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              heading: pos.coords.heading ?? undefined,
+              speed: pos.coords.speed ?? undefined,
+            });
+          },
+        );
+        if (!mounted) {
+          sub.remove();
+          return;
+        }
+        watcherRef.current = sub;
+      } catch (err) {
+        if (!mounted) return;
+        // Surface the failure instead of crashing. Dropper can still tap Mark
+        // Drop — the button just won't have a live GPS fix to record with.
+        setLocationError((err as Error).message ?? 'Location unavailable');
       }
-      const sub = await Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.High, distanceInterval: 5, timeInterval: 2_000 },
-        (pos) => {
-          if (!mounted) return;
-          setLocation({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            heading: pos.coords.heading ?? undefined,
-            speed: pos.coords.speed ?? undefined,
-          });
-        },
-      );
-      watcherRef.current = sub;
     })();
     return () => {
       mounted = false;
@@ -314,6 +337,11 @@ export function ActiveScreen() {
             <Text style={s.permWarnText}>
               Location permission denied. Enable it in Settings to record drops.
             </Text>
+          </View>
+        )}
+        {locationError && !permissionDenied && (
+          <View style={s.permWarn}>
+            <Text style={s.permWarnText}>Location unavailable: {locationError}</Text>
           </View>
         )}
         {location && (

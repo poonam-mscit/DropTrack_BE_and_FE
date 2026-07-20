@@ -1,0 +1,44 @@
+{
+  "cli": {
+    "version": ">= 5.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "channel": "production",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_ORIGIN": "https://portal.droptrack.com.au"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "poonam@thelinetech.uk",
+        "ascAppId": "6786642908",
+        "appleTeamId": "7MX7LM6986",
+        "ascApiKeyPath": "../../AuthKey_6Y7BWX5U4W.p8",
+        "ascApiKeyId": "6Y7BWX5U4W",
+        "ascApiKeyIssuerId": "6e255f7b-dd2d-4d98-b670-109c881e2199"
+      },
+      "android": {
+        "serviceAccountKeyPath": "../../play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
+  }
+}

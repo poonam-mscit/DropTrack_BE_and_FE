@@ -92,6 +92,38 @@ export class EmailService {
     this.logger.log(`SES email sent: ${info.messageId}`);
     return { stubbed: false, messageId: info.messageId };
   }
+
+  /**
+   * Send a dropper invite with the accept-URL button. Called from the
+   * admin dropper-invites endpoint once the row is written.
+   */
+  async sendDropperInvite(params: {
+    to: string;
+    firstName: string;
+    acceptUrl: string;
+    deepLink: string;
+    expiresAt: Date;
+  }) {
+    const { to, firstName, acceptUrl, deepLink, expiresAt } = params;
+    const subject = `You're invited to join DropTrack as a Dropper`;
+    const text = renderInviteText({ firstName, acceptUrl, deepLink, expiresAt });
+    const html = renderInviteHtml({ firstName, acceptUrl, deepLink, expiresAt });
+
+    if (this.stubbed || !this.transporter) {
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      writeFileSync(
+        join(OUTBOX_DIR, `${stamp}-invite-${to.replace(/[^a-z0-9]/gi, '_')}.json`),
+        JSON.stringify({ sentAt: new Date().toISOString(), from: this.fromAddress, to, subject, acceptUrl }, null, 2),
+      );
+      writeFileSync(join(OUTBOX_DIR, `${stamp}-invite-${to.replace(/[^a-z0-9]/gi, '_')}.html`), html);
+      this.logger.log(`STUB invite written to ${OUTBOX_DIR} (to: ${to})`);
+      return { stubbed: true, messageId: `stub-${stamp}` };
+    }
+
+    const info = await this.transporter.sendMail({ from: this.fromAddress, to, subject, text, html });
+    this.logger.log(`Invite email sent to ${to}: ${info.messageId}`);
+    return { stubbed: false, messageId: info.messageId };
+  }
 }
 
 function renderText({
@@ -159,6 +191,95 @@ function renderHtml({
         </div>
 
         <p style="margin:24px 0 0;font-size:13px;color:#8B92A4;">— The DropTrack team<br>Sydney, Australia &middot; droptrack.au</p>
+      </td>
+    </tr>
+  </table>
+</body></html>`;
+}
+
+function renderInviteText({
+  firstName,
+  acceptUrl,
+  deepLink,
+  expiresAt,
+}: {
+  firstName: string;
+  acceptUrl: string;
+  deepLink: string;
+  expiresAt: Date;
+}) {
+  const dateStr = expiresAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  return `Hi ${firstName},
+
+You've been invited to join DropTrack as a Dropper — the AU-based, GPS-verified leaflet distribution platform.
+
+Accept your invite and set your password:
+${acceptUrl}
+
+On your phone with the DropTrack app installed:
+${deepLink}
+
+This link expires on ${dateStr}. If you didn't expect this invite, ignore this email.
+
+— The DropTrack team
+Drop Track Pty Ltd · ABN 39 697 128 920
+hello@droptrack.com.au
+`;
+}
+
+function renderInviteHtml({
+  firstName,
+  acceptUrl,
+  deepLink,
+  expiresAt,
+}: {
+  firstName: string;
+  acceptUrl: string;
+  deepLink: string;
+  expiresAt: Date;
+}) {
+  const dateStr = expiresAt.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  return `<!doctype html>
+<html><body style="background:#F4F5FB;margin:0;padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0F1029;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E4E7F2;">
+    <tr>
+      <td style="background:#0F1029;padding:22px 28px;color:#fff;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.14em;color:#A3E635;text-transform:uppercase;">DropTrack</div>
+        <div style="font-size:18px;font-weight:700;margin-top:6px;">You're invited</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:28px;line-height:1.55;">
+        <p style="margin:0 0 14px;">Hi ${escapeHtml(firstName)},</p>
+        <p style="margin:0 0 14px;color:#4A4E6B;">
+          You've been invited to join <strong>DropTrack</strong> as a Dropper &mdash; our AU-based, GPS-verified leaflet distribution platform. Tap the button below to accept and set your password.
+        </p>
+
+        <div style="text-align:center;margin:26px 0;">
+          <a href="${acceptUrl}" style="display:inline-block;background:#4F46E5;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 28px;border-radius:12px;">
+            Accept invite &amp; set password
+          </a>
+        </div>
+
+        <p style="margin:0 0 8px;color:#4A4E6B;font-size:13px;">Or copy this link into your browser:</p>
+        <p style="margin:0 0 20px;font-size:12px;word-break:break-all;">
+          <a href="${acceptUrl}" style="color:#4F46E5;text-decoration:none;">${escapeHtml(acceptUrl)}</a>
+        </p>
+
+        <div style="background:#F4F5FB;border:1px solid #E4E7F2;border-radius:12px;padding:14px 16px;margin:0 0 20px;font-size:13px;color:#4A4E6B;">
+          Already have the DropTrack Dropper app? Open on your phone:
+          <a href="${deepLink}" style="color:#4F46E5;text-decoration:none;">${escapeHtml(deepLink)}</a>
+        </div>
+
+        <p style="margin:0;color:#8A8FA8;font-size:13px;">
+          This invite expires on <strong>${dateStr}</strong>. If you didn't expect this email, you can safely ignore it.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:18px 28px;background:#FAFBFF;border-top:1px solid #E4E7F2;color:#8A8FA8;font-size:12px;">
+        Drop Track Pty Ltd &middot; ABN 39 697 128 920 &middot; 42/21 Braybrooke Street, Bruce ACT 2617<br />
+        Questions? <a href="mailto:hello@droptrack.com.au" style="color:#4F46E5;text-decoration:none;">hello@droptrack.com.au</a>
       </td>
     </tr>
   </table>

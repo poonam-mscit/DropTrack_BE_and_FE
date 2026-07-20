@@ -8,6 +8,7 @@
 import { createHmac } from 'node:crypto';
 import {
   AdminCreateUserCommand,
+  AdminDeleteUserCommand,
   AdminDisableUserCommand,
   AdminEnableUserCommand,
   AdminSetUserPasswordCommand,
@@ -511,6 +512,26 @@ export class CognitoAuthService {
       new AdminEnableUserCommand({ UserPoolId: this.userPoolId, Username: email }),
     );
     return { enabled: true };
+  }
+
+  /**
+   * Hard-delete a Cognito user. Idempotent — treats "user not found" as success
+   * so admin can clean up rows whose Cognito identity was already removed.
+   */
+  async adminDeleteUser(email: string): Promise<{ deleted: boolean }> {
+    const client = this.requireClient();
+    if (!this.userPoolId) {
+      throw new ServiceUnavailableException('COGNITO_USER_POOL_ID not configured');
+    }
+    try {
+      await client.send(
+        new AdminDeleteUserCommand({ UserPoolId: this.userPoolId, Username: email }),
+      );
+    } catch (err) {
+      const name = (err as { name?: string }).name ?? '';
+      if (name !== 'UserNotFoundException') throw err;
+    }
+    return { deleted: true };
   }
 
   // ─────────────────── helpers ───────────────────

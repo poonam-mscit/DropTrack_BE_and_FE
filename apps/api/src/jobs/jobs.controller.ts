@@ -102,10 +102,21 @@ export class JobsController {
     return this.jobsService.confirm(id, user.id);
   }
 
-  /** DELETE /api/jobs/:id — only allowed while status='draft'. */
+  /** DELETE /api/jobs/:id — only allowed while status='draft'. Ownership-checked. */
   @Delete(':id')
   @HttpCode(204)
-  async remove(@Param('id') id: string) {
-    await this.jobsService.deleteDraft(id);
+  async remove(@Param('id') id: string, @CurrentUser() user: AuthedUser) {
+    await this.jobsService.deleteDraft(id, user.id, user.role === 'admin');
+  }
+
+  /**
+   * POST /api/jobs/:id/cancel — client can cancel any non-completed
+   * campaign. Draft → hard delete. Paid → status=cancelled + open
+   * assignments → abandoned. Refunds handled manually by admin.
+   */
+  @Post(':id/cancel')
+  @HttpCode(200)
+  async cancel(@Param('id') id: string, @CurrentUser() user: AuthedUser) {
+    return this.jobsService.cancelCampaign(id, user.id, user.role === 'admin');
   }
 }

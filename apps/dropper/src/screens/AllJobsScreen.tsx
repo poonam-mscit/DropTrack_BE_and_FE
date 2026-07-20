@@ -30,6 +30,7 @@ interface AssignmentRow {
     jobId: string;
     status: AssignmentStatus;
     dropsCompleted: number;
+    targetLeaflets: number | null;
     startedAt: string | null;
     pausedTotalSeconds?: number | null;
   };
@@ -179,7 +180,7 @@ export function AllJobsScreen() {
 
 function Card({ row, onPress }: { row: AssignmentRow; onPress: () => void }) {
   const { assignment: a, job: j, subZone: sz } = row;
-  const target = sz?.targetLeaflets ?? j.leafletCount ?? 0;
+  const target = a.targetLeaflets ?? sz?.targetLeaflets ?? j.leafletCount ?? 0;
   const pct = target > 0 ? Math.min(100, Math.round((a.dropsCompleted / target) * 100)) : 0;
   const meta = statusMeta(a.status);
 

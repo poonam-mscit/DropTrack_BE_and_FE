@@ -25,6 +25,11 @@ interface DraftAssignment {
   label: string;
 }
 
+interface ExistingAssignment {
+  assignment: { id: string; targetLeaflets: number | null; status: string };
+  dropper: { id: string; email: string };
+}
+
 export default function AssignWorkspace() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -32,6 +37,7 @@ export default function AssignWorkspace() {
 
   const [job, setJob] = useState<ApiJob | null>(null);
   const [droppers, setDroppers] = useState<Dropper[] | null>(null);
+  const [existing, setExisting] = useState<ExistingAssignment[]>([]);
   const [drafts, setDrafts] = useState<DraftAssignment[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,21 +51,27 @@ export default function AssignWorkspace() {
     Promise.all([
       api.get<{ data: ApiJob }>(`/api/jobs/${jobId}`),
       api.get<{ data: Dropper[] }>('/api/droppers'),
+      api.get<ExistingAssignment[]>(`/api/jobs/${jobId}/assignments`).catch(() => [] as ExistingAssignment[]),
     ])
-      .then(([j, d]) => {
+      .then(([j, d, ex]) => {
         setJob(j.data);
         setDroppers(d.data);
+        setExisting(Array.isArray(ex) ? ex : []);
       })
       .catch((err) => setError(err.message ?? 'Failed to load'));
   }, [jobId, router]);
+
+  const priorAssigned = existing.reduce((s, e) => s + (e.assignment.targetLeaflets ?? 0), 0);
+  const pool = job ? Math.max(0, job.leafletCount - priorAssigned) : 0;
 
   function toggle(d: Dropper) {
     setDrafts((prev) => {
       const i = prev.findIndex((x) => x.dropperUserId === d.userId);
       if (i >= 0) return prev.filter((_, idx) => idx !== i);
-      const remaining = job ? Math.max(0, job.leafletCount - prev.reduce((s, x) => s + x.targetLeaflets, 0)) : 0;
-      const split = prev.length === 0 && job ? job.leafletCount : Math.floor(remaining / 2) || remaining;
-      const label = ['Zone A', 'Zone B', 'Zone C', 'Zone D', 'Zone E', 'Zone F'][prev.length] ?? `Zone ${prev.length + 1}`;
+      const draftsAssigned = prev.reduce((s, x) => s + x.targetLeaflets, 0);
+      const remaining = Math.max(0, pool - draftsAssigned);
+      const split = prev.length === 0 ? pool : Math.floor(remaining / 2) || remaining;
+      const label = ['Zone A', 'Zone B', 'Zone C', 'Zone D', 'Zone E', 'Zone F'][existing.length + prev.length] ?? `Zone ${existing.length + prev.length + 1}`;
       return [...prev, { dropperUserId: d.userId, targetLeaflets: split, label }];
     });
   }
@@ -84,7 +96,8 @@ export default function AssignWorkspace() {
     }
   }
 
-  const totalAssigned = drafts.reduce((s, d) => s + d.targetLeaflets, 0);
+  const draftsTotal = drafts.reduce((s, d) => s + d.targetLeaflets, 0);
+  const totalAssigned = priorAssigned + draftsTotal;
   const remaining = job ? job.leafletCount - totalAssigned : 0;
   const recommended =
     droppers
@@ -116,9 +129,29 @@ export default function AssignWorkspace() {
             </h1>
             {job && (
               <p className="text-text-muted text-sm mt-1.5">
-                {job.jobCode} · {job.leafletCount.toLocaleString()} leaflets · starts{' '}
-                {job.startDate ?? '—'}
+                {job.jobCode} · {job.leafletCount.toLocaleString()} leaflets ·{' '}
+                {priorAssigned > 0 ? (
+                  <>
+                    <strong className="text-text-primary">{priorAssigned.toLocaleString()}</strong> already assigned ·{' '}
+                    <strong className="text-primary">{pool.toLocaleString()}</strong> remaining
+                  </>
+                ) : (
+                  <>starts {job.startDate ?? '—'}</>
+                )}
               </p>
+            )}
+            {existing.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {existing.map((e) => (
+                  <span
+                    key={e.assignment.id}
+                    className="text-[11px] font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700"
+                    title={e.assignment.status}
+                  >
+                    {e.dropper.email.split('@')[0]} · {(e.assignment.targetLeaflets ?? 0).toLocaleString()}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
           <div className="flex gap-2">

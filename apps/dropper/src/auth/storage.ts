@@ -30,5 +30,32 @@ export async function setSession(s: Session): Promise<void> {
 }
 
 export async function clearSession(): Promise<void> {
-  await AsyncStorage.removeItem(KEY);
+  await AsyncStorage.multiRemove([KEY, PROFILE_KEY]);
+}
+
+/**
+ * Lightweight profile cache — persisted so the greeting shows the real name
+ * on cold launch instead of an email-derived guess. Refreshed on every
+ * /api/me/profile fetch. Safe to store in AsyncStorage: contains no secrets,
+ * just first/last name + employee id.
+ */
+export interface CachedProfile {
+  firstName: string;
+  lastName: string;
+  employeeId?: string;
+}
+
+const PROFILE_KEY = 'droptrack.profile';
+
+export async function getCachedProfile(): Promise<CachedProfile | null> {
+  try {
+    const raw = await AsyncStorage.getItem(PROFILE_KEY);
+    return raw ? (JSON.parse(raw) as CachedProfile) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function setCachedProfile(p: CachedProfile): Promise<void> {
+  await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(p));
 }

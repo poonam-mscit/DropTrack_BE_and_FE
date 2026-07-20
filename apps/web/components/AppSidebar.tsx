@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  Bell,
   ChevronRight,
   CreditCard,
   FolderClock,
@@ -13,9 +14,10 @@ import {
 } from 'lucide-react';
 import { clearSession, getSession } from '@/lib/auth';
 import { Logo } from '@/components/Logo';
+import { useUnreadCount } from '@/lib/notifications';
 
 interface Props {
-  active?: 'dashboard' | 'tracking' | 'campaigns' | 'create' | 'ai' | 'billing' | 'profile';
+  active?: 'dashboard' | 'tracking' | 'campaigns' | 'notifications' | 'create' | 'ai' | 'billing' | 'profile';
   /** Per-item badge counts (e.g. number of jobs going live right now). */
   badges?: { tracking?: number; campaigns?: number };
   /** Show a notification dot on AI Assistant (e.g. new insight available). */
@@ -24,6 +26,7 @@ interface Props {
 
 export function AppSidebar({ active, badges, aiNotify }: Props) {
   const router = useRouter();
+  const unread = useUnreadCount();
 
   // Server render uses neutral placeholders, then localStorage hydrates on the
   // client. Keeps SSR + first-paint HTML identical → no hydration mismatch.
@@ -68,6 +71,14 @@ export function AppSidebar({ active, badges, aiNotify }: Props) {
           badge={badges?.campaigns}
         >
           Campaigns
+        </NavLink>
+        <NavLink
+          href="/notifications"
+          icon={Bell}
+          active={active === 'notifications'}
+          badge={unread ?? undefined}
+        >
+          Notifications
         </NavLink>
 
         <NavLabel>Create</NavLabel>

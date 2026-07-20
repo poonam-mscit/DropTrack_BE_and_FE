@@ -22,6 +22,7 @@ import {
 import { CampaignReportService } from '../ai/campaign-report.service.js';
 import { DB } from '../db/db.module.js';
 import { FraudShieldService } from '../fraud/fraud-shield.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 import type { CreateAssignmentsInput, MarkDropInput, MarkLocationInput } from './assignments.dto.js';
 
@@ -34,6 +35,7 @@ export class AssignmentsService {
     private readonly realtime: RealtimeGateway,
     private readonly reports: CampaignReportService,
     private readonly fraud: FraudShieldService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ───────────────────────── admin: create ─────────────────────────
@@ -45,11 +47,17 @@ export class AssignmentsService {
       throw new ConflictException(`Job is in status "${job.status}" — cannot assign`);
     }
 
-    // Validate target totals don't exceed the job's leaflet count.
+    // How many leaflets are already covered by prior assignments on this job?
+    const priorRows = await this.db
+      .select({ target: assignments.targetLeaflets })
+      .from(assignments)
+      .where(eq(assignments.jobId, jobId));
+    const priorAssigned = priorRows.reduce((s, r) => s + (r.target ?? 0), 0);
+
     const totalTarget = input.assignments.reduce((sum, a) => sum + a.targetLeaflets, 0);
-    if (totalTarget > job.leafletCount) {
+    if (priorAssigned + totalTarget > job.leafletCount) {
       throw new BadRequestException(
-        `Sum of targetLeaflets (${totalTarget}) exceeds job.leafletCount (${job.leafletCount})`,
+        `Assigning ${totalTarget} would exceed remaining (${job.leafletCount - priorAssigned} of ${job.leafletCount}).`,
       );
     }
 
@@ -103,6 +111,7 @@ export class AssignmentsService {
             subZoneId,
             dropperUserId: a.dropperUserId,
             assignedByUserId: actorUserId,
+            targetLeaflets: a.targetLeaflets,
             status: 'pending',
           })
           .returning();
@@ -120,6 +129,19 @@ export class AssignmentsService {
       await tx.update(jobs).set({ status: 'assigned' }).where(eq(jobs.id, jobId));
 
       return { jobId, assignments: created, jobStatus: 'assigned' as const };
+    }).then((result) => {
+      // Notify the client that droppers are on the way. Fire-and-forget
+      // outside the transaction so a notification insert failure can't roll
+      // the assignments back.
+      const n = input.assignments.length;
+      void this.notifications.emit({
+        userId: job.clientUserId,
+        type: 'assignment',
+        title: n === 1 ? 'Dropper assigned to your campaign' : `${n} droppers assigned`,
+        body: `"${job.title}" is scheduled and will start ${job.startDate ?? 'shortly'}.`,
+        linkUrl: `/campaigns/${jobId}/track`,
+      });
+      return result;
     });
   }
 
@@ -239,8 +261,20 @@ export class AssignmentsService {
     if (asgn.dropperUserId !== dropperUserId) {
       throw new ForbiddenException('Not your assignment');
     }
-    if (asgn.status !== 'started') {
-      throw new ConflictException(`Cannot mark drop in status "${asgn.status}" — start first`);
+    // Completed or abandoned shifts are terminal — refuse.
+    if (asgn.status === 'completed' || asgn.status === 'abandoned') {
+      throw new ConflictException(`This drop is ${asgn.status} — cannot add more.`);
+    }
+    // pending or paused → auto-transition to started so the dropper can just
+    // tap Mark Drop without hunting for a separate Start button.
+    if (asgn.status === 'pending' || asgn.status === 'paused') {
+      await this.db
+        .update(assignments)
+        .set({ status: 'started', startedAt: asgn.startedAt ?? new Date() })
+        .where(eq(assignments.id, asgn.id));
+      this.logger.log(
+        `assignment ${asgn.id} auto-started via markDrop (was ${asgn.status})`,
+      );
     }
 
     const [drop] = await this.db
@@ -279,6 +313,16 @@ export class AssignmentsService {
           jobId: asgn.jobId,
           status: 'active',
           at: new Date().toISOString(),
+        });
+        // Fire the "campaign is live" notification once per job — this branch
+        // only entered when transitioning assigned → active, which means this
+        // is the very first drop on the whole campaign.
+        void this.notifications.emit({
+          userId: job.clientUserId,
+          type: 'campaign_milestone',
+          title: 'Your campaign is live',
+          body: `First drop just landed for "${job.title}". Track it in real time.`,
+          linkUrl: `/campaigns/${job.id}/track`,
         });
       }
     }
@@ -438,7 +482,7 @@ export class AssignmentsService {
         COALESCE(NULLIF(trim(coalesce(dp.first_name,'') || ' ' || coalesce(dp.last_name,'')), ''), u.email) AS dropper_name,
         u.email                      AS dropper_email,
         a.status::text               AS status,
-        COALESCE(sz.target_leaflets, j.leaflet_count, 0) AS target_leaflets,
+        COALESCE(a.target_leaflets, sz.target_leaflets, j.leaflet_count, 0) AS target_leaflets,
         a.drops_completed            AS drops_completed,
         a.started_at                 AS started_at,
         ST_Y(l.location::geometry)::float AS last_lat,

@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, Printer } from 'lucide-react';
+import { Loader2, Printer } from 'lucide-react';
 import { api } from '@/lib/api';
 import { getSession } from '@/lib/auth';
 import { LogoMark } from '@/components/Logo';
@@ -30,13 +30,13 @@ interface Invoice {
 }
 
 const COMPANY = {
-  name: 'DropTrack Pty Ltd',
-  abn: '12 345 678 901',
+  name: 'Drop Track Pty Ltd',
+  abn: '39 697 128 920',
   address: 'Level 5, 100 George St, Sydney NSW 2000',
   email: 'hello@droptrack.com.au',
   web: 'droptrack.com.au',
   bank: {
-    accountName: 'DropTrack Pty Ltd',
+    accountName: 'Drop Track Pty Ltd',
     bsb: '012-951',
     accountNumber: '813491871',
   },
@@ -72,9 +72,6 @@ export default function InvoicePage() {
         <div className="p-5 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-700">
           <p className="font-semibold mb-1">Invoice not available</p>
           <p>{error}</p>
-          <a href="/billing" className="btn-ghost mt-3 inline-flex">
-            <ArrowLeft size={14} /> Back to billing
-          </a>
         </div>
       </main>
     );
@@ -94,12 +91,11 @@ export default function InvoicePage() {
 
   return (
     <div className="min-h-screen bg-bg-muted/40">
-      {/* Top toolbar — hidden when printing */}
+      {/* Top toolbar — hidden when printing. Invoice always opens in a new tab
+       * (from /admin/invoices or /billing), so we don't need a Back button —
+       * closing the tab returns the user to where they came from. */}
       <div className="print:hidden bg-white border-b border-border">
-        <div className="max-w-[820px] mx-auto p-4 flex items-center justify-between">
-          <a href="/billing" className="text-sm text-text-muted inline-flex items-center gap-1.5 hover:text-text-primary">
-            <ArrowLeft size={14} /> Back to billing
-          </a>
+        <div className="max-w-[820px] mx-auto p-4 flex items-center justify-end">
           <button onClick={() => window.print()} className="btn-primary text-sm">
             <Printer size={14} /> Print / Save as PDF
           </button>

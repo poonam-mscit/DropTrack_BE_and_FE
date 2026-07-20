@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, KeyRound, Loader2, Mail } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { PasswordInput } from '@/components/PasswordInput';
 
 type Step = 'request' | 'confirm' | 'done';
 
@@ -143,13 +144,11 @@ export default function ForgotPasswordPage() {
             </label>
             <label className="text-xs font-semibold text-text-secondary">
               New password
-              <input
-                type="password"
+              <PasswordInput
                 required
                 minLength={8}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-1 w-full border border-border rounded-xl px-4 py-3 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary"
                 autoComplete="new-password"
                 placeholder="At least 8 characters"
               />

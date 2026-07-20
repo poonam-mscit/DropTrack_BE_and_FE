@@ -27,7 +27,7 @@
     "studio": "drizzle-kit studio --port 4983",
     "generate": "drizzle-kit generate && pnpm fix-geo",
     "fix-geo": "find drizzle -name '*.sql' -exec sed -i '' -e 's/\"geography(Point, 4326)\"/geography(Point, 4326)/g' -e 's/\"geography(Polygon, 4326)\"/geography(Polygon, 4326)/g' {} +",
-    "migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/0000_init.sql && psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f drizzle/0000_init.sql && psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/0001_spatial_indexes.sql",
+    "migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/0000_init.sql && psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f drizzle/0000_init.sql && psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/0001_spatial_indexes.sql && psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/0002_notification_prefs.sql && psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f migrations/0003_app_settings.sql",
     "init": "pnpm generate && pnpm migrate",
     "seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit",

@@ -73,6 +73,7 @@ function gatewayOrigins(): Array<string | RegExp> {
   if (process.env.NODE_ENV === 'production') {
     return [
       'https://portal.droptrack.com.au',
+      'https://dropper.droptrack.com.au',
       'https://droptrack.com.au',
       'https://www.droptrack.com.au',
     ];
@@ -106,6 +107,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
       if (typeof jobId !== 'string') return;
       client.leave(`job:${jobId}`);
     });
+    // User-scoped room — used by NotificationsService for the bell push.
+    client.on('join:user', (userId: string) => {
+      if (typeof userId !== 'string') return;
+      client.join(`user:${userId}`);
+    });
+    client.on('leave:user', (userId: string) => {
+      if (typeof userId !== 'string') return;
+      client.leave(`user:${userId}`);
+    });
   }
 
   handleDisconnect(client: Socket) {
@@ -115,5 +125,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   /** Called from services after a successful state change. */
   emit(event: RealtimeEvent) {
     this.server.to(`job:${event.jobId}`).emit(event.type, event);
+  }
+
+  /** Fan-out a payload to every socket that joined `user:<id>`. Used by
+   * NotificationsService so the bell can react without a poll. */
+  emitToUser(userId: string, type: string, payload: unknown) {
+    this.server.to(`user:${userId}`).emit(type, payload);
   }
 }

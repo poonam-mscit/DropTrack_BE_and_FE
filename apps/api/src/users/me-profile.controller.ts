@@ -41,24 +41,61 @@ const AU_STATE = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'] as const;
 
 const NOTIFICATION_KEYS = ['campaignLaunched', 'campaignCompleted', 'paymentReceipts', 'weeklySummary', 'productUpdates'] as const;
 
+// Lenient normalisers — accept common human-typed formats and coerce to the
+// canonical shape the DB expects, instead of failing with a cryptic 400.
+
+const normDate = (v: unknown): unknown => {
+  if (typeof v !== 'string') return v;
+  const s = v.trim();
+  if (!s) return null;
+  // Already ISO
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // DD/MM/YYYY or DD-MM-YYYY  → ISO
+  const dmy = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+  if (dmy) return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
+  // YYYY/MM/DD  → ISO
+  const ymd = s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+  if (ymd) return `${ymd[1]}-${ymd[2].padStart(2, '0')}-${ymd[3].padStart(2, '0')}`;
+  return s; // let the regex below reject anything else
+};
+
+const normDigits = (v: unknown): unknown => {
+  if (typeof v !== 'string') return v;
+  const stripped = v.replace(/[^0-9]/g, '');
+  return stripped.length ? stripped : null;
+};
+
+const normBsb = (v: unknown): unknown => {
+  if (typeof v !== 'string') return v;
+  const d = v.replace(/[^0-9]/g, '');
+  if (d.length !== 6) return d.length ? d : null;
+  return `${d.slice(0, 3)}-${d.slice(3)}`;
+};
+
+const trimOrNull = (v: unknown): unknown => {
+  if (typeof v !== 'string') return v;
+  const s = v.trim();
+  return s.length ? s : null;
+};
+
 const DropperPatchSchema = z.object({
-  firstName: z.string().min(1).max(60).optional(),
-  lastName: z.string().min(1).max(60).optional(),
-  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
-  addressLine1: z.string().max(200).optional().nullable(),
-  suburb: z.string().max(80).optional().nullable(),
-  state: z.enum(AU_STATE).optional().nullable(),
-  postcode: z.string().max(8).optional().nullable(),
-  emergencyContactName: z.string().max(120).optional().nullable(),
-  emergencyContactPhone: z.string().max(20).optional().nullable(),
-  tfn: z.string().regex(/^\d{8,9}$/).optional().nullable(),
-  superFundName: z.string().max(80).optional().nullable(),
-  superMemberNumber: z.string().max(40).optional().nullable(),
-  bankBsb: z.string().regex(/^\d{3}-?\d{3}$/).optional().nullable(),
-  bankAccountNumber: z.string().regex(/^\d{4,12}$/).optional().nullable(),
-  wwccNumber: z.string().max(40).optional().nullable(),
-  wwccExpiresAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
-  primaryZone: z.string().max(80).optional().nullable(),
+  firstName: z.preprocess(trimOrNull, z.string().min(1).max(60).nullable().optional()),
+  lastName: z.preprocess(trimOrNull, z.string().min(1).max(60).nullable().optional()),
+  dob: z.preprocess(normDate, z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional()),
+  addressLine1: z.preprocess(trimOrNull, z.string().max(200).nullable().optional()),
+  suburb: z.preprocess(trimOrNull, z.string().max(80).nullable().optional()),
+  state: z.preprocess(trimOrNull, z.enum(AU_STATE).nullable().optional()),
+  postcode: z.preprocess(trimOrNull, z.string().max(8).nullable().optional()),
+  emergencyContactName: z.preprocess(trimOrNull, z.string().max(120).nullable().optional()),
+  emergencyContactPhone: z.preprocess(trimOrNull, z.string().max(20).nullable().optional()),
+  tfn: z.preprocess(normDigits, z.string().regex(/^\d{8,9}$/).nullable().optional()),
+  superFundName: z.preprocess(trimOrNull, z.string().max(80).nullable().optional()),
+  superMemberNumber: z.preprocess(trimOrNull, z.string().max(40).nullable().optional()),
+  bankBsb: z.preprocess(normBsb, z.string().regex(/^\d{3}-\d{3}$/).nullable().optional()),
+  bankAccountNumber: z.preprocess(normDigits, z.string().regex(/^\d{4,12}$/).nullable().optional()),
+  wwccNumber: z.preprocess(trimOrNull, z.string().max(40).nullable().optional()),
+  wwccExpiresAt: z.preprocess(normDate, z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional()),
+  primaryZone: z.preprocess(trimOrNull, z.string().max(80).nullable().optional()),
 }).partial();
 
 const ProfilePatchSchema = z.object({
@@ -205,6 +242,35 @@ export class MeProfileController {
         .update(dropperProfiles)
         .set({ ...patch })
         .where(eq(dropperProfiles.userId, user.id));
+
+      // Auto-flip onboarding_status → complete once the mandatory bundle is in.
+      // We check the row *after* this patch by loading it again.
+      const [full] = await this.db
+        .select()
+        .from(dropperProfiles)
+        .where(eq(dropperProfiles.userId, user.id))
+        .limit(1);
+      // Required for assignability: name (already required), DOB, address, TFN,
+      // emergency contact. Super/bank/WWCC/zone are optional and can be filled
+      // later before the first payroll run.
+      const complete =
+        !!full?.firstName &&
+        !!full?.lastName &&
+        !!full?.dob &&
+        !!full?.addressLine1 &&
+        !!full?.suburb &&
+        !!full?.state &&
+        !!full?.postcode &&
+        !!full?.emergencyContactName &&
+        !!full?.emergencyContactPhone &&
+        !!full?.tfnEncrypted;
+      if (complete && full?.onboardingStatus !== 'complete') {
+        await this.db
+          .update(dropperProfiles)
+          .set({ onboardingStatus: 'complete', onboardingCompletedAt: new Date() })
+          .where(eq(dropperProfiles.userId, user.id));
+        this.logger.log(`dropper onboarding complete · user=${user.id}`);
+      }
     } else {
       // Bare-minimum required fields for an insert; the rest are nullable.
       await this.db.insert(dropperProfiles).values({

@@ -13,6 +13,7 @@ import type { Database } from '@droptrack/db';
 import { businessProfiles, jobs, payments as paymentsTable, users } from '@droptrack/db';
 import { DB } from '../db/db.module.js';
 import { CurrentUser, Roles, type AuthedUser } from '../auth/auth.decorators.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 @Controller()
 export class PaymentsController {
@@ -21,6 +22,7 @@ export class PaymentsController {
   constructor(
     private readonly jobsService: JobsService,
     @Inject(DB) private readonly db: Database,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -69,7 +71,7 @@ export class PaymentsController {
     return { data };
   }
 
-  /** GET /api/admin/payments — full invoice list across all clients. */
+  /** GET /api/admin/payments — full invoice list across all clients, with business info. */
   @Get('admin/payments')
   @Roles('admin')
   async listAll() {
@@ -80,7 +82,16 @@ export class PaymentsController {
         jobCode: jobs.jobCode,
         jobTitle: jobs.title,
         jobStatus: jobs.status,
+        leafletCount: jobs.leafletCount,
         clientUserId: paymentsTable.clientUserId,
+        clientEmail: users.email,
+        businessName: businessProfiles.businessName,
+        abn: businessProfiles.abn,
+        suburb: businessProfiles.suburb,
+        state: businessProfiles.state,
+        mobile: businessProfiles.mobile,
+        amountNetCents: paymentsTable.amountNetCents,
+        gstCents: paymentsTable.gstCents,
         amountTotalCents: paymentsTable.amountTotalCents,
         status: paymentsTable.status,
         createdAt: paymentsTable.createdAt,
@@ -88,8 +99,25 @@ export class PaymentsController {
       })
       .from(paymentsTable)
       .innerJoin(jobs, eq(jobs.id, paymentsTable.jobId))
+      .innerJoin(users, eq(users.id, paymentsTable.clientUserId))
+      .leftJoin(businessProfiles, eq(businessProfiles.userId, paymentsTable.clientUserId))
       .orderBy(desc(paymentsTable.createdAt));
-    return { data: rows };
+
+    // Chronological invoice numbering (oldest = INV-00001).
+    const chrono = [...rows].sort(
+      (a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0),
+    );
+    const numberById = new Map<string, string>();
+    chrono.forEach((r, i) => {
+      numberById.set(r.id, `INV-${String(i + 1).padStart(5, '0')}`);
+    });
+
+    const data = rows.map((r) => ({
+      ...r,
+      invoiceNumber: numberById.get(r.id) ?? '',
+    }));
+
+    return { data };
   }
 
   /** PATCH /api/admin/payments/:id/mark-paid — flip payment → succeeded + job → paid_unassigned. */
@@ -98,6 +126,17 @@ export class PaymentsController {
   async adminMarkPaid(@Param('id') id: string) {
     const result = await this.jobsService.adminMarkPaid(id);
     if (!result) throw new NotFoundException(`Payment ${id} not found`);
+    // Notify the agent that their payment landed. Skipped for already-paid
+    // idempotent replays (result.alreadyPaid).
+    if (!('alreadyPaid' in result) && result.job && result.payment) {
+      void this.notifications.emit({
+        userId: result.payment.clientUserId,
+        type: 'payment_received',
+        title: 'Payment received',
+        body: `Your payment for "${result.job.title}" has been confirmed. We'll assign droppers shortly.`,
+        linkUrl: `/campaigns/${result.job.id}`,
+      });
+    }
     return result;
   }
 

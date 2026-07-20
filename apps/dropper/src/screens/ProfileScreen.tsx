@@ -222,7 +222,8 @@ export function ProfileScreen() {
               </View>
             </View>
             <Text style={s.statusBody}>
-              Fill in the sections below — should take about 10 minutes. Save anytime and come back.
+              Fill the four required sections below — should take about 5 minutes. Super, bank and
+              WWCC are optional; you can add them later. Save anytime and come back.
             </Text>
             <View style={s.progressTrack}>
               <View style={[s.progressFill, complete && { backgroundColor: colors.accent }, { width: `${(progress.done / progress.total) * 100}%` }]} />
@@ -319,7 +320,7 @@ export function ProfileScreen() {
           </Section>
 
           {/* Super */}
-          <Section title="Superannuation" icon="trending-up-outline" done={progress.flags.super}>
+          <Section title="Superannuation (optional)" icon="trending-up-outline" done={progress.flags.super}>
             <Field
               label="Fund name"
               value={form.superFundName}
@@ -334,7 +335,7 @@ export function ProfileScreen() {
           </Section>
 
           {/* Bank */}
-          <Section title="Bank for payroll" icon="cash-outline" done={progress.flags.bank}>
+          <Section title="Bank for payroll (optional)" icon="cash-outline" done={progress.flags.bank}>
             <Row two>
               <Field
                 label="BSB"
@@ -508,6 +509,8 @@ function cap(s?: string | null): string | null {
 }
 
 function sectionCompleteness(p: MeProfile | null, f: FormState) {
+  // Required for assignability (matches API): name, address, emergency, TFN.
+  // Super, bank, WWCC show a green tick when filled but aren't required.
   const flags = {
     personal: !!f.firstName && !!f.lastName && !!(f.dob || p?.dropper?.dob) && !!f.mobile,
     address: !!f.addressLine1 && !!f.suburb && !!f.state && !!f.postcode,
@@ -517,8 +520,9 @@ function sectionCompleteness(p: MeProfile | null, f: FormState) {
     bank: !!f.bankBsb && !!(p?.dropper?.bankAccountLast4 || f.bankAccountNumber),
     wwcc: true, // optional — counts as complete
   };
-  const done = Object.values(flags).filter(Boolean).length;
-  return { done, total: 7, flags };
+  const requiredFlags: Array<keyof typeof flags> = ['personal', 'address', 'emergency', 'tfn'];
+  const done = requiredFlags.filter((k) => flags[k]).length;
+  return { done, total: requiredFlags.length, flags };
 }
 
 // ── Styles ────────────────────────────────────────────────────────

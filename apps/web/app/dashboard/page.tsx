@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
   ArrowUpRight,
-  Bell,
   Download,
   Plus,
   TrendingUp,
@@ -47,15 +46,21 @@ export default function Dashboard() {
     return 'Good evening';
   }, []);
 
-  // Aggregates — derived from real DB data, no fallback fillers.
+  // Aggregates — derived from real DB data.
   const live = jobs?.filter((j) => j.status === 'active' || j.status === 'assigned') ?? [];
   const liveCount = live.length;
-  const dropsToday = sumLeaflets(jobs ?? []);
-  const leafletsInField = Math.round(dropsToday * 0.57);
-  const pacePerHour = liveCount > 0 ? 148 : 0;
+
+  // Rolling snapshot across live campaigns: how much has been ordered vs
+  // actually dropped today by droppers. `dropsCompleted` sums the per-
+  // assignment counters and comes back on the /api/jobs response.
+  const orderedLive = live.reduce((s, j) => s + (j.leafletCount ?? 0), 0);
+  const droppedLive = live.reduce((s, j) => s + (j.dropsCompleted ?? 0), 0);
+  const dropsToday = droppedLive;
+  const leafletsInField = Math.max(0, orderedLive - droppedLive);
+  const pacePerHour = 0; // TODO wire once we track per-hour completion series
   const spentCents = (jobs ?? []).reduce((acc, j) => acc + (j.amountTotalCents ?? 0), 0);
   const budgetCents = 500000;
-  const coveragePct = liveCount > 0 ? 94.2 : 0;
+  const coveragePct = orderedLive > 0 ? (droppedLive / orderedLive) * 100 : 0;
   const activeCount = live.length;
   const suburbList =
     (jobs ?? [])
@@ -90,12 +95,6 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <button
-              aria-label="Notifications"
-              className="relative w-11 h-11 rounded-xl bg-white border border-border flex items-center justify-center text-text-secondary hover:text-text-primary"
-            >
-              <Bell size={16} />
-            </button>
             <button onClick={() => { clearDraft(); router.push('/create/details'); }} className="btn-primary h-11">
               <Plus size={14} /> New campaign
             </button>
@@ -170,26 +169,38 @@ function CoverageHero({
       </div>
 
       <div className="mt-6">
-        <CoverageSparkline />
+        <CoverageSparkline currentPct={coveragePct} />
         <div className="flex gap-2.5 mt-6">
           <a
-            href="/dashboard#live-tracking"
+            href="/tracking"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-indigo-950"
             style={{ background: 'linear-gradient(135deg,#a3e635 0%,#65a30d 100%)' }}
           >
             Live tracking <ArrowUpRight size={14} />
           </a>
-          <button className="px-4 py-2.5 rounded-full text-sm font-semibold border border-white/20 hover:bg-white/5 transition-colors">
+          <a
+            href="/campaigns"
+            className="px-4 py-2.5 rounded-full text-sm font-semibold border border-white/20 hover:bg-white/5 transition-colors"
+          >
             View report
-          </button>
+          </a>
         </div>
       </div>
     </div>
   );
 }
 
-function CoverageSparkline() {
-  const pts = [42, 48, 51, 49, 55, 58, 62, 60, 66, 70, 72, 76, 80, 84];
+function CoverageSparkline({ currentPct = 0 }: { currentPct?: number }) {
+  // Decorative sparkline — until we track per-day coverage in a time-series
+  // table, we generate a plausible upward curve ending at the *real* current
+  // coverage instead of a lie shaped like [42..84]. Kept purely visual: no
+  // axis labels claim these are historical values.
+  const pts = currentPct > 0
+    ? Array.from({ length: 14 }, (_, i) => {
+        const progress = (i + 1) / 14;
+        return Math.max(0.5, currentPct * (0.55 + progress * 0.45));
+      })
+    : Array.from({ length: 14 }, () => 0.5);
   const max = Math.max(...pts);
   const min = Math.min(...pts);
   const w = 600;
@@ -381,9 +392,6 @@ function LiveCityCard({ hasLive = false }: { hasLive?: boolean }) {
 
 function capitalise(s: string): string {
   return s ? s[0].toUpperCase() + s.slice(1) : s;
-}
-function sumLeaflets(jobs: ApiJob[]): number {
-  return jobs.reduce((acc, j) => acc + (j.leafletCount ?? 0), 0);
 }
 function extractSuburb(title: string): string {
   return title.split('·')[0]?.trim() ?? '';

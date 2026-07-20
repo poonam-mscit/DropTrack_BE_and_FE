@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -12,11 +12,20 @@ export interface MapDrop {
   dropperUserId?: string;
 }
 
+export interface MapRoute {
+  assignmentId: string;
+  dropperUserId: string;
+  coords: Array<[number, number]>;
+  points: number;
+}
+
 interface Props {
   /** GeoJSON Polygon — drawn as the zone outline. */
   polygon: GeoJSON.Polygon | null;
   /** Existing + new drops. New ones added by parent state will animate in. */
   drops: MapDrop[];
+  /** Strava-style walking paths — one polyline per dropper. */
+  routes?: MapRoute[];
   /** Highlight the most recent drop (set by parent when a socket event lands). */
   newestDropId?: string | null;
 }
@@ -29,10 +38,11 @@ interface Props {
  * - When NEXT_PUBLIC_MAPBOX_TOKEN is missing, falls back to a styled placeholder
  *   that still shows drop coordinates in a list so the page is useful in dev.
  */
-export function LiveMap({ polygon, drops, newestDropId }: Props) {
+export function LiveMap({ polygon, drops, routes, newestDropId }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<unknown>(null);
   const fittedRef = useRef(false);
+  const [mapReady, setMapReady] = useState(false);
 
   // ───────────────────────── init ─────────────────────────
   useEffect(() => {
@@ -52,6 +62,7 @@ export function LiveMap({ polygon, drops, newestDropId }: Props) {
       mapRef.current = map;
 
       map.on('load', () => {
+        setMapReady(true);
         // Zone source
         map.addSource('zone', {
           type: 'geojson',
@@ -68,6 +79,16 @@ export function LiveMap({ polygon, drops, newestDropId }: Props) {
           type: 'line',
           source: 'zone',
           paint: { 'line-color': '#A3E635', 'line-width': 2.5 },
+        });
+
+        // Walking-trail source — one LineString per dropper (below drops)
+        map.addSource('routes', { type: 'geojson', data: emptyFC });
+        map.addLayer({
+          id: 'routes-line',
+          type: 'line',
+          source: 'routes',
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': '#F59E0B', 'line-width': 4, 'line-opacity': 0.85 },
         });
 
         // Drops source
@@ -106,7 +127,7 @@ export function LiveMap({ polygon, drops, newestDropId }: Props) {
 
   // ─────────────────── update polygon ───────────────────
   useEffect(() => {
-    if (!MAPBOX_TOKEN || !mapRef.current || !polygon) return;
+    if (!MAPBOX_TOKEN || !mapRef.current || !polygon || !mapReady) return;
     const map = mapRef.current as MapboxMap;
     const src = map.getSource('zone') as MapboxSource | undefined;
     if (!src) return;
@@ -117,11 +138,29 @@ export function LiveMap({ polygon, drops, newestDropId }: Props) {
       map.fitBounds(bounds, { padding: 60, duration: 0 });
       fittedRef.current = true;
     }
-  }, [polygon]);
+  }, [polygon, mapReady]);
+
+  // ──────────────────── update routes (walking trail) ────
+  useEffect(() => {
+    if (!MAPBOX_TOKEN || !mapRef.current || !mapReady) return;
+    const map = mapRef.current as MapboxMap;
+    const src = map.getSource('routes') as MapboxSource | undefined;
+    if (!src) return;
+    src.setData({
+      type: 'FeatureCollection',
+      features: (routes ?? [])
+        .filter((r) => r.coords && r.coords.length >= 2)
+        .map((r) => ({
+          type: 'Feature',
+          geometry: { type: 'LineString', coordinates: r.coords },
+          properties: { assignmentId: r.assignmentId },
+        })),
+    });
+  }, [routes, mapReady]);
 
   // ──────────────────── update drops ────────────────────
   useEffect(() => {
-    if (!MAPBOX_TOKEN || !mapRef.current) return;
+    if (!MAPBOX_TOKEN || !mapRef.current || !mapReady) return;
     const map = mapRef.current as MapboxMap;
     const src = map.getSource('drops') as MapboxSource | undefined;
     if (!src) return;
@@ -133,7 +172,7 @@ export function LiveMap({ polygon, drops, newestDropId }: Props) {
         properties: { inside: d.insideZone, fresh: d.id === newestDropId },
       })),
     });
-  }, [drops, newestDropId]);
+  }, [drops, newestDropId, mapReady]);
 
   if (!MAPBOX_TOKEN) {
     return (

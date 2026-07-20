@@ -46,7 +46,7 @@ export default function CookiesPage() {
       lastUpdated={LAST_UPDATED}
       intro={
         <>
-          This Cookie Policy explains how DropTrack Pty Ltd uses cookies and similar tracking
+          This Cookie Policy explains how Drop Track Pty Ltd (ABN 39 697 128 920) uses cookies and similar tracking
           technologies on {SITE.url} and the DropTrack application. It complements our{' '}
           <Link className="text-primary hover:underline" href="/privacy">
             Privacy Policy

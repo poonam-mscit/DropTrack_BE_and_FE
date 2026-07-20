@@ -14,14 +14,14 @@ type Nav = NativeStackNavigationProp<RootStackParamList, 'JobDetail'>;
 type Route = RouteProp<RootStackParamList, 'JobDetail'>;
 
 interface Detail {
-  assignment: { id: string; status: string };
+  assignment: { id: string; status: string; targetLeaflets: number | null };
   job: { id: string; code: string; title: string; leafletCount: number; startDate: string | null };
   subZone: { id: string; label: string; targetLeaflets: number } | null;
 }
 const titleOf = (d: Detail | null) => d?.job.title ?? '…';
 const codeOf = (d: Detail | null) => d?.job.code ?? '';
 const targetOf = (d: Detail | null) =>
-  d?.subZone?.targetLeaflets ?? d?.job.leafletCount ?? 0;
+  d?.assignment.targetLeaflets ?? d?.subZone?.targetLeaflets ?? d?.job.leafletCount ?? 0;
 
 export function JobDetailScreen() {
   const nav = useNavigation<Nav>();

@@ -13,10 +13,12 @@ import {
   Share2,
   ShieldCheck,
   Sparkles,
+  Trash2,
 } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
 import { api, type ApiJob } from '@/lib/api';
 import { getSession } from '@/lib/auth';
+import { cloneJobAsDraft } from '@/lib/draft';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -42,6 +44,68 @@ export default function CampaignDetail() {
   const [job, setJob] = useState<ApiJob | null>(null);
   const [map, setMap] = useState<MapData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [rerunning, setRerunning] = useState(false);
+  const [shared, setShared] = useState<'copied' | 'shared' | null>(null);
+
+  async function handleRerun() {
+    if (!job || rerunning) return;
+    setRerunning(true);
+    try {
+      await cloneJobAsDraft(job.id);
+      router.push('/create/details');
+    } catch (e) {
+      setError((e as Error).message);
+      setRerunning(false);
+    }
+  }
+
+  async function handleShare() {
+    if (!job) return;
+    const url = window.location.href;
+    const text = `Follow my "${job.title}" leaflet drop on DropTrack`;
+    try {
+      const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
+      if (typeof nav.share === 'function') {
+        await nav.share({ title: job.title, text, url });
+        setShared('shared');
+      } else {
+        await nav.clipboard.writeText(url);
+        setShared('copied');
+      }
+    } catch {
+      // User aborted the native share sheet — no-op.
+    } finally {
+      setTimeout(() => setShared(null), 2500);
+    }
+  }
+
+  function handleDownloadPdf() {
+    if (!job) return;
+    window.open(`/api/jobs/${job.id}/report/pdf`, '_blank', 'noopener');
+  }
+
+  const [cancelling, setCancelling] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  async function handleCancel() {
+    if (!job) return;
+    setCancelling(true);
+    try {
+      if (job.status === 'draft') {
+        await api.delete(`/api/jobs/${job.id}`);
+      } else {
+        await api.post(`/api/jobs/${job.id}/cancel`);
+      }
+      router.push('/campaigns');
+    } catch (e) {
+      const body = (e as { body?: { message?: unknown } }).body?.message;
+      setError(typeof body === 'string' ? body : (e as Error).message);
+      setCancelling(false);
+      setConfirmCancel(false);
+    }
+  }
+
+  const canCancel =
+    job != null && !['completed', 'cancelled'].includes(job.status);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -211,10 +275,30 @@ export default function CampaignDetail() {
                 <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" /> Live tracking
               </a>
             )}
-            <button className="pill-btn-solid"><FileText size={14} /> Download AI Report</button>
-            <button className="pill-btn-ghost"><RotateCcw size={14} /> Re-run campaign</button>
-            <button className="pill-btn-ghost"><Share2 size={14} /> Share</button>
-            <button className="pill-btn-ghost"><Download size={14} /> Export GPX</button>
+            <button
+              onClick={handleDownloadPdf}
+              disabled={job.status !== 'completed'}
+              className="pill-btn-solid disabled:opacity-50 disabled:cursor-not-allowed"
+              title={job.status === 'completed' ? 'Download PDF report' : 'Available on completion'}
+            >
+              <FileText size={14} /> Download AI Report
+            </button>
+            <button onClick={handleRerun} disabled={rerunning} className="pill-btn-ghost disabled:opacity-50">
+              {rerunning ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+              Re-run campaign
+            </button>
+            <button onClick={handleShare} className="pill-btn-ghost">
+              <Share2 size={14} /> {shared === 'copied' ? 'Link copied!' : shared === 'shared' ? 'Shared' : 'Share'}
+            </button>
+            {canCancel && (
+              <button
+                onClick={() => setConfirmCancel(true)}
+                className="pill-btn-ghost text-red-300 hover:text-red-200"
+                title={job?.status === 'draft' ? 'Delete draft' : 'Cancel campaign'}
+              >
+                <Trash2 size={14} /> {job?.status === 'draft' ? 'Delete draft' : 'Cancel campaign'}
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-5 mt-8 pt-7 border-t border-white/10">
@@ -285,11 +369,16 @@ export default function CampaignDetail() {
               )}
             </p>
             <div className="flex gap-2.5">
-              <button className="btn-primary text-sm" disabled={job.status !== 'completed'}>
+              <button
+                onClick={handleDownloadPdf}
+                disabled={job.status !== 'completed'}
+                className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                title={job.status === 'completed' ? 'Download PDF report' : 'Available on completion'}
+              >
                 <FileDown size={14} /> Download full PDF
               </button>
-              <button className="btn-ghost text-sm">
-                <Share2 size={14} /> Share with my team
+              <button onClick={handleShare} className="btn-ghost text-sm">
+                <Share2 size={14} /> {shared === 'copied' ? 'Link copied!' : 'Share with my team'}
               </button>
             </div>
           </div>
@@ -367,6 +456,54 @@ export default function CampaignDetail() {
           </Panel>
         </div>
       </main>
+      {confirmCancel && job && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => !cancelling && setConfirmCancel(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                <Trash2 size={16} />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-base font-bold">
+                  {job.status === 'draft' ? 'Delete this draft?' : `Cancel "${job.title}"?`}
+                </h2>
+                <p className="text-sm text-text-secondary mt-2 leading-relaxed">
+                  {job.status === 'draft' ? (
+                    <>Draft removed permanently. Nothing was charged.</>
+                  ) : (
+                    <>
+                      Any droppers assigned will stop tracking immediately. If the campaign was paid, our team processes a refund within 5 business days.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={() => setConfirmCancel(false)}
+                className="btn-ghost"
+                disabled={cancelling}
+              >
+                Keep it
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 disabled:opacity-50"
+              >
+                {cancelling ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                {job.status === 'draft' ? 'Delete draft' : 'Cancel campaign'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

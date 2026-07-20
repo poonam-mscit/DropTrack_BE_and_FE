@@ -36,3 +36,9 @@ drizzle/
 ios/Pods/
 android/.gradle/
 android/build/
+
+# secrets — never commit
+*.pem
+*.p8
+AuthKey_*.p8
+droptrack-portal*.pem

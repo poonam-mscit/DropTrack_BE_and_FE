@@ -153,10 +153,14 @@ export function LoginScreen() {
               Sign in
             </GradientButton>
 
-            <Text style={s.divider}>or</Text>
-            <Pressable onPress={useDemoAccount} style={s.btnGhost}>
-              <Text style={s.btnGhostText}>Use demo account (dev)</Text>
-            </Pressable>
+            {__DEV__ && (
+              <>
+                <Text style={s.divider}>or</Text>
+                <Pressable onPress={useDemoAccount} style={s.btnGhost}>
+                  <Text style={s.btnGhostText}>Use demo account (dev)</Text>
+                </Pressable>
+              </>
+            )}
 
             <View style={s.registerRow}>
               <Text style={s.registerText}>New here? </Text>

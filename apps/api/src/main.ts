@@ -20,6 +20,7 @@ function allowedOrigins(): string[] {
   if (process.env.NODE_ENV === 'production') {
     return [
       'https://portal.droptrack.com.au',
+      'https://dropper.droptrack.com.au',
       'https://droptrack.com.au',
       'https://www.droptrack.com.au',
     ];

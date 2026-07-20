@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { setSession, type Role } from '@/lib/auth';
 import { Logo } from '@/components/Logo';
+import { PasswordInput } from '@/components/PasswordInput';
 
 interface DevUser {
   id: string;
@@ -79,7 +80,7 @@ interface ChallengeResponse {
 const ROLE_HOME: Record<Role, string> = {
   client: '/dashboard',
   admin: '/admin/jobs',
-  dropper: '/dashboard',
+  dropper: '/dropper',
 };
 
 export default function Login() {
@@ -246,12 +247,10 @@ export default function Login() {
             </label>
             <label className="text-xs font-semibold text-text-secondary">
               Password
-              <input
-                type="password"
+              <PasswordInput
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full border border-border rounded-xl px-4 py-3 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary"
                 autoComplete="current-password"
               />
             </label>
@@ -296,13 +295,11 @@ export default function Login() {
             </p>
             <label className="text-xs font-semibold text-text-secondary">
               New password
-              <input
-                type="password"
+              <PasswordInput
                 required
                 minLength={8}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-1 w-full border border-border rounded-xl px-4 py-3 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary"
                 autoComplete="new-password"
               />
             </label>

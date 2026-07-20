@@ -17,6 +17,7 @@ interface AssignmentSummary {
   assignment: {
     id: string;
     dropsCompleted: number;
+    targetLeaflets: number | null;
     distanceWalkedM?: number | null;
     startedAt?: string | null;
     completedAt?: string | null;
@@ -38,7 +39,9 @@ export function SummaryScreen() {
       .catch(() => null);
   }, [params.assignmentId]);
 
-  const target = data ? (data.subZone?.targetLeaflets ?? data.job.leafletCount) : 0;
+  const target = data
+    ? (data.assignment.targetLeaflets ?? data.subZone?.targetLeaflets ?? data.job.leafletCount)
+    : 0;
   const dropsCompleted = data?.assignment.dropsCompleted ?? 0;
   const coverage = target ? Math.round((dropsCompleted / target) * 100) : 0;
   const distanceKm = data?.assignment.distanceWalkedM ? data.assignment.distanceWalkedM / 1000 : null;

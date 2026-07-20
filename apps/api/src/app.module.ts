@@ -9,6 +9,7 @@ import { DbModule } from './db/db.module.js';
 import { InvitesModule } from './invites/invites.module.js';
 import { HealthController } from './health/health.controller.js';
 import { JobsModule } from './jobs/jobs.module.js';
+import { NotificationsModule } from './notifications/notifications.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { RealtimeModule } from './realtime/realtime.module.js';
 import { SettingsModule } from './settings/settings.module.js';
@@ -32,6 +33,7 @@ import { UsersModule } from './users/users.module.js';
     SettingsModule,
     UsersModule,
     InvitesModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
 })

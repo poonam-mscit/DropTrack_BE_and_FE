@@ -75,15 +75,6 @@ export default function AdminUsersPage() {
     }
   }
 
-  async function setRole(id: string, role: Role) {
-    try {
-      await api.patch(`/api/admin/users/${id}/role`, { role });
-      void load();
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  }
-
   async function setStatus(id: string, status: Status) {
     try {
       await api.patch(`/api/admin/users/${id}/status`, { status });
@@ -157,17 +148,11 @@ export default function AdminUsersPage() {
                     <tr key={u.id} className="border-t border-border">
                       <td className="px-5 py-3 font-medium">{u.email}</td>
                       <td className="px-3 py-3">
-                        <select
-                          value={u.role}
-                          onChange={(e) => setRole(u.id, e.target.value as Role)}
-                          className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border cursor-pointer ${ROLE_TONE[u.role]}`}
+                        <span
+                          className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border inline-block ${ROLE_TONE[u.role]}`}
                         >
-                          {(['client', 'dropper', 'admin'] as Role[]).map((r) => (
-                            <option key={r} value={r}>
-                              {ROLE_LABEL[r]}
-                            </option>
-                          ))}
-                        </select>
+                          {ROLE_LABEL[u.role]}
+                        </span>
                       </td>
                       <td className="px-3 py-3">
                         {u.status === 'active' ? (

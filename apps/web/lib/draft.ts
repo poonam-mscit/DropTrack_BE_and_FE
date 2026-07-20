@@ -91,6 +91,40 @@ export async function loadDraftFromServer(jobId: string): Promise<Partial<JobDra
   return draft;
 }
 
+/**
+ * Copy an existing job (any status) into a fresh draft — used by the
+ * "Re-run campaign" button. Strips the id, dates, and status so the user
+ * lands on the wizard as if they started from scratch, but with the same
+ * zone, title, campaign type, leaflet count and delivery preferences.
+ */
+export async function cloneJobAsDraft(jobId: string): Promise<Partial<JobDraft>> {
+  const { api } = await import('./api');
+  const [jobRes, mapRes] = await Promise.all([
+    api.get<{ data: ApiJobForEdit } | ApiJobForEdit>(`/api/jobs/${jobId}`),
+    api
+      .get<{ zone: { polygon: DraftPolygon | null } | null }>(`/api/jobs/${jobId}/map`)
+      .catch(() => null),
+  ]);
+  const job = (jobRes as { data?: ApiJobForEdit }).data ?? (jobRes as ApiJobForEdit);
+  const draft: Partial<JobDraft> = {
+    // No `id` — this becomes a new draft when the wizard saves.
+    title: job.title.replace(/\s*\(re-run\)$/i, '') + ' (re-run)',
+    campaignType: job.campaignType as JobDraft['campaignType'],
+    leafletCount: job.leafletCount,
+    leafletSize: (job.leafletSize ?? 'dl') as JobDraft['leafletSize'],
+    // Dates cleared — the wizard's Step 1 asks for new ones.
+    startDate: '',
+    deadline: '',
+    skipNoJunkMail: job.skipNoJunkMail ?? true,
+    skipApartments: job.skipApartments ?? false,
+    specialInstructions: job.specialInstructions ?? undefined,
+    zone: mapRes?.zone?.polygon ?? undefined,
+  };
+  clearDraft();
+  saveDraft(draft);
+  return draft;
+}
+
 /** Minimum subset of the API job row needed to seed the editor. */
 interface ApiJobForEdit {
   id: string;

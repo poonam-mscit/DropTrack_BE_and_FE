@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '@/api/client';
 import { useAuth } from '@/auth/AuthContext';
+import { getCachedProfile, setCachedProfile } from '@/auth/storage';
 import { BrandHeader } from '@/components/BrandHeader';
 import { colors, radii, spacing } from '@/theme';
 import type { RootStackParamList } from '@/nav/types';
@@ -17,6 +18,7 @@ interface AssignmentRow {
     jobId: string;
     status: 'pending' | 'started' | 'paused' | 'completed' | 'abandoned';
     dropsCompleted: number;
+    targetLeaflets: number | null;
     startedAt: string | null;
     pausedTotalSeconds?: number | null;
   };
@@ -32,9 +34,9 @@ interface AssignmentRow {
   subZone: { id: string; label: string; targetLeaflets: number } | null;
 }
 
-/** Sub-zone target if carved, otherwise the whole-job count. */
+/** Prefer per-assignment target, then sub-zone, then the whole-job count. */
 function targetOf(r: AssignmentRow): number {
-  return r.subZone?.targetLeaflets ?? r.job.leafletCount ?? 0;
+  return r.assignment.targetLeaflets ?? r.subZone?.targetLeaflets ?? r.job.leafletCount ?? 0;
 }
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Jobs'>;
@@ -64,10 +66,37 @@ export function JobsScreen() {
     }
   }, []);
 
-  // Profile only needs to load once per session — name doesn't change on refresh.
+  // Hydrate greeting from the cached profile immediately so cold-launch shows
+  // the real name instead of an email-derived guess. Then refresh from the
+  // server in the background and re-cache.
   useEffect(() => {
-    void api.get<MeProfile>('/api/me/profile').then(setProfile).catch(() => null);
-  }, []);
+    (async () => {
+      const cached = await getCachedProfile();
+      if (cached) {
+        setProfile({
+          user: { email: session?.email ?? '' },
+          dropper: {
+            employeeId: cached.employeeId ?? '',
+            firstName: cached.firstName,
+            lastName: cached.lastName,
+          },
+        });
+      }
+      try {
+        const fresh = await api.get<MeProfile>('/api/me/profile');
+        setProfile(fresh);
+        if (fresh.dropper) {
+          await setCachedProfile({
+            firstName: fresh.dropper.firstName,
+            lastName: fresh.dropper.lastName,
+            employeeId: fresh.dropper.employeeId,
+          });
+        }
+      } catch {
+        // network blip — the cached name is still on screen.
+      }
+    })();
+  }, [session?.email]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
   useEffect(() => { void load(); }, [load]);
@@ -86,13 +115,25 @@ export function JobsScreen() {
     () => rows?.find((r) => r.assignment.status === 'started' || r.assignment.status === 'paused'),
     [rows],
   );
-  const todays = useMemo(
+  // Overdue = pending assignments whose startDate is BEFORE today (and not the
+  // in-progress row). Surface these first so droppers don't lose old work.
+  const overdue = useMemo(
     () =>
       rows?.filter(
         (r) =>
           r.assignment.status === 'pending' &&
           r.job.startDate &&
-          r.job.startDate <= today &&
+          r.job.startDate < today &&
+          r.assignment.id !== active?.assignment.id,
+      ) ?? [],
+    [rows, active, today],
+  );
+  const todays = useMemo(
+    () =>
+      rows?.filter(
+        (r) =>
+          r.assignment.status === 'pending' &&
+          r.job.startDate === today &&
           r.assignment.id !== active?.assignment.id,
       ) ?? [],
     [rows, active, today],
@@ -115,7 +156,7 @@ export function JobsScreen() {
   // ── Aggregates ──────────────────────────────────────────────────
   // Prefer the real dropper name; fall back to email-derived first name only
   // while the profile fetch is in-flight on first launch.
-  const firstName = capitalise(profile?.dropper?.firstName ?? (session?.email ?? '').split('.')[0] ?? 'mate');
+  const firstName = capitalise(profile?.dropper?.firstName ?? 'there');
   const lastName = capitalise(profile?.dropper?.lastName ?? '');
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
   const initials = ((firstName[0] ?? 'D') + (lastName[0] ?? '')).toUpperCase();
@@ -152,6 +193,41 @@ export function JobsScreen() {
             <Text style={s.statSub}>hrs</Text>
           </View>
         </View>
+
+        {/* OVERDUE — surface pending jobs whose start date has passed */}
+        {overdue.length > 0 && (
+          <>
+            <Text style={[s.sectionLabel, { color: '#F87171' }]}>
+              Overdue · {overdue.length}
+            </Text>
+            {overdue.map((r) => (
+              <Pressable
+                key={r.assignment.id}
+                onPress={() => nav.navigate('JobDetail', { assignmentId: r.assignment.id })}
+              >
+                <View style={[s.card, { borderColor: 'rgba(248,113,113,0.35)' }]}>
+                  <View style={s.cardHeadRow}>
+                    <View style={{ flex: 1, paddingRight: spacing.md }}>
+                      <View style={[s.pillLime, { backgroundColor: 'rgba(248,113,113,0.15)' }]}>
+                        <Text style={[s.pillLimeText, { color: '#FCA5A5' }]}>OVERDUE</Text>
+                      </View>
+                      <Text style={s.cardTitle} numberOfLines={2}>
+                        {r.job.title}
+                      </Text>
+                      <Text style={s.cardSub}>
+                        {r.subZone?.label ?? 'Whole zone'} · was due {r.job.startDate}
+                      </Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={s.statLabel}>Target</Text>
+                      <Text style={s.cardValue}>{targetOf(r)}</Text>
+                    </View>
+                  </View>
+                </View>
+              </Pressable>
+            ))}
+          </>
+        )}
 
         {/* TODAY */}
         <Text style={s.sectionLabel}>Today · {humanDate(new Date())}</Text>

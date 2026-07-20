@@ -17,7 +17,19 @@ export default function AdminQueue() {
     if (s.role !== 'admin') return router.replace('/dashboard');
     api
       .get<{ data: ApiJob[] }>('/api/jobs')
-      .then((r) => setJobs(r.data.filter((j) => j.status === 'paid_unassigned')))
+      .then((r) =>
+        setJobs(
+          r.data.filter((j) => {
+            if (j.status === 'paid_unassigned') return true;
+            // Partially-assigned jobs still need droppers.
+            if (j.status === 'assigned') {
+              const remaining = j.leafletCount - (j.assignedLeaflets ?? 0);
+              return remaining > 0;
+            }
+            return false;
+          }),
+        ),
+      )
       .catch(console.error);
   }, [router, refreshKey]);
 
@@ -98,7 +110,21 @@ export default function AdminQueue() {
                     </td>
                     <td className="py-4 px-5 capitalize">{j.campaignType.replace('_', ' ')}</td>
                     <td className="py-4 px-5 text-right tabular-nums font-semibold">
-                      {j.leafletCount.toLocaleString()}
+                      {(() => {
+                        const assigned = j.assignedLeaflets ?? 0;
+                        const remaining = j.leafletCount - assigned;
+                        if (assigned > 0) {
+                          return (
+                            <>
+                              <div>{remaining.toLocaleString()}</div>
+                              <div className="text-[10px] font-normal text-text-muted mt-0.5">
+                                remaining of {j.leafletCount.toLocaleString()}
+                              </div>
+                            </>
+                          );
+                        }
+                        return j.leafletCount.toLocaleString();
+                      })()}
                     </td>
                     <td className="py-4 px-5 text-right tabular-nums font-semibold">
                       {j.amountTotalCents

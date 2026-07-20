@@ -19,7 +19,7 @@ export default function PrivacyPage() {
       lastUpdated={LAST_UPDATED}
       intro={
         <>
-          DropTrack Pty Ltd ("DropTrack", "we", "our", "us") respects your privacy. This Privacy
+          Drop Track Pty Ltd (ABN 39 697 128 920, trading as "DropTrack", "we", "our", "us") respects your privacy. This Privacy
           Policy explains how we collect, use, store, disclose and protect your personal information
           when you use our website ({SITE.url}), our applications, or our services. We comply with
           the <em>Privacy Act 1988</em> (Cth) and the Australian Privacy Principles (APPs).

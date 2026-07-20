@@ -138,4 +138,8 @@ export interface ApiJob {
   paidAt: string | null;
   paymentStatus: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'partial_refund' | null;
   amountTotalCents: number | null;
+  /** Sum of target_leaflets across all assignments on this job. */
+  assignedLeaflets?: number;
+  /** Sum of drops_completed across all assignments on this job. */
+  dropsCompleted?: number;
 }

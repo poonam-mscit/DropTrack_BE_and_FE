@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, CalendarPlus, FileDown, Radio, ShieldAlert, Sparkles, TrendingUp, X } from 'lucide-react';
 import { AdminSidebar } from '@/components/AdminSidebar';
-import { LiveMap, type MapDrop } from '@/components/LiveMap';
+import { LiveMap, type MapDrop, type MapRoute } from '@/components/LiveMap';
 import { api, type ApiJob } from '@/lib/api';
 import { getSession } from '@/lib/auth';
 import {
@@ -17,6 +17,7 @@ import {
 interface JobMap {
   zone: { polygon: GeoJSON.Polygon; areaSqm: number; estimatedLetterboxes: number | null } | null;
   drops: MapDrop[];
+  routes?: MapRoute[];
 }
 
 interface AssignmentRow {
@@ -283,6 +284,7 @@ export default function AdminLiveTrack() {
           <LiveMap
             polygon={mapData?.zone?.polygon ?? null}
             drops={mapData?.drops ?? []}
+            routes={mapData?.routes ?? []}
             newestDropId={newestDropId}
           />
         </div>

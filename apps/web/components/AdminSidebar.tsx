@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import {
   BarChart3,
+  Bell,
   Briefcase,
   Building2,
   DollarSign,
@@ -15,11 +16,13 @@ import {
   Wallet,
 } from 'lucide-react';
 import { clearSession } from '@/lib/auth';
+import { useUnreadCount } from '@/lib/notifications';
 
-type Active = 'dashboard' | 'jobs' | 'queue' | 'map' | 'droppers' | 'clients' | 'users' | 'fraud' | 'finance' | 'reports' | 'pricing';
+type Active = 'dashboard' | 'jobs' | 'queue' | 'map' | 'droppers' | 'clients' | 'users' | 'fraud' | 'finance' | 'reports' | 'pricing' | 'notifications';
 
 export function AdminSidebar({ active, queueCount }: { active?: Active; queueCount?: number }) {
   const router = useRouter();
+  const unread = useUnreadCount();
   function signOut() {
     clearSession();
     router.push('/login');
@@ -51,19 +54,27 @@ export function AdminSidebar({ active, queueCount }: { active?: Active; queueCou
         Assignment Queue
       </NavLink>
       <NavLink href="#" icon={<Map size={16} />} active={active === 'map'}>Master Map</NavLink>
+      <NavLink
+        href="/admin/notifications"
+        icon={<Bell size={16} />}
+        active={active === 'notifications'}
+        count={unread ?? undefined}
+      >
+        Notifications
+      </NavLink>
 
       <NavLabel>People</NavLabel>
       <NavLink href="/admin/droppers" icon={<Users size={16} />} active={active === 'droppers'}>
         Droppers
       </NavLink>
-      <NavLink href="#" icon={<Building2 size={16} />} active={active === 'clients'}>Clients</NavLink>
+      <NavLink href="/admin/clients" icon={<Building2 size={16} />} active={active === 'clients'}>Clients</NavLink>
       <NavLink href="/admin/users" icon={<KeyRound size={16} />} active={active === 'users'}>
         Users &amp; access
       </NavLink>
 
       <NavLabel>Trust &amp; Money</NavLabel>
       <NavLink href="#" icon={<ShieldCheck size={16} />} active={active === 'fraud'}>Fraud Shield</NavLink>
-      <NavLink href="#" icon={<Wallet size={16} />} active={active === 'finance'}>Finance</NavLink>
+      <NavLink href="/admin/invoices" icon={<Wallet size={16} />} active={active === 'finance'}>Finance</NavLink>
       <NavLink href="/admin/pricing" icon={<DollarSign size={16} />} active={active === 'pricing'}>Pricing</NavLink>
       <NavLink href="#" icon={<BarChart3 size={16} />} active={active === 'reports'}>Reports</NavLink>
 
