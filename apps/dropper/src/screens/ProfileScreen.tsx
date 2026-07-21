@@ -83,10 +83,139 @@ const BLANK: FormState = {
   wwccNumber: '', wwccExpiresAt: '', primaryZone: '',
 };
 
+function restrictName(v: string): string {
+  return v.replace(/[^A-Za-z\s'\-]/g, '');
+}
+
+function restrictPhone(v: string): string {
+  const clean = v.replace(/[^\d\s]/g, '');
+  return clean.slice(0, 14);
+}
+
+function restrictDigits(v: string, maxLen?: number): string {
+  const clean = v.replace(/\D/g, '');
+  return maxLen ? clean.slice(0, maxLen) : clean;
+}
+
+function restrictBsb(v: string): string {
+  const clean = v.replace(/[^\d\-]/g, '');
+  return clean.slice(0, 7);
+}
+
+function validateForm(form: FormState, profile: MeProfile | null): Record<string, string> {
+  const errs: Record<string, string> = {};
+
+  if (!form.firstName.trim()) {
+    errs.firstName = 'First name is required';
+  } else if (!/^[A-Za-z\s'\-]+$/.test(form.firstName.trim())) {
+    errs.firstName = 'Letters, spaces, hyphens, and apostrophes only';
+  }
+
+  if (!form.lastName.trim()) {
+    errs.lastName = 'Last name is required';
+  } else if (!/^[A-Za-z\s'\-]+$/.test(form.lastName.trim())) {
+    errs.lastName = 'Letters, spaces, hyphens, and apostrophes only';
+  }
+
+  if (!form.dob) {
+    errs.dob = 'Date of birth is required';
+  } else {
+    const dobDate = new Date(form.dob);
+    const today = new Date();
+    if (isNaN(dobDate.getTime())) {
+      errs.dob = 'Invalid date format (YYYY-MM-DD)';
+    } else if (dobDate >= today) {
+      errs.dob = 'Date of birth must be in the past';
+    } else {
+      const ageYears = (today.getTime() - dobDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+      if (ageYears < 14) {
+        errs.dob = 'Must be at least 14 years old';
+      }
+    }
+  }
+
+  const mobileDigits = form.mobile.replace(/\D/g, '');
+  if (!form.mobile.trim()) {
+    errs.mobile = 'Mobile number is required';
+  } else if (mobileDigits.length !== 10) {
+    errs.mobile = 'Mobile number must be 10 digits (e.g. 0412 345 678)';
+  }
+
+  if (!form.addressLine1.trim()) {
+    errs.addressLine1 = 'Street address is required';
+  }
+
+  if (!form.suburb.trim()) {
+    errs.suburb = 'Suburb is required';
+  } else if (!/^[A-Za-z\s'\-]+$/.test(form.suburb.trim())) {
+    errs.suburb = 'Letters, spaces, hyphens, and apostrophes only';
+  }
+
+  if (!form.state) {
+    errs.state = 'State is required';
+  }
+
+  const postcodeDigits = form.postcode.replace(/\D/g, '');
+  if (!form.postcode.trim()) {
+    errs.postcode = 'Postcode is required';
+  } else if (postcodeDigits.length !== 4) {
+    errs.postcode = 'Postcode must be 4 digits';
+  }
+
+  if (!form.emergencyContactName.trim()) {
+    errs.emergencyContactName = 'Emergency contact name is required';
+  } else if (!/^[A-Za-z\s'\-]+$/.test(form.emergencyContactName.trim())) {
+    errs.emergencyContactName = 'Letters, spaces, hyphens, and apostrophes only';
+  }
+
+  const emergencyDigits = form.emergencyContactPhone.replace(/\D/g, '');
+  if (!form.emergencyContactPhone.trim()) {
+    errs.emergencyContactPhone = 'Emergency contact phone is required';
+  } else if (emergencyDigits.length < 8 || emergencyDigits.length > 11) {
+    errs.emergencyContactPhone = 'Must be a valid phone number (8-11 digits)';
+  }
+
+  const tfnDigits = form.tfn.replace(/\D/g, '');
+  const hasExistingTfn = !!profile?.dropper?.tfnLast4;
+  if (!hasExistingTfn && !form.tfn.trim()) {
+    errs.tfn = 'TFN is required';
+  } else if (form.tfn.trim() && (tfnDigits.length < 8 || tfnDigits.length > 9)) {
+    errs.tfn = 'TFN must be 8 or 9 digits';
+  }
+
+  if (form.bankBsb.trim()) {
+    const bsbDigits = form.bankBsb.replace(/\D/g, '');
+    if (bsbDigits.length !== 6) {
+      errs.bankBsb = 'BSB must be 6 digits (e.g. 012-345)';
+    }
+  }
+
+  if (form.bankAccountNumber.trim()) {
+    const accDigits = form.bankAccountNumber.replace(/\D/g, '');
+    if (accDigits.length < 4 || accDigits.length > 12) {
+      errs.bankAccountNumber = 'Account number must be 4 to 12 digits';
+    }
+  }
+
+  if (form.wwccExpiresAt.trim()) {
+    const expiryDate = new Date(form.wwccExpiresAt);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (isNaN(expiryDate.getTime())) {
+      errs.wwccExpiresAt = 'Invalid expiry date format (YYYY-MM-DD)';
+    } else if (expiryDate < today) {
+      errs.wwccExpiresAt = 'WWCC expiry date must be in the future';
+    }
+  }
+
+  return errs;
+}
+
 export function ProfileScreen() {
   const { session, signOut } = useAuth();
   const [profile, setProfile] = useState<MeProfile | null>(null);
   const [form, setForm] = useState<FormState>(BLANK);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedTick, setSavedTick] = useState(false);
@@ -115,6 +244,7 @@ export function ProfileScreen() {
         wwccExpiresAt: p.dropper?.wwccExpiresAt ?? '',
         primaryZone: p.dropper?.primaryZone ?? '',
       });
+      setFieldErrors({});
     } catch (err) {
       setError((err as Error).message);
     }
@@ -124,11 +254,28 @@ export function ProfileScreen() {
 
   function field<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
+    if (fieldErrors[key]) {
+      setFieldErrors((errs) => {
+        const next = { ...errs };
+        delete next[key];
+        return next;
+      });
+    }
   }
 
   async function save() {
     setSaving(true);
     setError(null);
+
+    const errs = validateForm(form, profile);
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      setError('Please fix the highlighted errors before saving.');
+      setSaving(false);
+      return;
+    }
+    setFieldErrors({});
+
     try {
       // Mobile lives on users; everything else on dropper_profiles.
       if (form.mobile !== (profile?.user.mobile ?? '')) {
@@ -176,8 +323,20 @@ export function ProfileScreen() {
     return (
       <SafeAreaView style={s.safe} edges={['top']}>
         <BrandHeader />
-        <View style={[s.center, { flex: 1 }]}>
-          <ActivityIndicator color={colors.accent} />
+        <View style={[s.center, { flex: 1, padding: spacing.xl }]}>
+          {error ? (
+            <View style={[s.errorBox, { width: '100%' }]}>
+              <Text style={[s.errorText, { fontWeight: '700', marginBottom: 4 }]}>
+                Failed to load profile
+              </Text>
+              <Text style={s.errorText}>{error}</Text>
+              <GradientButton onPress={load} style={{ marginTop: spacing.lg }}>
+                Retry
+              </GradientButton>
+            </View>
+          ) : (
+            <ActivityIndicator color={colors.accent} />
+          )}
         </View>
       </SafeAreaView>
     );
@@ -234,8 +393,8 @@ export function ProfileScreen() {
           {/* Personal */}
           <Section title="Personal details" icon="person-outline" done={progress.flags.personal}>
             <Row two>
-              <Field label="First name" value={form.firstName} onChangeText={(v) => field('firstName', v)} />
-              <Field label="Last name" value={form.lastName} onChangeText={(v) => field('lastName', v)} />
+              <Field label="First name" value={form.firstName} onChangeText={(v) => field('firstName', restrictName(v))} error={fieldErrors.firstName} />
+              <Field label="Last name" value={form.lastName} onChangeText={(v) => field('lastName', restrictName(v))} error={fieldErrors.lastName} />
             </Row>
             <Field
               label="Date of birth"
@@ -244,13 +403,15 @@ export function ProfileScreen() {
               onChangeText={(v) => field('dob', v)}
               maxLength={10}
               keyboardType="numbers-and-punctuation"
+              error={fieldErrors.dob}
             />
             <Field
               label="Mobile"
               value={form.mobile}
               placeholder="04xx xxx xxx"
-              onChangeText={(v) => field('mobile', v)}
+              onChangeText={(v) => field('mobile', restrictPhone(v))}
               keyboardType="phone-pad"
+              error={fieldErrors.mobile}
             />
           </Section>
 
@@ -261,19 +422,22 @@ export function ProfileScreen() {
               value={form.addressLine1}
               placeholder="12 King St"
               onChangeText={(v) => field('addressLine1', v)}
+              error={fieldErrors.addressLine1}
             />
             <Row two>
               <Field
                 label="Suburb"
                 value={form.suburb}
-                onChangeText={(v) => field('suburb', v)}
+                onChangeText={(v) => field('suburb', restrictName(v))}
+                error={fieldErrors.suburb}
               />
               <Field
                 label="Postcode"
                 value={form.postcode}
-                onChangeText={(v) => field('postcode', v)}
+                onChangeText={(v) => field('postcode', restrictDigits(v, 4))}
                 keyboardType="number-pad"
                 maxLength={4}
+                error={fieldErrors.postcode}
               />
             </Row>
             <SelectField
@@ -281,6 +445,7 @@ export function ProfileScreen() {
               value={form.state}
               options={AU_STATES.map((x) => ({ value: x, label: x }))}
               onChange={(v) => field('state', v as AuState)}
+              error={fieldErrors.state}
             />
             <Field
               label="Primary work zone"
@@ -295,14 +460,16 @@ export function ProfileScreen() {
             <Field
               label="Name"
               value={form.emergencyContactName}
-              onChangeText={(v) => field('emergencyContactName', v)}
+              onChangeText={(v) => field('emergencyContactName', restrictName(v))}
+              error={fieldErrors.emergencyContactName}
             />
             <Field
               label="Phone"
               value={form.emergencyContactPhone}
-              onChangeText={(v) => field('emergencyContactPhone', v)}
+              onChangeText={(v) => field('emergencyContactPhone', restrictPhone(v))}
               placeholder="0412 345 678"
               keyboardType="phone-pad"
+              error={fieldErrors.emergencyContactPhone}
             />
           </Section>
 
@@ -311,11 +478,12 @@ export function ProfileScreen() {
             <Field
               label={profile.dropper?.tfnLast4 ? `TFN  •••• ${profile.dropper.tfnLast4}` : 'TFN'}
               value={form.tfn}
-              onChangeText={(v) => field('tfn', v)}
+              onChangeText={(v) => field('tfn', restrictDigits(v, 9))}
               placeholder={profile.dropper?.tfnLast4 ? 'Leave blank to keep existing' : '000 000 000'}
               keyboardType="number-pad"
               maxLength={11}
               secureTextEntry={!!profile.dropper?.tfnLast4 && !form.tfn}
+              error={fieldErrors.tfn}
             />
           </Section>
 
@@ -340,16 +508,18 @@ export function ProfileScreen() {
               <Field
                 label="BSB"
                 value={form.bankBsb}
-                onChangeText={(v) => field('bankBsb', v)}
+                onChangeText={(v) => field('bankBsb', restrictBsb(v))}
                 placeholder="000-000"
                 keyboardType="number-pad"
+                error={fieldErrors.bankBsb}
               />
               <Field
                 label={profile.dropper?.bankAccountLast4 ? `Acc •••• ${profile.dropper.bankAccountLast4}` : 'Account'}
                 value={form.bankAccountNumber}
-                onChangeText={(v) => field('bankAccountNumber', v)}
+                onChangeText={(v) => field('bankAccountNumber', restrictDigits(v, 12))}
                 placeholder={profile.dropper?.bankAccountLast4 ? 'Leave blank to keep' : '0000 0000'}
                 keyboardType="number-pad"
+                error={fieldErrors.bankAccountNumber}
               />
             </Row>
           </Section>
@@ -369,6 +539,7 @@ export function ProfileScreen() {
               placeholder="YYYY-MM-DD"
               keyboardType="numbers-and-punctuation"
               maxLength={10}
+              error={fieldErrors.wwccExpiresAt}
             />
           </Section>
 
@@ -438,6 +609,7 @@ function Field({
   secureTextEntry,
   keyboardType,
   maxLength,
+  error,
 }: {
   label: string;
   value: string;
@@ -446,9 +618,10 @@ function Field({
   secureTextEntry?: boolean;
   keyboardType?: 'default' | 'number-pad' | 'phone-pad' | 'numbers-and-punctuation';
   maxLength?: number;
+  error?: string;
 }) {
   return (
-    <View style={{ marginBottom: spacing.md }}>
+    <View style={{ marginBottom: spacing.md, flex: 1 }}>
       <Text style={s.label}>{label}</Text>
       <TextInput
         value={value}
@@ -459,8 +632,9 @@ function Field({
         keyboardType={keyboardType}
         maxLength={maxLength}
         autoCapitalize="words"
-        style={s.input}
+        style={[s.input, !!error && s.inputError]}
       />
+      {!!error && <Text style={s.fieldErrorText}>{error}</Text>}
     </View>
   );
 }
@@ -470,11 +644,13 @@ function SelectField({
   value,
   options,
   onChange,
+  error,
 }: {
   label: string;
   value: string;
   options: { value: string; label: string }[];
   onChange: (v: string) => void;
+  error?: string;
 }) {
   return (
     <View style={{ marginBottom: spacing.md }}>
@@ -486,13 +662,14 @@ function SelectField({
             <Pressable
               key={o.value}
               onPress={() => onChange(selected ? '' : o.value)}
-              style={[s.chip, selected && s.chipSelected]}
+              style={[s.chip, selected && s.chipSelected, !!error && s.chipError]}
             >
               <Text style={[s.chipText, selected && s.chipTextSelected]}>{o.label}</Text>
             </Pressable>
           );
         })}
       </View>
+      {!!error && <Text style={s.fieldErrorText}>{error}</Text>}
     </View>
   );
 }
@@ -601,6 +778,17 @@ const s = StyleSheet.create({
     paddingVertical: 11,
     color: colors.text,
     fontSize: 14,
+  },
+  inputError: {
+    borderColor: 'rgba(239,68,68,0.6)',
+  },
+  chipError: {
+    borderColor: 'rgba(239,68,68,0.6)',
+  },
+  fieldErrorText: {
+    color: '#EF4444',
+    fontSize: 11,
+    marginTop: 4,
   },
   row: { flexDirection: 'row' },
 
