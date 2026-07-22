@@ -101,23 +101,59 @@ export default function DropperJobDetail() {
         </section>
       )}
 
-      {isActive ? (
-        <Link
-          href={`/dropper/active/${row.assignment.id}`}
-          className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-emerald-400 text-emerald-950 font-bold py-4 active:bg-emerald-500"
-        >
-          <Play size={16} /> Resume drop
-        </Link>
-      ) : (
-        <button
-          onClick={startJob}
-          disabled={busy || row.assignment.status === 'completed'}
-          className="mt-6 w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-400 text-emerald-950 font-bold py-4 active:bg-emerald-500 disabled:opacity-40"
-        >
-          {busy ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-          {row.assignment.status === 'completed' ? 'Completed' : 'Start drop'}
-        </button>
-      )}
+      {(() => {
+        const st = row.assignment.status;
+        if (st === 'completed') {
+          return (
+            <div className="mt-6 rounded-2xl bg-emerald-400/10 border border-emerald-400/30 p-4 text-center">
+              <p className="text-sm font-semibold text-emerald-200">✓ Drop completed</p>
+              <Link
+                href={`/dropper/recap/${row.assignment.id}`}
+                className="inline-block mt-3 text-xs font-semibold text-emerald-300 hover:text-emerald-200 underline"
+              >
+                View recap →
+              </Link>
+            </div>
+          );
+        }
+        if (st === 'abandoned') {
+          return (
+            <div className="mt-6 rounded-2xl bg-red-500/10 border border-red-500/30 p-4 text-center">
+              <p className="text-sm font-semibold text-red-200">This campaign was cancelled</p>
+              <p className="text-xs text-red-200/80 mt-2 leading-relaxed">
+                The client cancelled the job. Any drops you already made were recorded — you don't
+                need to do anything else.
+              </p>
+              <Link
+                href="/dropper"
+                className="inline-block mt-3 text-xs font-semibold text-white/80 hover:text-white underline"
+              >
+                Back to your jobs →
+              </Link>
+            </div>
+          );
+        }
+        if (isActive) {
+          return (
+            <Link
+              href={`/dropper/active/${row.assignment.id}`}
+              className="mt-6 flex items-center justify-center gap-2 rounded-2xl bg-emerald-400 text-emerald-950 font-bold py-4 active:bg-emerald-500"
+            >
+              <Play size={16} /> Resume drop
+            </Link>
+          );
+        }
+        return (
+          <button
+            onClick={startJob}
+            disabled={busy}
+            className="mt-6 w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-400 text-emerald-950 font-bold py-4 active:bg-emerald-500 disabled:opacity-40"
+          >
+            {busy ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+            Start drop
+          </button>
+        );
+      })()}
     </div>
   );
 }

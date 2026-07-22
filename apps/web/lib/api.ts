@@ -110,6 +110,33 @@ export const api = {
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  /**
+   * Fetch a binary asset (PDF, image, CSV) as a Blob using the same auth
+   * headers as JSON requests, then trigger a browser download. window.open
+   * won't work for auth-required endpoints because new tabs can't attach
+   * the Bearer token — it lives in localStorage, not cookies.
+   */
+  async download(path: string, filename: string): Promise<void> {
+    const s = (await refreshIfNeeded()) ?? getSession();
+    const headers = new Headers({ Accept: 'application/octet-stream, application/pdf, */*' });
+    if (s?.accessToken) headers.set('Authorization', `Bearer ${s.accessToken}`);
+    const res = await fetch(path, { headers });
+    if (!res.ok) {
+      let body: unknown = null;
+      try { body = await res.json(); } catch { body = await res.text().catch(() => null); }
+      throw new ApiError(res.status, body);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Revoke on next tick so the click has a chance to start the download.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  },
 };
 
 export { ApiError };

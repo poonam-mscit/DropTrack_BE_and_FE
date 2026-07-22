@@ -298,7 +298,7 @@ function TodayActivity({ jobs }: { jobs: ApiJob[] }) {
     <div className="bg-white rounded-2xl p-5 lg:p-6 border border-border shadow-[0_2px_6px_rgba(11,13,18,.04)]">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-bold text-lg tracking-tight">Today's activity</h3>
-        <a href="#" className="text-sm text-text-muted hover:text-text-primary font-medium">View all</a>
+        <a href="/campaigns" className="text-sm text-text-muted hover:text-text-primary font-medium">View all</a>
       </div>
       {events.length === 0 && (
         <p className="text-sm text-text-muted py-6 text-center">No activity yet — create a campaign to get started.</p>
@@ -337,7 +337,7 @@ function LiveCityCard({ hasLive = false }: { hasLive?: boolean }) {
     <div className="bg-white rounded-2xl p-5 lg:p-6 border border-border shadow-[0_2px_6px_rgba(11,13,18,.04)] flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-bold text-lg tracking-tight">Live across the city</h3>
-        <a href="#" className="text-sm text-primary hover:underline font-semibold inline-flex items-center gap-1">
+        <a href="/tracking" className="text-sm text-primary hover:underline font-semibold inline-flex items-center gap-1">
           Open map <ArrowRight size={13} />
         </a>
       </div>

@@ -49,6 +49,7 @@ export default function DropperActive() {
   const mapInstanceRef = useRef<any>(null);
   const meMarkerRef = useRef<any>(null);
   const dropsSrcAdded = useRef(false);
+  const zoneAddedRef = useRef(false);
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null);
   const lastPingAtRef = useRef(0);
   const watchIdRef = useRef<number | null>(null);
@@ -81,43 +82,89 @@ export default function DropperActive() {
   }, [id]);
 
   // ── Mapbox init ──────────────────────────────────────────
+  // Initialise as soon as the container is mounted — do NOT gate on the zone
+  // polygon: if the API hasn't returned a zone yet (or the job has none), we
+  // still want to render a base map centred on the dropper's GPS. The zone
+  // layer is added when jobMap.zone lands (separate effect below).
   useEffect(() => {
-    if (!MAPBOX_TOKEN || !mapDivRef.current || !jobMap?.zone) return;
+    if (!MAPBOX_TOKEN || !mapDivRef.current) return;
     let cancelled = false;
     (async () => {
       const mapboxgl = (await import('mapbox-gl')).default;
       if (cancelled) return;
       mapboxgl.accessToken = MAPBOX_TOKEN;
-      const bbox = polygonBbox(jobMap.zone!.polygon);
-      const center: [number, number] = [(bbox.minLng + bbox.maxLng) / 2, (bbox.minLat + bbox.maxLat) / 2];
+      // Start centred on the zone if we have one; else on the last GPS fix;
+      // else a neutral AU centre so the tiles at least show up.
+      let initialCenter: [number, number] = [133.7751, -25.2744];
+      let initialZoom = 4;
+      if (jobMap?.zone) {
+        const bbox = polygonBbox(jobMap.zone.polygon);
+        initialCenter = [(bbox.minLng + bbox.maxLng) / 2, (bbox.minLat + bbox.maxLat) / 2];
+        initialZoom = 16;
+      } else if (fix) {
+        initialCenter = [fix.lng, fix.lat];
+        initialZoom = 17;
+      }
       const map = new mapboxgl.Map({
         container: mapDivRef.current!,
         style: 'mapbox://styles/mapbox/streets-v12',
-        center,
-        zoom: 16,
+        center: initialCenter,
+        zoom: initialZoom,
       });
       mapInstanceRef.current = map;
       map.on('load', () => {
-        // Zone fill + outline
-        map.addSource('zone', { type: 'geojson', data: { type: 'Feature', geometry: jobMap.zone!.polygon, properties: {} } });
-        map.addLayer({ id: 'zone-fill', type: 'fill', source: 'zone', paint: { 'fill-color': '#4F46E5', 'fill-opacity': 0.15 } });
-        map.addLayer({ id: 'zone-line', type: 'line', source: 'zone', paint: { 'line-color': '#4F46E5', 'line-width': 2 } });
-        // Drops
+        // Empty drops source — populated whenever jobMap updates.
         map.addSource('drops', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
         map.addLayer({
           id: 'drops-dot', type: 'circle', source: 'drops',
           paint: { 'circle-radius': 6, 'circle-color': '#22C55E', 'circle-stroke-width': 2, 'circle-stroke-color': '#F0FDF4' },
         });
         dropsSrcAdded.current = true;
-        map.fitBounds([[bbox.minLng, bbox.minLat], [bbox.maxLng, bbox.maxLat]], { padding: 40, animate: false });
+        // Mobile Safari measures container size before layout settles — force
+        // a resize on next tick so tiles render into the correct viewport.
+        requestAnimationFrame(() => map.resize());
       });
+      // Also resize on window resize (orientation change / URL bar hide/show).
+      const onWin = () => map.resize();
+      window.addEventListener('resize', onWin);
+      window.addEventListener('orientationchange', onWin);
+      // Store cleanup on the ref via closure — captured in outer return below.
+      (map as unknown as { _cleanupWin?: () => void })._cleanupWin = () => {
+        window.removeEventListener('resize', onWin);
+        window.removeEventListener('orientationchange', onWin);
+      };
     })();
     return () => {
       cancelled = true;
+      const m = mapInstanceRef.current as unknown as { _cleanupWin?: () => void; remove?: () => void } | null;
+      m?._cleanupWin?.();
       mapInstanceRef.current?.remove();
       mapInstanceRef.current = null;
       dropsSrcAdded.current = false;
+      zoneAddedRef.current = false;
     };
+    // Init runs once — subsequent effects add zone + drops layers as data lands.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Add the zone layer once the map has loaded AND the polygon is known.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !jobMap?.zone || zoneAddedRef.current) return;
+    const apply = () => {
+      if (zoneAddedRef.current) return;
+      map.addSource('zone', {
+        type: 'geojson',
+        data: { type: 'Feature', geometry: jobMap.zone!.polygon, properties: {} },
+      });
+      map.addLayer({ id: 'zone-fill', type: 'fill', source: 'zone', paint: { 'fill-color': '#4F46E5', 'fill-opacity': 0.15 } });
+      map.addLayer({ id: 'zone-line', type: 'line', source: 'zone', paint: { 'line-color': '#4F46E5', 'line-width': 2 } });
+      zoneAddedRef.current = true;
+      const bbox = polygonBbox(jobMap.zone!.polygon);
+      map.fitBounds([[bbox.minLng, bbox.minLat], [bbox.maxLng, bbox.maxLat]], { padding: 40, animate: false });
+    };
+    if (map.isStyleLoaded?.() !== false) apply();
+    else map.once('load', apply);
   }, [jobMap?.zone]);
 
   // Push drops into map source when jobMap updates

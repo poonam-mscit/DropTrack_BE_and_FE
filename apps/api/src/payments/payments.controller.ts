@@ -136,6 +136,13 @@ export class PaymentsController {
         body: `Your payment for "${result.job.title}" has been confirmed. We'll assign droppers shortly.`,
         linkUrl: `/campaigns/${result.job.id}`,
       });
+      // Admin fan-out so ops knows a new campaign is queued for assignment.
+      void this.notifications.emitToAdmins({
+        type: 'assignment',
+        title: 'New campaign ready to assign',
+        body: `"${result.job.title}" is paid — ${result.job.leafletCount.toLocaleString()} leaflets waiting for droppers.`,
+        linkUrl: `/admin/queue/${result.job.id}`,
+      });
     }
     return result;
   }

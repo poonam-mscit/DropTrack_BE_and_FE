@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,7 +30,6 @@ export function SummaryScreen() {
   const nav = useNavigation<Nav>();
   const { params } = useRoute<Route>();
   const [data, setData] = useState<AssignmentSummary | null>(null);
-  const [rating, setRating] = useState<number>(0);
 
   useEffect(() => {
     void api
@@ -82,14 +81,11 @@ export function SummaryScreen() {
         </View>
 
         <View style={s.rateCard}>
-          <Text style={s.rateHead}>Rate your shift</Text>
-          <View style={s.starsRow}>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <Pressable key={n} onPress={() => setRating(n)}>
-                <Text style={[s.star, rating >= n && { color: colors.accent }]}>★</Text>
-              </Pressable>
-            ))}
-          </View>
+          <Text style={s.rateHead}>Sent for client review</Text>
+          <Text style={s.rateBody}>
+            Your work has been sent to the client. You&rsquo;ll see their rating on your Profile once
+            they&rsquo;ve submitted it.
+          </Text>
         </View>
 
         <GradientButton onPress={done} style={{ marginTop: spacing.lg }}>
@@ -164,8 +160,12 @@ const s = StyleSheet.create({
     marginTop: spacing.md,
   },
   rateHead: { color: colors.text, fontSize: 13, fontWeight: '700' },
-  starsRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
-  star: { fontSize: 32, color: colors.textFaint },
+  rateBody: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: spacing.sm,
+  },
 
   doneBtn: {
     backgroundColor: colors.accent,

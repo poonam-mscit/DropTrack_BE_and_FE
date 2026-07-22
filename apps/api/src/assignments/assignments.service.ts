@@ -217,6 +217,13 @@ export class AssignmentsService {
       return { completedAt: new Date() };
     });
 
+    // Bump the denormalised counter shown on the admin droppers detail card.
+    // Uses SQL increment so concurrent completions can't clobber each other.
+    await this.db
+      .update(dropperProfiles)
+      .set({ jobsDone: sql`${dropperProfiles.jobsDone} + 1` })
+      .where(eq(dropperProfiles.userId, dropperUserId));
+
     // If every assignment for this job is now completed, mark the job complete too.
     const sibling = await this.db
       .select({ status: assignments.status })
@@ -503,7 +510,7 @@ export class AssignmentsService {
         LIMIT 1
       ) l ON TRUE
       WHERE a.job_id = ${jobId}
-        AND a.status IN ('started', 'paused')
+        AND a.status IN ('started', 'paused', 'completed')
       ORDER BY a.started_at NULLS LAST;
     `);
 

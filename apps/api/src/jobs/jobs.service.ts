@@ -7,12 +7,14 @@ import type { CreateJobInput } from './jobs.dto.js';
 import { SETTING_KEYS, SettingsService } from '../settings/settings.service.js';
 import { DEFAULT_PRICING_CONFIG, type PricingConfig } from '../payments/pricing.js';
 import { estimateZone, type ZoneEstimate } from './zone-estimator.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 @Injectable()
 export class JobsService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly settings: SettingsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /** Resolve the live (admin-tunable) pricing config from settings. */
@@ -529,6 +531,14 @@ export class JobsService {
     // their next poll (15s) or navigation. Not wiring realtime here to keep
     // the service dependency-free; assignments.service handles those pushes
     // for its own actions.
+    if (wasPaid) {
+      void this.notifications.emitToAdmins({
+        type: 'payment_received',
+        title: 'Refund needed — campaign cancelled',
+        body: `"${job.title}" was cancelled after payment. Process refund via bank transfer.`,
+        linkUrl: `/admin/invoices`,
+      });
+    }
     return { cancelled: true, deleted: false, refundRequired: wasPaid };
   }
 }

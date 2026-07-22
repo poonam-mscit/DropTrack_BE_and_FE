@@ -79,9 +79,19 @@ export default function CampaignDetail() {
     }
   }
 
-  function handleDownloadPdf() {
-    if (!job) return;
-    window.open(`/api/jobs/${job.id}/report/pdf`, '_blank', 'noopener');
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  async function handleDownloadPdf() {
+    if (!job || downloadingPdf) return;
+    setDownloadingPdf(true);
+    try {
+      const filename = `${job.jobCode || 'campaign'}-report.pdf`;
+      await api.download(`/api/jobs/${job.id}/report/pdf`, filename);
+    } catch (e) {
+      const body = (e as { body?: { message?: unknown } }).body?.message;
+      setError(typeof body === 'string' ? body : (e as Error).message);
+    } finally {
+      setDownloadingPdf(false);
+    }
   }
 
   const [cancelling, setCancelling] = useState(false);
@@ -277,11 +287,12 @@ export default function CampaignDetail() {
             )}
             <button
               onClick={handleDownloadPdf}
-              disabled={job.status !== 'completed'}
+              disabled={job.status !== 'completed' || downloadingPdf}
               className="pill-btn-solid disabled:opacity-50 disabled:cursor-not-allowed"
               title={job.status === 'completed' ? 'Download PDF report' : 'Available on completion'}
             >
-              <FileText size={14} /> Download AI Report
+              {downloadingPdf ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+              Download AI Report
             </button>
             <button onClick={handleRerun} disabled={rerunning} className="pill-btn-ghost disabled:opacity-50">
               {rerunning ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
@@ -371,11 +382,12 @@ export default function CampaignDetail() {
             <div className="flex gap-2.5">
               <button
                 onClick={handleDownloadPdf}
-                disabled={job.status !== 'completed'}
+                disabled={job.status !== 'completed' || downloadingPdf}
                 className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 title={job.status === 'completed' ? 'Download PDF report' : 'Available on completion'}
               >
-                <FileDown size={14} /> Download full PDF
+                {downloadingPdf ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
+                Download full PDF
               </button>
               <button onClick={handleShare} className="btn-ghost text-sm">
                 <Share2 size={14} /> {shared === 'copied' ? 'Link copied!' : 'Share with my team'}

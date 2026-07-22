@@ -14,7 +14,7 @@ interface LiveDropper {
   assignmentId: string;
   dropperUserId: string;
   dropperName: string;
-  status: 'started' | 'paused';
+  status: 'started' | 'paused' | 'completed';
   targetLeaflets: number;
   dropsCompleted: number;
   startedAt: string | null;
@@ -380,8 +380,13 @@ export default function CampaignTrack() {
           </p>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <Stat label="Active droppers" value={droppers.length.toString()} />
-          <Stat label="Drops live" value={totals.dropsCompleted.toLocaleString()} />
+          <Stat
+            label="Active droppers"
+            value={droppers
+              .filter((d) => d.status === 'started' || d.status === 'paused')
+              .length.toString()}
+          />
+          <Stat label="Drops" value={totals.dropsCompleted.toLocaleString()} />
           <Stat label="Coverage" value={`${totals.coverage}%`} accent />
         </div>
       </header>

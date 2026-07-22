@@ -27,6 +27,7 @@ import { DB } from '../db/db.module.js';
 import { CurrentUser, Public, Roles, type AuthedUser } from '../auth/auth.decorators.js';
 import { CognitoAuthService } from '../auth/cognito-auth.service.js';
 import { EmailService } from '../email/email.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 const APP_BASE_URL = process.env.WEB_BASE_URL || 'http://localhost:3002';
 const DROPPER_DEEP_LINK = process.env.DROPPER_DEEP_LINK_BASE || 'droptrackdropper://accept';
@@ -56,6 +57,7 @@ export class InvitesController {
     @Inject(DB) private readonly db: Database,
     private readonly cognito: CognitoAuthService,
     private readonly email: EmailService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ───────────────────── admin ─────────────────────
@@ -235,6 +237,16 @@ export class InvitesController {
     const tokens = await this.cognito.login(invite.email, body.password);
 
     this.logger.log(`dropper invite accepted · email=${invite.email} userId=${result.id}`);
+
+    // Notify admins so they can see the dropper's onboarding progress land in
+    // their /admin/droppers list without polling. Fire-and-forget.
+    void this.notifications.emitToAdmins({
+      type: 'assignment',
+      title: 'Dropper accepted invite',
+      body: `${invite.email} just set their password and can now finish onboarding.`,
+      linkUrl: `/admin/droppers`,
+    });
+
     return {
       ...tokens,
       provisioned: true,

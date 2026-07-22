@@ -7,7 +7,12 @@ const assignmentEntrySchema = z.object({
   label: z.string().max(40).optional(), // e.g. "Zone A"
   /** Optional sub-zone polygon. If absent, this dropper covers the whole job zone. */
   polygon: polygonSchema.optional(),
-  targetLeaflets: z.number().int().min(50).max(50_000),
+  // Per-assignment target — the job-wide 50-leaflet minimum is enforced when
+  // a client creates a campaign. Splitting across N droppers can produce
+  // small sub-targets (e.g. 50 total → 25 / 15 / 10), so we only guard the
+  // non-zero lower bound here. The service verifies the sum against
+  // job.leafletCount before inserting.
+  targetLeaflets: z.number().int().min(1).max(50_000),
 });
 
 /** POST /api/jobs/:id/assignments */

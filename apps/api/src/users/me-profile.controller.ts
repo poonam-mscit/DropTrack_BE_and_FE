@@ -18,6 +18,7 @@ import type { Database } from '@droptrack/db';
 import { businessProfiles, dropperProfiles, users } from '@droptrack/db';
 import { DB } from '../db/db.module.js';
 import { CurrentUser, Roles, type AuthedUser } from '../auth/auth.decorators.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 const S3_BUCKET = process.env.S3_BUCKET ?? '';
 const S3_REGION = process.env.AWS_REGION ?? 'ap-southeast-2';
@@ -119,7 +120,10 @@ class ProfilePatchDto extends createZodDto(ProfilePatchSchema) {}
 @Controller('me')
 export class MeProfileController {
   private readonly logger = new Logger(MeProfileController.name);
-  constructor(@Inject(DB) private readonly db: Database) {}
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   @Get('profile')
   async get(@CurrentUser() user: AuthedUser) {
@@ -270,6 +274,13 @@ export class MeProfileController {
           .set({ onboardingStatus: 'complete', onboardingCompletedAt: new Date() })
           .where(eq(dropperProfiles.userId, user.id));
         this.logger.log(`dropper onboarding complete · user=${user.id}`);
+        // Notify admins so ops knows the dropper is now assignable.
+        void this.notifications.emitToAdmins({
+          type: 'assignment',
+          title: 'Dropper ready to assign',
+          body: `${full.firstName ?? ''} ${full.lastName ?? ''} (${user.email}) finished onboarding and can now take jobs.`,
+          linkUrl: `/admin/droppers`,
+        });
       }
     } else {
       // Bare-minimum required fields for an insert; the rest are nullable.

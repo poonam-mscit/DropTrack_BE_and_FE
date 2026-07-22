@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import type { Database } from '@droptrack/db';
-import { notifications } from '@droptrack/db';
+import { notifications, users } from '@droptrack/db';
 import { DB } from '../db/db.module.js';
 import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 
@@ -35,6 +36,24 @@ export class NotificationsService {
     @Inject(DB) private readonly db: Database,
     private readonly realtime: RealtimeGateway,
   ) {}
+
+  /**
+   * Fan out an identical notification to every active admin. Used for
+   * ops-relevant events (fraud alerts, refund-needed cancellations, new
+   * onboarded droppers, freshly-paid campaigns waiting for assignment).
+   * Silent on failure per row — one bad admin doesn't block the rest.
+   */
+  async emitToAdmins(input: Omit<EmitInput, 'userId'>): Promise<void> {
+    try {
+      const admins = await this.db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.role, 'admin'));
+      await Promise.all(admins.map((a) => this.emit({ ...input, userId: a.id })));
+    } catch (err) {
+      this.logger.warn(`admin fan-out failed for type=${input.type}: ${(err as Error).message}`);
+    }
+  }
 
   async emit(input: EmitInput): Promise<void> {
     try {
