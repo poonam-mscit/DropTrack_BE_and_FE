@@ -96,6 +96,8 @@ export const campaignTypeEnum = pgEnum('campaign_type', [
   'retail',
   'education',
   'government',
+  'calendar_magnet',
+  'magazine',
   'other',
 ]);
 

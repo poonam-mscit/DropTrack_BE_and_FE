@@ -254,8 +254,8 @@ export class MeProfileController {
         .from(dropperProfiles)
         .where(eq(dropperProfiles.userId, user.id))
         .limit(1);
-      // Required for assignability: name (already required), DOB, address, TFN,
-      // emergency contact. Super/bank/WWCC/zone are optional and can be filled
+      // Required for assignability: name (already required), DOB, address,
+      // emergency contact. TFN/super/bank/WWCC/zone are optional and can be filled
       // later before the first payroll run.
       const complete =
         !!full?.firstName &&
@@ -266,8 +266,7 @@ export class MeProfileController {
         !!full?.state &&
         !!full?.postcode &&
         !!full?.emergencyContactName &&
-        !!full?.emergencyContactPhone &&
-        !!full?.tfnEncrypted;
+        !!full?.emergencyContactPhone;
       if (complete && full?.onboardingStatus !== 'complete') {
         await this.db
           .update(dropperProfiles)

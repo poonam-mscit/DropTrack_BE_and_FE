@@ -46,6 +46,8 @@ const SWEET_SPOT_DAYS: Record<string, number> = {
   retail: 18,
   education: 28,
   government: 28,
+  calendar_magnet: 30,
+  magazine: 30,
   other: 21,
 };
 

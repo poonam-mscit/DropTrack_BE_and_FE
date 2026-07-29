@@ -29,6 +29,8 @@ export const campaignTypeSchema = z.enum([
   'retail',
   'education',
   'government',
+  'calendar_magnet',
+  'magazine',
   'other',
 ]);
 export const leafletSizeSchema = z.enum(['dl', 'a5', 'a4']);

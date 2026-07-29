@@ -155,10 +155,7 @@ function validateProfileForm(form: Form, profile: MeProfile | null): Record<stri
   }
 
   const tfnDigits = form.tfn.replace(/\D/g, '');
-  const hasExistingTfn = !!profile?.dropper?.tfnLast4;
-  if (!hasExistingTfn && !form.tfn.trim()) {
-    errors.tfn = 'TFN is required';
-  } else if (form.tfn.trim() && (tfnDigits.length < 8 || tfnDigits.length > 9)) {
+  if (form.tfn.trim() && (tfnDigits.length < 8 || tfnDigits.length > 9)) {
     errors.tfn = 'TFN must be 8 or 9 digits';
   }
 
@@ -347,7 +344,7 @@ export default function DropperProfilePage() {
         <Input label="Phone" type="tel" value={form.emergencyContactPhone} onChange={(v) => setField('emergencyContactPhone', restrictPhone(v))} error={fieldErrors.emergencyContactPhone} />
       </Section>
 
-      <Section title="Tax file number" required>
+      <Section title="Tax file number" optional>
         <SecretInput
           label={profile.dropper?.tfnLast4 ? `Saved — ends ${profile.dropper.tfnLast4}` : 'TFN (9 digits)'}
           value={form.tfn}

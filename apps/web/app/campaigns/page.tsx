@@ -2,6 +2,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
+  AlertTriangle,
   CheckCircle2,
   FolderClock,
   Loader2,
@@ -25,6 +26,8 @@ const CAMPAIGN_TYPE_LABEL: Record<string, string> = {
   retail: 'Retail',
   education: 'Education',
   government: 'Government',
+  calendar_magnet: 'Calendar Magnet',
+  magazine: 'Magazine',
   other: 'Campaign',
 };
 
@@ -249,6 +252,15 @@ function CampaignsContent() {
         {error && (
           <div className="mb-5 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
             {error}
+          </div>
+        )}
+
+        {(tab === 'draft' || tab === 'all') && filtered.some((j) => j.status === 'draft') && (
+          <div className="mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-sm text-amber-900 flex items-start gap-3 shadow-[0_1px_3px_rgba(11,13,18,.02)]">
+            <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+            <div className="leading-relaxed font-normal">
+              Draft campaigns remain editable until an admin starts the job. Once started, they will be locked and can no longer be edited.
+            </div>
           </div>
         )}
 

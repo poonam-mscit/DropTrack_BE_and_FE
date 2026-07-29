@@ -176,10 +176,7 @@ function validateForm(form: FormState, profile: MeProfile | null): Record<string
   }
 
   const tfnDigits = form.tfn.replace(/\D/g, '');
-  const hasExistingTfn = !!profile?.dropper?.tfnLast4;
-  if (!hasExistingTfn && !form.tfn.trim()) {
-    errs.tfn = 'TFN is required';
-  } else if (form.tfn.trim() && (tfnDigits.length < 8 || tfnDigits.length > 9)) {
+  if (form.tfn.trim() && (tfnDigits.length < 8 || tfnDigits.length > 9)) {
     errs.tfn = 'TFN must be 8 or 9 digits';
   }
 
@@ -474,7 +471,7 @@ export function ProfileScreen() {
           </Section>
 
           {/* TFN */}
-          <Section title="Tax File Number" icon="receipt-outline" done={progress.flags.tfn}>
+          <Section title="Tax File Number (optional)" icon="receipt-outline" done={progress.flags.tfn}>
             <Field
               label={profile.dropper?.tfnLast4 ? `TFN  •••• ${profile.dropper.tfnLast4}` : 'TFN'}
               value={form.tfn}
@@ -686,8 +683,8 @@ function cap(s?: string | null): string | null {
 }
 
 function sectionCompleteness(p: MeProfile | null, f: FormState) {
-  // Required for assignability (matches API): name, address, emergency, TFN.
-  // Super, bank, WWCC show a green tick when filled but aren't required.
+  // Required for assignability (matches API): name, address, emergency.
+  // Super, bank, TFN, WWCC show a green tick when filled but aren't required.
   const flags = {
     personal: !!f.firstName && !!f.lastName && !!(f.dob || p?.dropper?.dob) && !!f.mobile,
     address: !!f.addressLine1 && !!f.suburb && !!f.state && !!f.postcode,
@@ -697,7 +694,7 @@ function sectionCompleteness(p: MeProfile | null, f: FormState) {
     bank: !!f.bankBsb && !!(p?.dropper?.bankAccountLast4 || f.bankAccountNumber),
     wwcc: true, // optional — counts as complete
   };
-  const requiredFlags: Array<keyof typeof flags> = ['personal', 'address', 'emergency', 'tfn'];
+  const requiredFlags: Array<keyof typeof flags> = ['personal', 'address', 'emergency'];
   const done = requiredFlags.filter((k) => flags[k]).length;
   return { done, total: requiredFlags.length, flags };
 }

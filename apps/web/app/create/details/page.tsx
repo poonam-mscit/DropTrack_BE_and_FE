@@ -33,6 +33,8 @@ const CAMPAIGN_TYPES: Array<[JobDraft['campaignType'], string]> = [
   ['retail', 'Retail'],
   ['education', 'Education'],
   ['government', 'Government'],
+  ['calendar_magnet', 'Calendar Magnet'],
+  ['magazine', 'Magazine'],
   ['other', 'Other'],
 ];
 

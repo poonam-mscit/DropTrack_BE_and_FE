@@ -19,6 +19,8 @@ export interface JobDraft {
     | 'retail'
     | 'education'
     | 'government'
+    | 'calendar_magnet'
+    | 'magazine'
     | 'other';
   leafletCount: number;
   leafletSize: 'dl' | 'a5' | 'a4';

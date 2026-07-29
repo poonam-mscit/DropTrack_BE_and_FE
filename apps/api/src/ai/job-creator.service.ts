@@ -20,6 +20,8 @@ export type CampaignType =
   | 'retail'
   | 'education'
   | 'government'
+  | 'calendar_magnet'
+  | 'magazine'
   | 'other';
 
 export interface JobCreatorOutput {
@@ -176,7 +178,7 @@ const SYSTEM_PROMPT = [
   '- title: short campaign name. If the brief includes a quoted name like "Foo 300",',
   '  use that verbatim. Otherwise build "<purpose> — <suburb>" e.g. "Listings — Bondi".',
   '- campaignType: one of "real_estate" "medical" "political" "food" "retail" "education"',
-  '  "government" "other". Infer from context — DO NOT default to "political" unless the',
+  '  "government" "calendar_magnet" "magazine" "other". Infer from context — DO NOT default to "political" unless the',
   '  brief mentions election/candidate/party/voting.',
   '- leafletCount: integer 50–50000. If a number appears in the campaign NAME ("Goldcost 300"),',
   '  treat that number as the leaflet count. If no count is given anywhere, default to 1000.',
@@ -219,6 +221,8 @@ function parseHeuristic(prompt: string): Omit<JobCreatorOutput, 'confidence' | '
   else if (/(retail|sale|promo|store|shop)/.test(lower)) campaignType = 'retail';
   else if (/(school|college|university|open day)/.test(lower)) campaignType = 'education';
   else if (/(council|government|notice)/.test(lower)) campaignType = 'government';
+  else if (/(calendar|magnet)/.test(lower)) campaignType = 'calendar_magnet';
+  else if (/(magazine|catalogue|catalog|booklet)/.test(lower)) campaignType = 'magazine';
 
   // Suburb — capture proper noun after "in" or "across", crude but useful
   let suburb: string | undefined;
@@ -249,7 +253,11 @@ function parseHeuristic(prompt: string): Omit<JobCreatorOutput, 'confidence' | '
             ? 'Special'
             : campaignType === 'retail'
               ? 'Promo'
-              : 'Campaign';
+              : campaignType === 'calendar_magnet'
+                ? 'Calendar Magnet'
+                : campaignType === 'magazine'
+                  ? 'Magazine'
+                  : 'Campaign';
   const title = `${titlePrefix} — ${titleSuburb}`;
 
   // Special instructions — copy back whatever's after "skip" or "respect" phrases
