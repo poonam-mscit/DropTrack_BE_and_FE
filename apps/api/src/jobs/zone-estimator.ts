@@ -76,6 +76,8 @@ export interface ZoneEstimate {
   estimatedMinutes: number;
   suggestedPriceCents: number;
   suggestedPriceFormatted: string;
+  ratePerLeafletCents?: number;
+  pricingZoneName?: string | null;
   /** Full price breakdown — subtotal, platform fee, GST, total. All in cents. */
   priceBreakdown: PriceBreakdown;
 }
@@ -157,8 +159,59 @@ export async function estimateZone(
     (estimatedDistanceKm / paceKmh) * 60 + (clientDropCount * secondsPerDrop) / 60,
   );
 
-  const price = priceForLeaflets(clientDropCount, pricingConfig);
-  const aiPrice = priceForLeaflets(aiSuggestedDropCount, pricingConfig);
+  // Spatial lookup: Deterministically select active suburb pricing rule with largest overlap area
+  let matchedZone: {
+    suburb_name: string;
+    state: string;
+    postcode: string;
+    rate_per_leaflet_cents: number;
+    overlap_area_sqm: number;
+  } | null = null;
+
+  try {
+    const zoneMatchRows = await db.execute<{
+      suburb_name: string;
+      state: string;
+      postcode: string;
+      rate_per_leaflet_cents: number;
+      overlap_area_sqm: number;
+    }>(sql`
+      SELECT 
+        s.name AS suburb_name,
+        s.state,
+        s.postcode,
+        sp.rate_per_leaflet_cents,
+        ST_Area(
+          ST_CollectionExtract(
+            ST_Intersection(s.polygon::geometry, ST_GeomFromGeoJSON(${JSON.stringify(polygon)})::geometry),
+            3
+          )::geography
+        )::float AS overlap_area_sqm
+      FROM suburb_pricing sp
+      JOIN suburbs s ON s.id = sp.suburb_id
+      WHERE sp.is_active = true
+        AND ST_Intersects(s.polygon::geometry, ST_GeomFromGeoJSON(${JSON.stringify(polygon)})::geometry)
+      ORDER BY overlap_area_sqm DESC, sp.updated_at DESC
+      LIMIT 1;
+    `);
+    matchedZone = zoneMatchRows[0] ?? null;
+  } catch (err) {
+    // Fail-safe fallback: Never block pricing if spatial lookup encounters an issue
+    console.warn('[zone-estimator] Suburb pricing ST_Intersects lookup fallback:', err);
+    matchedZone = null;
+  }
+
+  const effectiveRateCents = matchedZone
+    ? matchedZone.rate_per_leaflet_cents
+    : pricingConfig.basePerLeafletCents;
+
+  const effectivePricingConfig: PricingConfig = {
+    ...pricingConfig,
+    basePerLeafletCents: effectiveRateCents,
+  };
+
+  const price = priceForLeaflets(clientDropCount, effectivePricingConfig);
+  const aiPrice = priceForLeaflets(aiSuggestedDropCount, effectivePricingConfig);
 
   return {
     areaSqm: Math.round(area_sqm),
@@ -179,6 +232,10 @@ export async function estimateZone(
       style: 'currency',
       currency: 'AUD',
     }),
+    ratePerLeafletCents: effectiveRateCents,
+    pricingZoneName: matchedZone
+      ? `${matchedZone.suburb_name} (${matchedZone.state} ${matchedZone.postcode})`
+      : null,
     priceBreakdown: price,
   };
 }

@@ -704,6 +704,57 @@ export const appSettings = pgTable('app_settings', {
   updatedByUserId: uuid('updated_by_user_id').references(() => users.id, { onDelete: 'set null' }),
 });
 
+/**
+ * Official Australian Suburbs & Locality Boundaries (ABS SAL / G-NAF dataset).
+ * MultiPolygon spatial boundaries indexed via GiST.
+ */
+export const suburbs = pgTable(
+  'suburbs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(), // e.g. "Bondi"
+    state: text('state').notNull(), // e.g. "NSW"
+    postcode: text('postcode').notNull(), // e.g. "2026"
+    osmId: text('osm_id'),
+    osmType: text('osm_type'),
+    polygon: customType<{ data: GeoJsonPolygon }>({
+      dataType() {
+        return 'geography(MultiPolygon, 4326)';
+      },
+      toDriver(val) {
+        return sql`ST_GeomFromGeoJSON(${JSON.stringify(val)})`;
+      },
+      fromDriver(val) {
+        return val as GeoJsonPolygon;
+      },
+    })('polygon').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    osmIdx: index('suburbs_osm_idx').on(t.osmId, t.osmType),
+    namePostcodeIdx: index('suburbs_name_postcode_idx').on(t.name, t.postcode),
+  }),
+);
+
+/**
+ * Suburb Pricing Rules — Admin rate overrides referencing official suburb boundaries (`suburbs.id`).
+ */
+export const suburbPricing = pgTable(
+  'suburb_pricing',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    suburbId: uuid('suburb_id').notNull().references(() => suburbs.id, { onDelete: 'cascade' }),
+    ratePerLeafletCents: integer('rate_per_leaflet_cents').notNull(),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    suburbIdIdx: uniqueIndex('suburb_pricing_suburb_id_idx').on(t.suburbId),
+  }),
+);
+
 /* ------------------------------------------------------------------ */
 /*                            relations                               */
 /* ------------------------------------------------------------------ */
