@@ -5,13 +5,17 @@ import {
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
 } from '@nestjs/common';
+import { z } from 'zod';
 import { CurrentUser, Roles, type AuthedUser } from '../auth/auth.decorators.js';
 import { createAssignmentsSchema, markDropSchema, markLocationSchema } from './assignments.dto.js';
 import { AssignmentsService } from './assignments.service.js';
 
 /* ─────────────── admin: create + list per job ─────────────── */
+
+const reassignSchema = z.object({ dropperUserId: z.string().uuid() });
 
 @Controller('jobs/:jobId/assignments')
 @Roles('admin')
@@ -37,6 +41,35 @@ export class JobAssignmentsController {
       throw new BadRequestException({ message: 'Invalid input', issues: parsed.error.issues });
     }
     return this.svc.createAssignments(jobId, parsed.data, user.id);
+  }
+}
+
+/* ─────────────── admin: reassign an existing assignment ─────────────── */
+
+@Controller('admin/assignments')
+@Roles('admin')
+export class AdminAssignmentsController {
+  constructor(private readonly svc: AssignmentsService) {}
+
+  /**
+   * PATCH /api/admin/assignments/:id/reassign
+   * Swap the dropper on an existing assignment in place. Historical drops +
+   * GPS pings stay attributed to whoever recorded them (audit-safe). Refuses
+   * on `started` / `completed` / `abandoned` — those need explicit pause /
+   * new assignment first.
+   */
+  @Patch(':id/reassign')
+  @HttpCode(200)
+  async reassign(
+    @Param('id') id: string,
+    @Body() body: unknown,
+    @CurrentUser() user: AuthedUser,
+  ) {
+    const parsed = reassignSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({ message: 'Invalid input', issues: parsed.error.issues });
+    }
+    return this.svc.reassign(id, parsed.data.dropperUserId, user.id);
   }
 }
 

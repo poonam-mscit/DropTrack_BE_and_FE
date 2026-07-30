@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { MessageCircle } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { PageHero } from '@/components/sections/PageHero';
 import { SectionHeading } from '@/components/sections/SectionHeading';
 import { IndustryTabs } from '@/components/sections/IndustryTabs';
 import { Faq, FaqJsonLd, type FaqItem } from '@/components/sections/Faq';
 import { CTABanner } from '@/components/sections/CTABanner';
-import { whatsappLink, SITE } from '@/lib/site';
+import { contactLink, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Industries — real estate, clinics, political campaigns',
@@ -54,8 +54,8 @@ export default function IndustriesPage() {
           </>
         }
         cta={
-          <a href={whatsappLink()} target="_blank" rel="noopener" className="btn-primary">
-            <MessageCircle size={14} /> Talk to us about your vertical
+          <a href={contactLink()} className="btn-primary">
+            <Mail size={14} /> Talk to us about your vertical
           </a>
         }
       />

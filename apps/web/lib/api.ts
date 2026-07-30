@@ -163,6 +163,8 @@ export interface ApiJob {
   deadline: string | null;
   createdAt: string;
   paidAt: string | null;
+  lockedAt: string | null;
+  lockedBy: string | null;
   paymentStatus: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'partial_refund' | null;
   amountTotalCents: number | null;
   /** Sum of target_leaflets across all assignments on this job. */

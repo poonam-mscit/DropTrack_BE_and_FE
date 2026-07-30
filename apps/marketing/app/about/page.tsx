@@ -1,16 +1,16 @@
 import type { Metadata } from 'next';
-import { MessageCircle } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { PageHero } from '@/components/sections/PageHero';
 import { SectionHeading } from '@/components/sections/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Reveal } from '@/components/ui/Reveal';
 import { CTABanner } from '@/components/sections/CTABanner';
-import { whatsappLink, SITE } from '@/lib/site';
+import { contactLink, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'About DropTrack — closing the letterbox trust gap',
   description:
-    'DropTrack was founded in Canberra by Joy Patel — Australia\'s first AI-native letterbox distribution platform — to bring GPS verification, AI reporting and Privacy Act compliance to a forty-year-old industry that has always run on the honour system.',
+    'DropTrack is Australia\'s first AI-native letterbox distribution platform — bringing GPS verification, AI reporting and Privacy Act compliance to a forty-year-old industry that has always run on the honour system.',
   alternates: { canonical: `${SITE.url}/about` },
 };
 
@@ -54,52 +54,40 @@ export default function AboutPage() {
           </>
         }
         cta={
-          <a href={whatsappLink()} target="_blank" rel="noopener" className="btn-primary">
-            <MessageCircle size={14} /> Get in touch
+          <a href={contactLink()} className="btn-primary">
+            <Mail size={14} /> Get in touch
           </a>
         }
       />
 
-      {/* Founder */}
+      {/* Mission — a company story, no personal details */}
       <section className="mx-auto max-w-[1100px] px-5">
         <Reveal>
           <GlassCard className="md:p-12">
-            <div className="grid md:grid-cols-[340px_1fr] gap-8 md:gap-14 items-start">
-              <div
-                className="w-64 h-64 md:w-[340px] md:h-[400px] rounded-3xl mx-auto md:mx-0 overflow-hidden relative shrink-0"
-                style={{
-                  boxShadow: '0 30px 60px -20px rgba(99,102,241,0.55)',
-                  background:
-                    'linear-gradient(135deg, #6366f1 0%, #a855f7 45%, #a3e635 100%)',
-                  padding: '2px',
-                }}
-              >
-                <img
-                  src="/joy-patel.jpg"
-                  alt="Joy Patel, Founder & CEO of DropTrack"
-                  className="w-full h-full object-cover rounded-[22px]"
-                />
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[.22em] text-primary font-bold mb-2">
-                  Founder & CEO
-                </p>
-                <h2 className="font-display text-4xl md:text-5xl text-white tracking-tight">
-                  {SITE.founder}
-                </h2>
-                <p className="mt-5 text-text-secondary leading-relaxed">
-                  Joy Patel is a Master of Information Technology with more than ten years across
-                  Australian real estate and last-mile delivery — two industries that share the
-                  same blind spot: nobody can prove the physical thing actually happened.
-                </p>
-                <p className="mt-4 text-text-secondary leading-relaxed">
-                  After watching agents pay thousands for letterbox campaigns with nothing more
-                  than a verbal confirmation in return, Joy started DropTrack with one question:
-                  what if every flyer carried a receipt? The answer became a GPS pin, a fraud
-                  engine, seven AI features, and an Australian-hosted platform built to fill the
-                  trust gap from the ground up.
-                </p>
-              </div>
+            <div className="max-w-3xl mx-auto">
+              <p className="text-xs uppercase tracking-[.22em] text-primary font-bold mb-2 text-center">
+                Why we exist
+              </p>
+              <h2 className="font-display text-4xl md:text-5xl text-white tracking-tight text-center">
+                A receipt for every flyer.
+              </h2>
+              <p className="mt-6 text-text-secondary leading-relaxed">
+                Australian agents spend thousands on letterbox campaigns every month and
+                receive nothing more than a verbal confirmation in return. The most
+                measurable channel in marketing — a physical leaflet in a real letterbox —
+                has somehow stayed the least measurable for forty years.
+              </p>
+              <p className="mt-4 text-text-secondary leading-relaxed">
+                DropTrack started with one question: what if every flyer carried a
+                receipt? The answer became a GPS pin, a fraud engine, seven AI features,
+                and an Australian-hosted platform built to fill the trust gap from the
+                ground up. Every campaign is verifiable. Every dollar is accounted for.
+              </p>
+              <p className="mt-4 text-text-secondary leading-relaxed">
+                We are Australian-registered, Canberra-founded, and every byte of client
+                data lives in Sydney. Our team is small and focused. If you want to talk
+                to a human, email <a className="text-primary hover:underline" href={`mailto:${SITE.email}`}>{SITE.email}</a> and one of us will reply the same day.
+              </p>
             </div>
           </GlassCard>
         </Reveal>

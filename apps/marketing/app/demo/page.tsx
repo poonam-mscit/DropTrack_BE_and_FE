@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Clock3, MapPin, MessageCircle, ShieldCheck } from 'lucide-react';
+import { Clock3, MapPin, Mail, ShieldCheck } from 'lucide-react';
 import { PageHero } from '@/components/sections/PageHero';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Reveal } from '@/components/ui/Reveal';
-import { whatsappLink, SITE } from '@/lib/site';
+import { contactLink, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Book a 15-minute demo',
   description:
-    'See DropTrack live with our team. Walk through a real GPS-tracked campaign, see an AI Campaign Report and get a quote for your suburb — all in 15 minutes on WhatsApp.',
+    'See DropTrack live with our team. Walk through a real GPS-tracked campaign, see an AI Campaign Report and get a quote for your suburb — all in 15 minutes by email.',
   alternates: { canonical: `${SITE.url}/demo` },
 };
 
@@ -23,7 +23,7 @@ export default function DemoPage() {
   return (
     <>
       <PageHero
-        eyebrow="Book a demo · 15 min · WhatsApp"
+        eyebrow="Book a demo · 15 min · Email"
         title={
           <>
             See DropTrack in <span className="gradient-text">15 minutes.</span>
@@ -31,13 +31,13 @@ export default function DemoPage() {
         }
         intro={
           <>
-            Tap the button and message us on WhatsApp. We'll send a Loom of the platform, then jump
+            Tap the button and email us. We'll send a Loom of the platform, then jump
             on a quick call to quote your suburb and answer anything.
           </>
         }
         cta={
-          <a href={whatsappLink()} target="_blank" rel="noopener" className="btn-primary">
-            <MessageCircle size={14} /> Open WhatsApp
+          <a href={contactLink()} className="btn-primary">
+            <Mail size={14} /> Email us
           </a>
         }
       />

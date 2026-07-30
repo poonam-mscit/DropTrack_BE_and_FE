@@ -326,6 +326,8 @@ export const jobs = pgTable(
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     paidAt: timestamp('paid_at', { withTimezone: true }),
+    lockedAt: timestamp('locked_at', { withTimezone: true }),
+    lockedBy: uuid('locked_by').references(() => users.id),
   },
   (t) => ({
     jobCodeIdx: uniqueIndex('jobs_job_code_idx').on(t.jobCode),

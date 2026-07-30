@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { MessageCircle, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
-import { SITE, whatsappLink } from '@/lib/site';
+import { SITE, contactLink } from '@/lib/site';
 
 const PRODUCT = [
   { href: '/features', label: 'Features' },
@@ -30,8 +30,8 @@ export function Footer() {
               {SITE.description}
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <a href={whatsappLink()} target="_blank" rel="noopener" className="btn-ghost">
-                <MessageCircle size={14} /> WhatsApp
+              <a href={contactLink()} className="btn-ghost">
+                <Mail size={14} /> Email us
               </a>
               <a href={`mailto:${SITE.email}`} className="btn-ghost">
                 <Mail size={14} /> {SITE.email}

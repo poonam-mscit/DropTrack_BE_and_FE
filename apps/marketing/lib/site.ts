@@ -16,21 +16,31 @@ export const SITE = {
       : 'http://localhost:3002'),
   description:
     'Australia\'s AI-native letterbox distribution platform. Every flyer GPS-verified, every campaign reported, every dollar accounted for.',
-  founder: 'Joy Patel',
-  founderTitle: 'Founder & CEO',
-  // WhatsApp click-to-chat. Format: 614XXXXXXXX (no plus, no spaces).
-  whatsappNumber: '61499912090',
-  whatsappMessage: 'Hi DropTrack, I\'d like to book a demo.',
+  // Contact — company channels only. Personal names, photos and phone
+  // numbers are deliberately not surfaced anywhere on the marketing site.
   email: 'hello@droptrack.com.au',
+  contactSubject: 'Book a demo',
+  contactBody: 'Hi DropTrack team,\n\nI\'d like to book a demo for our team.\n\nSuburb / region:\nApprox. leaflets per month:\n\nThanks,',
   addressLocality: 'Canberra',
   addressRegion: 'ACT',
   addressCountry: 'AU',
 };
 
-export const whatsappLink = () => {
-  const text = encodeURIComponent(SITE.whatsappMessage);
-  return `https://wa.me/${SITE.whatsappNumber}?text=${text}`;
+/**
+ * Company-email contact link. Renamed from `whatsappLink` so we no longer
+ * expose a personal phone number anywhere on the marketing site. All CTAs
+ * that used to open WhatsApp now open the user's default mail client with
+ * a prefilled "Book a demo" template.
+ */
+export const contactLink = () => {
+  const subject = encodeURIComponent(SITE.contactSubject);
+  const body = encodeURIComponent(SITE.contactBody);
+  return `mailto:${SITE.email}?subject=${subject}&body=${body}`;
 };
+
+/** Deprecated alias — kept temporarily so old imports still compile.
+ *  Now returns the mailto: link instead of a wa.me URL. */
+export const whatsappLink = contactLink;
 
 export const NAV = [
   { href: '/features', label: 'Features' },

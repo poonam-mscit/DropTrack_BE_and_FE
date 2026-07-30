@@ -42,8 +42,8 @@ export const metadata: Metadata = {
     'political campaign letterbox',
     'clinic flyer distribution',
   ],
-  authors: [{ name: SITE.founder }],
-  creator: SITE.founder,
+  authors: [{ name: SITE.name }],
+  creator: SITE.name,
   publisher: SITE.name,
   openGraph: {
     type: 'website',
@@ -77,7 +77,6 @@ const orgJsonLd = {
   name: SITE.name,
   url: SITE.url,
   logo: `${SITE.url}/og.png`,
-  founder: { '@type': 'Person', name: SITE.founder, jobTitle: SITE.founderTitle },
   foundingDate: '2026',
   description: SITE.description,
   areaServed: { '@type': 'Country', name: 'Australia' },

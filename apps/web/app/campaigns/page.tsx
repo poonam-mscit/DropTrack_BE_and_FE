@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   FolderClock,
   Loader2,
+  Lock,
   MapPin,
   Plus,
   Search,
@@ -272,8 +273,8 @@ function CampaignsContent() {
                 job={j}
                 onOpen={async () => {
                   // Drafts → resume the create flow with prefilled fields.
-                  // Everything else → live tracking view.
-                  if (j.status === 'draft') {
+                  // Locked drafts and everything else → detail/tracking view.
+                  if (j.status === 'draft' && !j.lockedAt) {
                     router.push(`/campaigns/${j.id}/edit`);
                   } else {
                     router.push(`/campaigns/${j.id}`);
@@ -402,6 +403,15 @@ function CampaignCard({
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <StatusPill status={job.status} />
+          {job.lockedAt && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+              style={{ background: '#FEF2F2', color: '#991B1B' }}
+              title={job.paidAt ? 'Paid — permanently locked' : 'Locked by admin'}
+            >
+              <Lock size={10} /> Locked
+            </span>
+          )}
           {(canDelete || canCancel) && (
             <button
               onClick={(e) => {

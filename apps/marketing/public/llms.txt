@@ -23,15 +23,11 @@ DropTrack is Australia's AI-native, GPS-verified letterbox distribution platform
 
 Launching in Sydney, Australia. Melbourne, Brisbane and Perth on the immediate roadmap.
 
-## Founder
-
-Joy Patel — Master of IT, 10+ years across Australian real estate and last-mile delivery.
-
 ## Contact
 
 - Website: https://droptrack.com.au
 - Email: hello@droptrack.com.au
-- WhatsApp: book a 15-minute demo via the website CTA
+- Demo: book a 15-minute demo via the website /demo CTA
 
 ## Common questions
 

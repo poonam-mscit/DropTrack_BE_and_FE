@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { MessageCircle } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { PageHero } from '@/components/sections/PageHero';
 import { SectionHeading } from '@/components/sections/SectionHeading';
 import { Faq, FaqJsonLd, type FaqItem } from '@/components/sections/Faq';
 import { CTABanner } from '@/components/sections/CTABanner';
-import { whatsappLink, SITE } from '@/lib/site';
+import { contactLink, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Frequently asked questions',
@@ -40,7 +40,7 @@ const GENERAL: FaqItem[] = [
 const PRICING_OPS: FaqItem[] = [
   {
     q: 'How much does letterbox distribution cost in Australia?',
-    a: 'DropTrack pricing is on application and varies by suburb density, leaflet count and turnaround. Most jobs land around 20 cents per leaflet inclusive of GST plus a 3% platform fee, but inner-city zones, weekend turnarounds and rural areas adjust the rate. The AI Smart Zones tool quotes your exact job the moment you draw the polygon — message us on WhatsApp for a sample quote.',
+    a: 'DropTrack pricing is on application and varies by suburb density, leaflet count and turnaround. Most jobs land around 20 cents per leaflet inclusive of GST plus a 3% platform fee, but inner-city zones, weekend turnarounds and rural areas adjust the rate. The AI Smart Zones tool quotes your exact job the moment you draw the polygon — email us for a sample quote.',
   },
   {
     q: 'How long does a typical campaign take from quote to completion?',
@@ -166,13 +166,13 @@ export default function FaqPage() {
         }
         intro={
           <>
-            If your question is not on this page, message us on WhatsApp — we will answer within
+            If your question is not on this page, email us — we will answer within
             one business day and add it here for the next agent who asks.
           </>
         }
         cta={
-          <a href={whatsappLink()} target="_blank" rel="noopener" className="btn-primary">
-            <MessageCircle size={14} /> Ask on WhatsApp
+          <a href={contactLink()} className="btn-primary">
+            <Mail size={14} /> Ask by email
           </a>
         }
       />

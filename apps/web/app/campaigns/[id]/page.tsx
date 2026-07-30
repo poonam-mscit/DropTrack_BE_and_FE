@@ -9,6 +9,7 @@ import {
   FileDown,
   FileText,
   Loader2,
+  Lock,
   RotateCcw,
   Share2,
   ShieldCheck,
@@ -278,6 +279,24 @@ export default function CampaignDetail() {
             <span className="text-white/20">·</span>
             <span>{job.jobCode}</span>
           </div>
+
+          {job.lockedAt && (
+            <div className="mt-5 flex items-start gap-3 rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-sm">
+              <Lock size={16} className="mt-0.5 shrink-0" />
+              <div>
+                <p className="font-semibold">
+                  {job.paidAt
+                    ? 'Paid — permanently locked'
+                    : 'Locked by admin'}
+                </p>
+                <p className="text-white/80 mt-0.5">
+                  {job.paidAt
+                    ? "This campaign has been paid for. Details can't be changed. Contact admin if something needs to change."
+                    : 'Admin has locked this campaign so it can be actioned. Ask admin to unlock if you need to change anything.'}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2.5 mt-5">
             {(job.status === 'active' || job.status === 'assigned' || job.status === 'upcoming') && (

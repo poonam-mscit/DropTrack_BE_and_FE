@@ -1,6 +1,6 @@
-import { MessageCircle } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Reveal } from '@/components/ui/Reveal';
-import { whatsappLink } from '@/lib/site';
+import { contactLink } from '@/lib/site';
 
 export function CTABanner() {
   return (
@@ -20,8 +20,8 @@ export function CTABanner() {
             Walk through a live campaign with our team. We'll quote your suburb on the call.
           </p>
           <div className="mt-7">
-            <a href={whatsappLink()} target="_blank" rel="noopener" className="btn-primary">
-              <MessageCircle size={14} /> Message us on WhatsApp
+            <a href={contactLink()} className="btn-primary">
+              <Mail size={14} /> Email us
             </a>
           </div>
         </div>

@@ -123,8 +123,8 @@ export class PaymentsController {
   /** PATCH /api/admin/payments/:id/mark-paid — flip payment → succeeded + job → paid_unassigned. */
   @Patch('admin/payments/:id/mark-paid')
   @Roles('admin')
-  async adminMarkPaid(@Param('id') id: string) {
-    const result = await this.jobsService.adminMarkPaid(id);
+  async adminMarkPaid(@Param('id') id: string, @CurrentUser() user: AuthedUser) {
+    const result = await this.jobsService.adminMarkPaid(id, user.id);
     if (!result) throw new NotFoundException(`Payment ${id} not found`);
     // Notify the agent that their payment landed. Skipped for already-paid
     // idempotent replays (result.alreadyPaid).

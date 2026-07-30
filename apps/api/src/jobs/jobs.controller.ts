@@ -119,4 +119,20 @@ export class JobsController {
   async cancel(@Param('id') id: string, @CurrentUser() user: AuthedUser) {
     return this.jobsService.cancelCampaign(id, user.id, user.role === 'admin');
   }
+
+  /** POST /api/jobs/admin/:id/lock — admin freezes a job so the client can't edit. */
+  @Post('admin/:id/lock')
+  @Roles('admin')
+  @HttpCode(200)
+  async lock(@Param('id') id: string, @CurrentUser() user: AuthedUser) {
+    return this.jobsService.lock(id, user.id);
+  }
+
+  /** POST /api/jobs/admin/:id/unlock — admin unlocks a non-paid job. */
+  @Post('admin/:id/unlock')
+  @Roles('admin')
+  @HttpCode(200)
+  async unlock(@Param('id') id: string, @CurrentUser() user: AuthedUser) {
+    return this.jobsService.unlock(id, user.id);
+  }
 }

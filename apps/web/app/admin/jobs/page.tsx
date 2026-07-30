@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Download, Search } from 'lucide-react';
+import { ArrowRight, Download, Lock, LockOpen, Search } from 'lucide-react';
 import { AdminSidebar } from '@/components/AdminSidebar';
 import { getSession } from '@/lib/auth';
 import { api, type ApiJob, type JobStatus } from '@/lib/api';
@@ -41,14 +41,17 @@ export default function AdminJobs() {
   const [jobs, setJobs] = useState<ApiJob[] | null>(null);
   const [filter, setFilter] = useState<JobStatus | 'all'>('all');
 
-  useEffect(() => {
-    const s = getSession();
-    if (!s) return router.replace('/login');
-    if (s.role !== 'admin') return router.replace('/dashboard');
+  const load = () =>
     api
       .get<{ data: ApiJob[] }>('/api/jobs')
       .then((r) => setJobs(r.data))
       .catch(console.error);
+
+  useEffect(() => {
+    const s = getSession();
+    if (!s) return router.replace('/login');
+    if (s.role !== 'admin') return router.replace('/dashboard');
+    void load();
   }, [router]);
 
   const counts = useMemo(() => {
@@ -130,7 +133,18 @@ export default function AdminJobs() {
                     <td className="py-4 px-5 tabular-nums">{j.leafletCount.toLocaleString()}</td>
                     <td className="py-4 px-5 tabular-nums">{j.startDate ?? '—'}</td>
                     <td className="py-4 px-5 text-right">
-                      <StatusPill status={j.status} />
+                      <div className="inline-flex items-center gap-1.5">
+                        <StatusPill status={j.status} />
+                        {j.lockedAt && (
+                          <span
+                            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                            style={{ background: '#FEF2F2', color: '#991B1B' }}
+                            title={j.paidAt ? 'Paid — permanently locked' : 'Locked by admin'}
+                          >
+                            <Lock size={10} /> Locked
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-4 px-5 text-right tabular-nums font-semibold">
                       {j.amountTotalCents
@@ -141,6 +155,8 @@ export default function AdminJobs() {
                         : '—'}
                     </td>
                     <td className="py-4 px-5 text-right">
+                      <div className="inline-flex items-center gap-1.5">
+                        <LockToggle job={j} onDone={load} />
                       {j.status === 'paid_unassigned' ? (
                         <a href={`/admin/queue/${j.id}`} className="btn-primary py-2 px-3 text-xs">
                           Assign <ArrowRight size={12} />
@@ -152,6 +168,7 @@ export default function AdminJobs() {
                       ) : (
                         <a href={`/admin/track/${j.id}`} className="btn-ghost py-2 px-3 text-xs">View</a>
                       )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -195,6 +212,50 @@ function FilterTab({
           {count}
         </span>
       )}
+    </button>
+  );
+}
+
+function LockToggle({ job, onDone }: { job: ApiJob; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const locked = !!job.lockedAt;
+  const paid = !!job.paidAt;
+  if (job.status === 'completed' || job.status === 'cancelled') return null;
+
+  const click = async () => {
+    if (busy) return;
+    if (locked && paid) {
+      alert('Paid jobs are permanently locked and cannot be unlocked.');
+      return;
+    }
+    const verb = locked ? 'Unlock' : 'Lock';
+    if (!confirm(`${verb} "${job.title}"?${locked ? '' : ' The client will not be able to edit this job.'}`)) return;
+    setBusy(true);
+    try {
+      await api.post(`/api/jobs/admin/${job.id}/${locked ? 'unlock' : 'lock'}`, {});
+      await onDone();
+    } catch (err) {
+      const body = (err as { body?: { message?: unknown } }).body?.message;
+      alert(typeof body === 'string' ? body : (err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={click}
+      disabled={busy || (locked && paid)}
+      className="btn-ghost py-2 px-2.5 text-xs disabled:opacity-40"
+      title={
+        locked && paid
+          ? 'Paid — permanently locked'
+          : locked
+            ? 'Unlock (allow client to edit)'
+            : 'Lock (block client edits)'
+      }
+    >
+      {locked ? <Lock size={12} /> : <LockOpen size={12} />}
     </button>
   );
 }

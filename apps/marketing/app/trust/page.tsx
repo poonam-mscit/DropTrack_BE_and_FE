@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { Database, Lock, MessageCircle, ScrollText, ShieldCheck, UsersRound } from 'lucide-react';
+import { Database, Lock, Mail, ScrollText, ShieldCheck, UsersRound } from 'lucide-react';
 import { PageHero } from '@/components/sections/PageHero';
 import { SectionHeading } from '@/components/sections/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Reveal } from '@/components/ui/Reveal';
 import { Faq, FaqJsonLd, type FaqItem } from '@/components/sections/Faq';
 import { CTABanner } from '@/components/sections/CTABanner';
-import { whatsappLink, SITE } from '@/lib/site';
+import { contactLink, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Trust, privacy and compliance',
@@ -91,8 +91,8 @@ export default function TrustPage() {
           </>
         }
         cta={
-          <a href={whatsappLink()} target="_blank" rel="noopener" className="btn-primary">
-            <MessageCircle size={14} /> Ask our team a compliance question
+          <a href={contactLink()} className="btn-primary">
+            <Mail size={14} /> Ask our team a compliance question
           </a>
         }
       />

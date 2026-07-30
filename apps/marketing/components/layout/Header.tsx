@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { LogIn, Menu, MessageCircle, X } from 'lucide-react';
+import { LogIn, Menu, Mail, X } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
-import { NAV, SITE, whatsappLink } from '@/lib/site';
+import { NAV, SITE, contactLink } from '@/lib/site';
 import { cn } from '@/lib/cn';
 
 export function Header() {
@@ -53,12 +53,12 @@ export function Header() {
               <LogIn size={14} /> Sign in
             </a>
             <a
-              href={whatsappLink()}
+              href={contactLink()}
               target="_blank"
               rel="noopener"
               className="btn-primary hidden sm:inline-flex"
             >
-              <MessageCircle size={14} /> Book a demo
+              <Mail size={14} /> Book a demo
             </a>
             <button
               onClick={() => setOpen((v) => !v)}
@@ -91,13 +91,13 @@ export function Header() {
               <LogIn size={14} /> Sign in
             </a>
             <a
-              href={whatsappLink()}
+              href={contactLink()}
               target="_blank"
               rel="noopener"
               onClick={() => setOpen(false)}
               className="btn-primary mt-1 justify-center"
             >
-              <MessageCircle size={14} /> Book a demo
+              <Mail size={14} /> Book a demo
             </a>
           </div>
         )}

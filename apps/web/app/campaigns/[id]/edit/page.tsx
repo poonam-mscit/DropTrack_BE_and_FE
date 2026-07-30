@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
 import { loadDraftFromServer } from '@/lib/draft';
 import { getSession } from '@/lib/auth';
+import { api, type ApiJob } from '@/lib/api';
 
 /**
  * Distinct edit-entry URL — loads the draft from the server into localStorage,
@@ -24,6 +25,13 @@ export default function EditCampaignEntry() {
     if (!id) return;
     (async () => {
       try {
+        // Refuse locked jobs up-front so the client doesn't spend time in the
+        // wizard just to fail on Save. Detail page has the "why" banner.
+        const { data: job } = await api.get<{ data: ApiJob }>(`/api/jobs/${id}`);
+        if (job.lockedAt) {
+          router.replace(`/campaigns/${id}`);
+          return;
+        }
         await loadDraftFromServer(id);
         router.replace(`/campaigns/${id}/edit/details`);
       } catch (err) {

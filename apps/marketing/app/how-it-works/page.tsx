@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { MapPin, MessageCircle, ScanLine, Sparkles, CreditCard, UserCheck } from 'lucide-react';
+import { MapPin, Mail, ScanLine, Sparkles, CreditCard, UserCheck } from 'lucide-react';
 import { PageHero } from '@/components/sections/PageHero';
 import { SectionHeading } from '@/components/sections/SectionHeading';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -14,7 +14,7 @@ import {
   WireframePay,
   WireframeReport,
 } from '@/components/mocks/StepWireframes';
-import { whatsappLink, SITE } from '@/lib/site';
+import { contactLink, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'How DropTrack works — from polygon to PDF',
@@ -104,8 +104,8 @@ export default function HowItWorksPage() {
           </>
         }
         cta={
-          <a href={whatsappLink()} target="_blank" rel="noopener" className="btn-primary">
-            <MessageCircle size={14} /> Walk through it live with us
+          <a href={contactLink()} className="btn-primary">
+            <Mail size={14} /> Walk through it live with us
           </a>
         }
       />

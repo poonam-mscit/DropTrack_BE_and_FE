@@ -310,6 +310,13 @@ export class JobsService {
   async updateDraft(id: string, patch: import('./jobs.dto.js').UpdateJobInput) {
     const [job] = await this.db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
     if (!job) throw new NotFoundException(`Job ${id} not found`);
+    if (job.lockedAt) {
+      throw new BadRequestException(
+        job.paidAt
+          ? 'Job is paid and locked — no further edits allowed.'
+          : 'Job is locked by admin — ask them to unlock it before editing.',
+      );
+    }
     if (job.status !== 'draft') {
       throw new BadRequestException(`Cannot edit a job in status "${job.status}" — only drafts.`);
     }
@@ -451,7 +458,7 @@ export class JobsService {
    * Admin-only: mark a pending invoice as paid. Flips the linked job's status
    * from 'draft' → 'paid_unassigned', locking out client edits.
    */
-  async adminMarkPaid(paymentId: string) {
+  async adminMarkPaid(paymentId: string, actorUserId: string) {
     const [payment] = await this.db
       .select()
       .from(payments)
@@ -467,14 +474,61 @@ export class JobsService {
         .where(eq(payments.id, paymentId))
         .returning();
 
+      // Paid ⇒ status flip + paidAt stamp + auto-lock (permanent). Backfill
+      // paidAt if it was missing on legacy rows.
+      const now = new Date();
       const [updatedJob] = await tx
         .update(jobs)
-        .set({ status: 'paid_unassigned' })
+        .set({
+          status: 'paid_unassigned',
+          paidAt: now,
+          lockedAt: now,
+          lockedBy: actorUserId,
+        })
         .where(eq(jobs.id, payment.jobId))
         .returning();
 
       return { payment: updatedPayment, job: updatedJob };
     });
+  }
+
+  /**
+   * Admin-only: lock a job so the client can no longer edit it. Idempotent —
+   * re-locking is a no-op. Paid jobs are already locked by the payment flow.
+   */
+  async lock(id: string, actorUserId: string) {
+    const [job] = await this.db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
+    if (!job) throw new NotFoundException(`Job ${id} not found`);
+    if (job.status === 'completed' || job.status === 'cancelled') {
+      throw new BadRequestException(`Cannot lock a ${job.status} job.`);
+    }
+    if (job.lockedAt) return job;
+    const [updated] = await this.db
+      .update(jobs)
+      .set({ lockedAt: new Date(), lockedBy: actorUserId })
+      .where(eq(jobs.id, id))
+      .returning();
+    return updated;
+  }
+
+  /**
+   * Admin-only: unlock a job. Refuses if the job is paid — paid jobs are
+   * permanently locked by design.
+   */
+  async unlock(id: string, actorUserId: string) {
+    const [job] = await this.db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
+    if (!job) throw new NotFoundException(`Job ${id} not found`);
+    if (job.paidAt) {
+      throw new BadRequestException('Paid jobs are permanently locked and cannot be unlocked.');
+    }
+    if (!job.lockedAt) return job;
+    const [updated] = await this.db
+      .update(jobs)
+      .set({ lockedAt: null, lockedBy: null })
+      .where(eq(jobs.id, id))
+      .returning();
+    void actorUserId; // reserved for future event/audit row
+    return updated;
   }
 
   async deleteDraft(id: string, actorUserId: string, isAdmin: boolean) {

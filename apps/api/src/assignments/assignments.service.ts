@@ -467,6 +467,160 @@ export class AssignmentsService {
    * Client-facing snapshot for the live-tracking page: every active assignment
    * on a job + each dropper's latest known position + drop count + pace.
    */
+  /**
+   * Swap the dropper on an existing assignment in place. Preserves the
+   * assignment id + target + sub-zone + all historical drops and GPS pings
+   * (those stay attributed to the previous dropper for audit + payroll).
+   *
+   * Refuses when:
+   *   - assignment is in a terminal state (`completed` or `abandoned`)
+   *   - assignment is `started` — dropper must pause first, so we don't
+   *     silently split a live shift across two people
+   *   - new dropper is the same as the current one (no-op)
+   *   - new dropper already has another live assignment on this job
+   *   - new dropper is not a dropper, not active, or onboarding incomplete
+   *
+   * Emits notifications to both parties and a realtime event so any open
+   * screens react without a poll.
+   */
+  async reassign(assignmentId: string, newDropperUserId: string, actorUserId: string) {
+    const [asgn] = await this.db
+      .select()
+      .from(assignments)
+      .where(eq(assignments.id, assignmentId))
+      .limit(1);
+    if (!asgn) throw new NotFoundException('Assignment not found');
+
+    if (asgn.status === 'completed' || asgn.status === 'abandoned') {
+      throw new ConflictException(
+        `Cannot reassign a ${asgn.status} assignment — add a fresh assignment on the job instead.`,
+      );
+    }
+    const wasStarted = asgn.status === 'started';
+    if (asgn.dropperUserId === newDropperUserId) {
+      throw new BadRequestException('Already assigned to this dropper');
+    }
+
+    // Validate the incoming dropper: exists + role + active + onboarded.
+    const [newDropper] = await this.db
+      .select({
+        id: users.id,
+        email: users.email,
+        role: users.role,
+        status: users.status,
+        onboardingStatus: dropperProfiles.onboardingStatus,
+        firstName: dropperProfiles.firstName,
+        lastName: dropperProfiles.lastName,
+      })
+      .from(users)
+      .leftJoin(dropperProfiles, eq(dropperProfiles.userId, users.id))
+      .where(eq(users.id, newDropperUserId))
+      .limit(1);
+    if (!newDropper) throw new NotFoundException('Dropper not found');
+    if (newDropper.role !== 'dropper') {
+      throw new BadRequestException(`${newDropper.email} is not a dropper`);
+    }
+    if (newDropper.status !== 'active') {
+      throw new BadRequestException(`${newDropper.email} is ${newDropper.status}`);
+    }
+    if (newDropper.onboardingStatus !== 'complete') {
+      throw new BadRequestException(`${newDropper.email} hasn't completed onboarding yet`);
+    }
+
+    // Refuse if the incoming dropper is already on another assignment for
+    // this same job. Splitting a dropper across two sub-zones on one job is
+    // rare and messy; force admin to consolidate.
+    const [dup] = await this.db
+      .select({ id: assignments.id })
+      .from(assignments)
+      .where(
+        and(
+          eq(assignments.jobId, asgn.jobId),
+          eq(assignments.dropperUserId, newDropperUserId),
+          inArray(assignments.status, ['pending', 'started', 'paused']),
+        ),
+      )
+      .limit(1);
+    if (dup) {
+      throw new BadRequestException(
+        `${newDropper.email} already has an active assignment on this job`,
+      );
+    }
+
+    const previousDropperUserId = asgn.dropperUserId;
+
+    // One UPDATE — historical drops + GPS rows are FK'd to dropper_user_id
+    // and are NOT rewritten, so the audit trail is preserved.
+    // If the current dropper is mid-shift, auto-pause as part of the swap so
+    // their app stops pinging and the incoming dropper starts from a clean
+    // paused state (they hit Start on their end).
+    const [updated] = await this.db
+      .update(assignments)
+      .set({
+        dropperUserId: newDropperUserId,
+        ...(wasStarted ? { status: 'paused' as const } : {}),
+      })
+      .where(eq(assignments.id, assignmentId))
+      .returning();
+
+    await this.db.insert(events).values({
+      actorUserId,
+      subjectType: 'assignment',
+      subjectId: assignmentId,
+      eventType: 'assignment.reassigned',
+      data: {
+        jobId: asgn.jobId,
+        fromDropperUserId: previousDropperUserId,
+        toDropperUserId: newDropperUserId,
+        dropsInherited: asgn.dropsCompleted,
+        autoPaused: wasStarted,
+      },
+    });
+
+    // Load the job title for readable notification copy.
+    const [job] = await this.db
+      .select({ id: jobs.id, title: jobs.title })
+      .from(jobs)
+      .where(eq(jobs.id, asgn.jobId))
+      .limit(1);
+    const jobTitle = job?.title ?? 'a campaign';
+
+    void this.notifications.emit({
+      userId: previousDropperUserId,
+      type: 'assignment',
+      title: 'Job reassigned',
+      body: wasStarted
+        ? `Your "${jobTitle}" shift was paused and reassigned by admin. Drops you already recorded stay attributed to you.`
+        : `Your "${jobTitle}" assignment has been reassigned by admin. Any drops you already recorded stay attributed to you.`,
+      linkUrl: `/dropper`,
+    });
+    void this.notifications.emit({
+      userId: newDropperUserId,
+      type: 'assignment',
+      title: 'New job for you',
+      body: `Admin assigned you "${jobTitle}". Head to your jobs list to start.`,
+      linkUrl: `/dropper/jobs/${assignmentId}`,
+    });
+
+    this.realtime.emit({
+      type: 'assignment.status',
+      jobId: asgn.jobId,
+      assignmentId,
+      dropperUserId: newDropperUserId,
+      status: updated.status,
+      at: new Date().toISOString(),
+    });
+
+    return {
+      assignmentId,
+      jobId: asgn.jobId,
+      previousDropperUserId,
+      newDropperUserId,
+      status: updated.status,
+      dropsInherited: asgn.dropsCompleted,
+    };
+  }
+
   async liveState(jobId: string) {
     const rows = await this.db.execute<{
       assignment_id: string;

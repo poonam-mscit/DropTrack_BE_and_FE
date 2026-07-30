@@ -3,7 +3,7 @@ import {
   Brain,
   ChartLine,
   MapPin,
-  MessageCircle,
+  Mail,
   Repeat2,
   Shield,
   Sparkles,
@@ -19,7 +19,7 @@ import { MockAgentDashboard } from '@/components/mocks/MockAgentDashboard';
 import { MockAIAssistant } from '@/components/mocks/MockAIAssistant';
 import { MockJobCreator } from '@/components/mocks/MockJobCreator';
 import { MockCampaignBuilder } from '@/components/mocks/MockCampaignBuilder';
-import { whatsappLink, SITE } from '@/lib/site';
+import { contactLink, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'AI features built for Australian letterbox campaigns',
@@ -153,8 +153,8 @@ export default function FeaturesPage() {
           </>
         }
         cta={
-          <a href={whatsappLink()} target="_blank" rel="noopener" className="btn-primary">
-            <MessageCircle size={14} /> Book a 15-minute walkthrough
+          <a href={contactLink()} className="btn-primary">
+            <Mail size={14} /> Book a 15-minute walkthrough
           </a>
         }
       />

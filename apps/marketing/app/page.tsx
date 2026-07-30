@@ -5,7 +5,7 @@ import {
   Brain,
   CheckCircle2,
   MapPin,
-  MessageCircle,
+  Mail,
   Radar,
   Repeat2,
   Shield,
@@ -20,7 +20,7 @@ import { Reveal } from '@/components/ui/Reveal';
 import { Faq, FaqJsonLd, type FaqItem } from '@/components/sections/Faq';
 import { CTABanner } from '@/components/sections/CTABanner';
 import { MockHomeMap } from '@/components/mocks/MockHomeMap';
-import { whatsappLink, SITE } from '@/lib/site';
+import { contactLink, SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'GPS-verified leaflet distribution for Australian agents',
@@ -99,7 +99,7 @@ const FAQ: FaqItem[] = [
   },
   {
     q: 'How much does letterbox distribution cost in Australia?',
-    a: 'DropTrack pricing is on application and varies by suburb density, leaflet count and turnaround. Most jobs land around 20 cents per leaflet inclusive of GST, but inner-city zones, weekend turnarounds and rural areas adjust the rate. The AI Smart Zones tool quotes your exact job the moment you draw the polygon — message us on WhatsApp for a sample quote.',
+    a: 'DropTrack pricing is on application and varies by suburb density, leaflet count and turnaround. Most jobs land around 20 cents per leaflet inclusive of GST, but inner-city zones, weekend turnarounds and rural areas adjust the rate. The AI Smart Zones tool quotes your exact job the moment you draw the polygon — email us for a sample quote.',
   },
   {
     q: 'Which Australian cities does DropTrack operate in?',
@@ -136,8 +136,8 @@ export default function Home() {
         }
         cta={
           <>
-            <a href={whatsappLink()} target="_blank" rel="noopener" className="btn-primary">
-              <MessageCircle size={14} /> Book a demo on WhatsApp
+            <a href={contactLink()} className="btn-primary">
+              <Mail size={14} /> Book a demo by email
             </a>
             <Link href="/how-it-works" className="btn-ghost">
               See how it works <ArrowRight size={14} />
