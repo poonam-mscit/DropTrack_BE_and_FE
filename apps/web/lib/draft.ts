@@ -12,16 +12,16 @@ export interface JobDraft {
   id?: string;
   title: string;
   campaignType:
-    | 'real_estate'
-    | 'medical'
-    | 'political'
-    | 'food'
-    | 'retail'
-    | 'education'
-    | 'government'
-    | 'calendar_magnet'
-    | 'magazine'
-    | 'other';
+  | 'real_estate'
+  | 'medical'
+  | 'political'
+  | 'food'
+  | 'retail'
+  | 'education'
+  | 'government'
+  | 'calendar_magnet'
+  | 'magazine'
+  | 'other';
   leafletCount: number;
   leafletSize: 'dl' | 'a5' | 'a4';
   startDate: string;
@@ -34,6 +34,34 @@ export interface JobDraft {
   zone?: DraftPolygon;
   /** Last AI Smart Zones estimate — cached so step 2 paints instantly on back-nav. */
   zoneEstimate?: SmartZoneEstimate;
+}
+
+export const CAMPAIGN_TYPES: Array<[JobDraft['campaignType'], string]> = [
+  ['real_estate', 'Real Estate'],
+  ['medical', 'Medical / Clinic'],
+  ['political', 'Political'],
+  ['food', 'Food & Restaurant'],
+  ['retail', 'Retail'],
+  ['education', 'Education'],
+  ['government', 'Government'],
+  ['calendar_magnet', 'Calendar Magnet'],
+  ['magazine', 'Magazine'],
+  ['other', 'Other'],
+];
+
+export const CAMPAIGN_TYPE_MAP: Record<string, string> = {
+  ...Object.fromEntries(CAMPAIGN_TYPES),
+  medical_clinic: 'Medical / Clinic',
+  food_restaurant: 'Food & Restaurant',
+};
+
+export function formatCampaignType(type?: string | null): string {
+  if (!type) return '—';
+  if (CAMPAIGN_TYPE_MAP[type]) return CAMPAIGN_TYPE_MAP[type];
+  return type
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
 }
 
 const KEY = 'droptrack.create-job-draft';
@@ -174,5 +202,7 @@ export interface SmartZoneEstimate {
   estimatedMinutes: number;
   suggestedPriceCents: number;
   suggestedPriceFormatted: string;
+  ratePerLeafletCents?: number;
+  pricingZoneName?: string | null;
   priceBreakdown: PriceBreakdown;
 }

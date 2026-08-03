@@ -80,7 +80,15 @@ export default function CreateZone() {
         void fetch(
           `https://api.mapbox.com/geocoding/v5/mapbox.places/${q}.json?country=AU&limit=1&access_token=${MAPBOX_TOKEN}`,
         )
-          .then((r) => r.json() as Promise<{ features?: Array<{ center?: [number, number]; bbox?: [number, number, number, number] }> }>)
+          .then(
+            (r) =>
+              r.json() as Promise<{
+                features?: Array<{
+                  center?: [number, number];
+                  bbox?: [number, number, number, number];
+                }>;
+              }>,
+          )
           .then((j) => {
             const feat = j.features?.[0];
             if (!feat) return;
@@ -164,7 +172,10 @@ export default function CreateZone() {
   const refreshEstimate = (poly: DraftPolygon, dropTarget: number) => {
     setEstimating(true);
     api
-      .post<SmartZoneEstimate>('/api/jobs/estimate', { polygon: poly, leafletCount: dropTarget || undefined })
+      .post<SmartZoneEstimate>('/api/jobs/estimate', {
+        polygon: poly,
+        leafletCount: dropTarget || undefined,
+      })
       .then((e) => {
         setEstimate(e);
         saveDraft({ zoneEstimate: e, zone: poly, leafletCount: dropTarget || undefined });
@@ -247,9 +258,13 @@ export default function CreateZone() {
         <div className="flex items-end justify-between mb-6 flex-wrap gap-4">
           <h1 className="text-3xl font-extrabold tracking-tight">
             Select Drop Zone{' '}
-            <span className="font-serif italic font-normal text-text-secondary">— where to drop.</span>
+            <span className="font-serif italic font-normal text-text-secondary">
+              — where to drop.
+            </span>
           </h1>
-          <a href="/dashboard" className="btn-ghost">Cancel</a>
+          <a href="/dashboard" className="btn-ghost">
+            Cancel
+          </a>
         </div>
 
         <StepBar step={2} />
@@ -299,9 +314,13 @@ export default function CreateZone() {
               {!polygon && (
                 <>
                   <p className="text-sm text-text-muted mb-3">
-                    Let AI draw a zone sized for your {draftCount ? draftCount.toLocaleString() : '600'} drops, or draw it yourself.
+                    Let AI draw a zone sized for your{' '}
+                    {draftCount ? draftCount.toLocaleString() : '600'} drops, or draw it yourself.
                   </p>
-                  <button onClick={autoDraw} className="btn-primary w-full justify-center mb-2 text-sm">
+                  <button
+                    onClick={autoDraw}
+                    className="btn-primary w-full justify-center mb-2 text-sm"
+                  >
                     <Wand2 size={14} /> Auto-draw zone
                   </button>
                   <p className="text-[11px] text-text-muted text-center">
@@ -316,9 +335,59 @@ export default function CreateZone() {
                   <input
                     type="number"
                     min={50}
+                    max={9999}
                     step={100}
                     value={draftCount || ''}
-                    onChange={(e) => setDraftCount(Number(e.target.value) || 0)}
+                    onKeyDown={(e) => {
+                      // Allow navigation and editing control keys
+                      const isControlKey = [
+                        'Backspace',
+                        'Delete',
+                        'ArrowLeft',
+                        'ArrowRight',
+                        'Tab',
+                        'Enter',
+                        'Escape',
+                      ].includes(e.key);
+
+                      // Allow modifier shortcuts (Ctrl/Cmd + A, C, V, X, Z, etc.)
+                      const isModifier = e.ctrlKey || e.metaKey;
+
+                      if (isControlKey || isModifier) {
+                        return;
+                      }
+
+                      // Allow ArrowUp/ArrowDown keys (native stepping)
+                      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        return;
+                      }
+
+                      // Prevent non-digit inputs (e.g. 'e', 'E', '.', '-', '+')
+                      if (!/^[0-9]$/.test(e.key)) {
+                        e.preventDefault();
+                        return;
+                      }
+
+                      // Prevent typing a 5th digit (unless text is selected for replacement)
+                      const target = e.currentTarget;
+                      const hasSelection =
+                        target.selectionStart !== null &&
+                        target.selectionStart !== target.selectionEnd;
+
+                      if (target.value.replace(/\D/g, '').length >= 4 && !hasSelection) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '') {
+                        setDraftCount(0);
+                        return;
+                      }
+                      // Clean and slice to maximum of 4 digits
+                      const cleanValue = value.replace(/\D/g, '').slice(0, 4);
+                      setDraftCount(Number(cleanValue) || 0);
+                    }}
                     className="input flex-1 h-8 text-xs"
                   />
                   <button
@@ -341,9 +410,7 @@ export default function CreateZone() {
                 </div>
               )}
 
-              {polygon && estimating && (
-                <p className="text-sm text-text-muted">Calculating…</p>
-              )}
+              {polygon && estimating && <p className="text-sm text-text-muted">Calculating…</p>}
 
               {polygon && estimate?.source === 'heuristic' && (
                 <div className="mb-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] leading-relaxed text-amber-900">
@@ -357,28 +424,21 @@ export default function CreateZone() {
                   <div className="text-sm space-y-2.5">
                     <Row label="Area" value={`${estimate.areaKm2.toLocaleString()} km²`} />
                     <Row
-                      label="Letterboxes in zone"
-                      value={`~ ${estimate.zoneLetterboxes.toLocaleString()}`}
-                    />
-                    <Row
                       label="Your drops"
                       value={estimate.clientDropCount.toLocaleString()}
                       bold
                     />
-                    <Row label="Walking distance" value={`~ ${estimate.estimatedDistanceKm} km`} />
-                    <Row label="Estimated time" value={`~ ${formatMinutes(estimate.estimatedMinutes)}`} />
                     <Row label="Density" value={estimate.density.replace('_', ' ')} muted />
                     <Row
                       label="Data source"
-                      value={estimate.source === 'osm' ? 'OpenStreetMap (live)' : 'AU census heuristic'}
+                      value={
+                        estimate.source === 'osm' ? 'OpenStreetMap (live)' : 'AU census heuristic'
+                      }
                       muted
                     />
                   </div>
                   <p className="text-[11px] text-text-muted mt-3 leading-relaxed">
-                    <strong>Letterboxes in zone</strong> is the AI&rsquo;s estimate of how many are
-                    physically inside your polygon (based on AU density). <strong>Your drops</strong>{' '}
-                    is what we deliver and bill — set it on step 1. Distance &amp; time scale with
-                    drops, not the full zone.
+                    <strong>Your drops</strong> is what we deliver and bill — set it on step 1.
                   </p>
                 </>
               )}
@@ -394,19 +454,28 @@ export default function CreateZone() {
                 <div className="text-xs text-text-muted">
                   Includes GST · {estimate.clientDropCount.toLocaleString()} drops
                 </div>
+                {estimate.ratePerLeafletCents && (
+                  <div className="mt-1.5 pt-1.5 border-t border-border/60 text-xs text-text-secondary font-medium">
+                    Rate: ${(estimate.ratePerLeafletCents / 100).toFixed(2)} / leaflet{' '}
+                    <span className="text-text-muted font-normal">
+                      ({estimate.pricingZoneName ? estimate.pricingZoneName : 'Standard Rate'})
+                    </span>
+                  </div>
+                )}
                 {estimate.aiSuggestedDropCount < estimate.clientDropCount && (
                   <div className="mt-3 pt-3 border-t border-border text-[11px] text-text-muted leading-relaxed">
                     <span className="font-semibold text-text-secondary">AI suggests</span>{' '}
-                    {estimate.aiSuggestedDropCount.toLocaleString()} drops ({fmtCents(estimate.aiSuggestedPriceCents)})
-                    — the polygon only contains {estimate.zoneLetterboxes.toLocaleString()} letterboxes. Re-draw
-                    above to grow the zone, or proceed and we&rsquo;ll deliver what fits.
+                    {estimate.aiSuggestedDropCount.toLocaleString()} drops (
+                    {fmtCents(estimate.aiSuggestedPriceCents)}) — the polygon only contains{' '}
+                    {estimate.zoneLetterboxes.toLocaleString()} letterboxes. Re-draw above to grow
+                    the zone, or proceed and we&rsquo;ll deliver what fits.
                   </div>
                 )}
                 {estimate.zoneLetterboxes > estimate.clientDropCount && (
                   <div className="mt-3 p-3 rounded-xl border bg-amber-50 border-amber-200 text-[11px] leading-relaxed text-amber-900">
                     <strong>Heads-up:</strong> AI found{' '}
-                    <strong>{estimate.zoneLetterboxes.toLocaleString()}</strong> letterboxes inside this
-                    polygon, but you&rsquo;re only paying for{' '}
+                    <strong>{estimate.zoneLetterboxes.toLocaleString()}</strong> letterboxes inside
+                    this polygon, but you&rsquo;re only paying for{' '}
                     <strong>{estimate.clientDropCount.toLocaleString()}</strong>. You&rsquo;ll leave{' '}
                     {(estimate.zoneLetterboxes - estimate.clientDropCount).toLocaleString()} homes
                     untouched. Bump your target drops above to cover the whole zone.
@@ -418,8 +487,14 @@ export default function CreateZone() {
         </div>
 
         <div className="flex justify-between mt-6">
-          <a href={wizardPath(pathname, 'details')} className="btn-ghost">← Back</a>
-          <button onClick={next} disabled={!polygon || !estimate} className="btn-primary disabled:opacity-50">
+          <a href={wizardPath(pathname, 'details')} className="btn-ghost">
+            ← Back
+          </a>
+          <button
+            onClick={next}
+            disabled={!polygon || !estimate}
+            className="btn-primary disabled:opacity-50"
+          >
             Next: Review &amp; Pay <ArrowRight size={16} />
           </button>
         </div>
@@ -428,7 +503,12 @@ export default function CreateZone() {
   );
 }
 
-function Row({ label, value, bold, muted }: { label: string; value: string; bold?: boolean; muted?: boolean }) {
+function Row({
+  label,
+  value,
+  bold,
+  muted,
+}: { label: string; value: string; bold?: boolean; muted?: boolean }) {
   return (
     <div className="flex justify-between items-baseline py-1.5 border-b border-border last:border-0">
       <span className={muted ? 'text-text-muted' : 'text-text-secondary'}>{label}</span>
@@ -441,13 +521,6 @@ function fmtCents(cents: number): string {
   return (cents / 100).toLocaleString('en-AU', { style: 'currency', currency: 'AUD' });
 }
 
-function formatMinutes(m: number): string {
-  const h = Math.floor(m / 60);
-  const min = m % 60;
-  if (h === 0) return `${min} min`;
-  if (min === 0) return `${h} hr`;
-  return `${h}h ${min}m`;
-}
 
 /**
  * Build a square polygon centred on `[lng, lat]` sized to contain roughly
@@ -464,8 +537,8 @@ function buildSquarePolygonAroundCentre(
   // Square side length in kilometres; cap small to keep at least ~150m × 150m.
   const sideKm = Math.max(0.15, Math.sqrt(km2Needed));
   // 1° latitude ≈ 110.574 km. 1° longitude ≈ 111.320 × cos(lat) km.
-  const halfDegLat = (sideKm / 2) / 110.574;
-  const halfDegLng = (sideKm / 2) / (111.32 * Math.cos((lat * Math.PI) / 180));
+  const halfDegLat = sideKm / 2 / 110.574;
+  const halfDegLng = sideKm / 2 / (111.32 * Math.cos((lat * Math.PI) / 180));
   const minLng = lng - halfDegLng;
   const maxLng = lng + halfDegLng;
   const minLat = lat - halfDegLat;
@@ -491,7 +564,10 @@ function buildSquarePolygonAroundCentre(
  */
 function fitMapToPolygon(rawMap: unknown, poly: DraftPolygon) {
   const map = rawMap as {
-    fitBounds: (b: [[number, number], [number, number]], o: { padding: number; animate: boolean; duration?: number }) => void;
+    fitBounds: (
+      b: [[number, number], [number, number]],
+      o: { padding: number; animate: boolean; duration?: number },
+    ) => void;
     getContainer: () => { clientWidth: number; clientHeight: number };
   } | null;
   if (!map?.fitBounds) return;
@@ -518,16 +594,21 @@ function scalePolygon(p: DraftPolygon, factor: number): DraftPolygon {
   return {
     type: 'Polygon',
     coordinates: p.coordinates.map((ring) =>
-      ring.map(([lng, lat]) => [
-        cx + (lng - cx) * factor,
-        cy + (lat - cy) * factor,
-      ]),
+      ring.map(([lng, lat]) => [cx + (lng - cx) * factor, cy + (lat - cy) * factor]),
     ),
   };
 }
 
-function polygonBbox(p: DraftPolygon): { minLng: number; minLat: number; maxLng: number; maxLat: number } {
-  let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+function polygonBbox(p: DraftPolygon): {
+  minLng: number;
+  minLat: number;
+  maxLng: number;
+  maxLat: number;
+} {
+  let minLng = Infinity,
+    minLat = Infinity,
+    maxLng = -Infinity,
+    maxLat = -Infinity;
   for (const ring of p.coordinates) {
     for (const [lng, lat] of ring) {
       if (lng < minLng) minLng = lng;
@@ -544,9 +625,9 @@ function classifyDensityByLat(lat: number): number {
   const CBDS = [-33.87, -37.81, -27.47, -28.0, -34.93, -31.95, -35.28, -42.88, -12.46];
   let nearest = Infinity;
   for (const c of CBDS) nearest = Math.min(nearest, Math.abs(lat - c));
-  if (nearest < 0.03) return 3500;   // inner_city
-  if (nearest < 0.15) return 1800;   // inner_suburb
-  return 700;                         // suburban
+  if (nearest < 0.03) return 3500; // inner_city
+  if (nearest < 0.15) return 1800; // inner_suburb
+  return 700; // suburban
 }
 
 function NoMapboxFallback({

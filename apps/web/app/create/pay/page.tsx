@@ -6,7 +6,7 @@ import { CheckCircle2, TriangleAlert } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
 import { StepBar } from '@/components/StepBar';
 import { getSession } from '@/lib/auth';
-import { clearDraft, loadDraft, type SmartZoneEstimate } from '@/lib/draft';
+import { clearDraft, formatCampaignType, loadDraft, type SmartZoneEstimate } from '@/lib/draft';
 import { api, type ApiJob } from '@/lib/api';
 
 export default function CreatePay() {
@@ -95,7 +95,7 @@ export default function CreatePay() {
               <h3 className="font-semibold text-base mb-4">Campaign summary</h3>
               <div className="grid grid-cols-2 gap-3.5 text-sm">
                 <Cell label="Campaign" value={draft.title ?? '—'} />
-                <Cell label="Type" value={draft.campaignType ?? '—'} />
+                <Cell label="Type" value={formatCampaignType(draft.campaignType)} />
                 <Cell label="Leaflets" value={(draft.leafletCount ?? estimate?.estimatedLetterboxes ?? '—').toLocaleString?.() ?? '—'} />
                 <Cell label="Size" value={draft.leafletSize ?? 'dl'} />
                 <Cell label="Start date" value={draft.startDate ?? '—'} />

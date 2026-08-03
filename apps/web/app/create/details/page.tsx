@@ -8,7 +8,7 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { StepBar } from '@/components/StepBar';
 import { api } from '@/lib/api';
 import { getSession } from '@/lib/auth';
-import { clearDraft, loadDraft, saveDraft, type JobDraft } from '@/lib/draft';
+import { CAMPAIGN_TYPES, clearDraft, loadDraft, saveDraft, type JobDraft } from '@/lib/draft';
 
 interface JobCreatorResult {
   title: string;
@@ -24,19 +24,6 @@ interface JobCreatorResult {
   stubbed: boolean;
   model: string;
 }
-
-const CAMPAIGN_TYPES: Array<[JobDraft['campaignType'], string]> = [
-  ['real_estate', 'Real Estate'],
-  ['medical', 'Medical / Clinic'],
-  ['political', 'Political'],
-  ['food', 'Food & Restaurant'],
-  ['retail', 'Retail'],
-  ['education', 'Education'],
-  ['government', 'Government'],
-  ['calendar_magnet', 'Calendar Magnet'],
-  ['magazine', 'Magazine'],
-  ['other', 'Other'],
-];
 
 interface ChatTurn {
   prompt: string;

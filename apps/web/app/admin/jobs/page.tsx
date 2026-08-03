@@ -165,6 +165,10 @@ export default function AdminJobs() {
                         <a href={`/admin/track/${j.id}`} className="btn-primary py-2 px-3 text-xs">
                           Track live <ArrowRight size={12} />
                         </a>
+                      ) : j.status === 'draft' ? (
+                        <a href={`/admin/track/${j.id}`} className="btn-ghost py-2 px-3 text-xs inline-flex items-center gap-1">
+                          <Lock size={12} /> View
+                        </a>
                       ) : (
                         <a href={`/admin/track/${j.id}`} className="btn-ghost py-2 px-3 text-xs">View</a>
                       )}
