@@ -4,6 +4,11 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
+// Distinct-but-readable palette for per-dropper route colouring. Kept in
+// sync with the client campaign-detail map so the same dropper reads as
+// the same colour across admin/live and client/completed views.
+const ROUTE_COLORS = ['#F59E0B', '#3B82F6', '#EC4899', '#10B981', '#8B5CF6', '#EF4444', '#14B8A6', '#F97316'];
+
 export interface MapDrop {
   id: string;
   lat: number;
@@ -98,7 +103,11 @@ export function LiveMap({ polygon, drops, routes, newestDropId, droppers }: Prop
           type: 'line',
           source: 'routes',
           layout: { 'line-cap': 'round', 'line-join': 'round' },
-          paint: { 'line-color': '#F59E0B', 'line-width': 4, 'line-opacity': 0.85 },
+          paint: {
+            'line-color': ['coalesce', ['get', 'color'], '#F59E0B'],
+            'line-width': 4,
+            'line-opacity': 0.85,
+          },
         });
 
         // Drops source
@@ -198,15 +207,17 @@ export function LiveMap({ polygon, drops, routes, newestDropId, droppers }: Prop
     const map = mapRef.current as MapboxMap;
     const src = map.getSource('routes') as MapboxSource | undefined;
     if (!src) return;
+    const usable = (routes ?? []).filter((r) => r.coords && r.coords.length >= 2);
     src.setData({
       type: 'FeatureCollection',
-      features: (routes ?? [])
-        .filter((r) => r.coords && r.coords.length >= 2)
-        .map((r) => ({
-          type: 'Feature',
-          geometry: { type: 'LineString', coordinates: r.coords },
-          properties: { assignmentId: r.assignmentId },
-        })),
+      features: usable.map((r, i) => ({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: r.coords },
+        properties: {
+          assignmentId: r.assignmentId,
+          color: ROUTE_COLORS[i % ROUTE_COLORS.length],
+        },
+      })),
     });
   }, [routes, mapReady]);
 

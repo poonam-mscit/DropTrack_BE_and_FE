@@ -27,7 +27,12 @@ interface MapData {
   zone: { polygon: { type: 'Polygon'; coordinates: number[][][] }; areaSqm: number; estimatedLetterboxes: number | null } | null;
   subZones: Array<{ id: string; label: string; targetLeaflets: number; dropperUserId: string | null; polygon: { type: 'Polygon'; coordinates: number[][][] } | null }>;
   drops: Array<{ id: string; assignmentId: string; dropperUserId: string; lat: number; lng: number; insideZone: boolean; markedAt: string }>;
+  routes?: Array<{ assignmentId: string; dropperUserId: string; coords: Array<[number, number]>; points: number }>;
 }
+
+// Distinct-but-readable palette for per-dropper route colouring. Cycles if
+// more droppers than colours — collisions are rare (typical job has 1–3).
+const ROUTE_COLORS = ['#F59E0B', '#3B82F6', '#EC4899', '#10B981', '#8B5CF6', '#EF4444', '#14B8A6', '#F97316'];
 
 const STATUS_LABEL: Record<string, string> = {
   paid_unassigned: 'Paid — awaiting droppers',
@@ -176,6 +181,37 @@ export default function CampaignDetail() {
           source: 'zone',
           paint: { 'line-color': '#7C3AED', 'line-width': 2 },
         });
+
+        // Walking paths — one LineString per dropper, distinct colour per
+        // assignment. Rendered below drops so drop dots sit on top.
+        const routes = (map.routes ?? []).filter((r) => r.coords && r.coords.length >= 2);
+        if (routes.length) {
+          mapboxMap.addSource('routes', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: routes.map((r, i) => ({
+                type: 'Feature',
+                geometry: { type: 'LineString', coordinates: r.coords },
+                properties: {
+                  assignmentId: r.assignmentId,
+                  color: ROUTE_COLORS[i % ROUTE_COLORS.length],
+                },
+              })),
+            },
+          });
+          mapboxMap.addLayer({
+            id: 'routes-line',
+            type: 'line',
+            source: 'routes',
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: {
+              'line-color': ['get', 'color'],
+              'line-width': 4,
+              'line-opacity': 0.85,
+            },
+          });
+        }
 
         // Drops
         if (map.drops.length) {
