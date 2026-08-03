@@ -1,10 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import MapView, { Marker, Polygon, PROVIDER_DEFAULT } from 'react-native-maps';
+// react-native-maps requires a Google Maps Android API key. Until one is
+// provisioned, importing the module on Android crashes MapView's native
+// init. Load lazily on iOS only; Android falls back to a text card.
+const IS_IOS = Platform.OS === 'ios';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const RNMaps = IS_IOS ? (require('react-native-maps') as any) : null;
+const MapView = RNMaps?.default;
+const Marker = RNMaps?.Marker;
+const Polygon = RNMaps?.Polygon;
+const PROVIDER_DEFAULT = RNMaps?.PROVIDER_DEFAULT;
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '@/api/client';
@@ -73,7 +82,8 @@ export function ActiveScreen() {
   const [drops, setDrops] = useState<MapData['drops']>([]);
   const lastPingRef = useRef(0);
   const watcherRef = useRef<Location.LocationSubscription | null>(null);
-  const mapRef = useRef<MapView | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRef = useRef<any>(null);
 
   /** Recenter the map on the dropper's current GPS. */
   const recenterOnMe = useCallback(() => {
@@ -297,9 +307,23 @@ export function ActiveScreen() {
         </View>
       </View>
 
-      {/* Map */}
+      {/* Map — iOS only until Android has a Google Maps API key. Android
+          shows a text fallback so the drop workflow still ships. */}
       <View style={s.mapBox}>
-        {initialRegion ? (
+        {!IS_IOS ? (
+          <View style={[s.map, s.mapFallback]}>
+            <Ionicons name="map-outline" size={28} color={colors.textMuted} />
+            <Text style={s.mapFallbackTitle}>Map view unavailable</Text>
+            <Text style={s.mapFallbackBody}>
+              {mapData?.zone
+                ? `You're in the ${assignment?.subZone?.label ?? 'assigned'} zone. Use Mark Drop to record deliveries — GPS is being captured in the background.`
+                : 'Loading zone…'}
+            </Text>
+            <Text style={s.mapFallbackHint}>
+              {drops.length} drop{drops.length === 1 ? '' : 's'} recorded this shift
+            </Text>
+          </View>
+        ) : initialRegion ? (
           <MapView
             ref={mapRef}
             provider={PROVIDER_DEFAULT}
@@ -310,7 +334,7 @@ export function ActiveScreen() {
           >
             {mapData?.zone?.polygon && (
               <Polygon
-                coordinates={mapData.zone.polygon.coordinates[0].map(([lng, lat]) => ({
+                coordinates={mapData.zone.polygon.coordinates[0].map(([lng, lat]: [number, number]) => ({
                   latitude: lat,
                   longitude: lng,
                 }))}
@@ -405,6 +429,15 @@ const s = StyleSheet.create({
     marginBottom: spacing.md,
   },
   map: { flex: 1, backgroundColor: '#222' },
+  mapFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+    backgroundColor: colors.cardSoft,
+  },
+  mapFallbackTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginTop: spacing.md },
+  mapFallbackBody: { color: colors.textMuted, fontSize: 12, textAlign: 'center', marginTop: spacing.sm, lineHeight: 18 },
+  mapFallbackHint: { color: colors.accent, fontSize: 11, fontWeight: '600', marginTop: spacing.md },
   permWarn: { position: 'absolute', bottom: 8, left: 8, right: 8, backgroundColor: 'rgba(239,68,68,0.85)', borderRadius: radii.md, padding: spacing.sm },
   permWarnText: { color: '#fff', fontSize: 11 },
   recenterBtn: {
