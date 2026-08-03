@@ -116,20 +116,35 @@ export class CampaignReportService {
       .where(eq(users.id, job.clientUserId))
       .limit(1);
 
+    // Prefer the stored assignments.distance_walked_m if the mobile app set it,
+    // otherwise reconstruct from dropper_locations pings via PostGIS. The old
+    // path returned 0 whenever the app hadn't written the column, which is
+    // most of prod today — this fallback keeps the report honest.
     const [{ totalDrops, insideZone, distanceWalkedM }] = await this.db.execute<{
       totalDrops: number;
       insideZone: number;
       distanceWalkedM: number;
     }>(sql`
       SELECT
-        COUNT(*)::int                                            AS "totalDrops",
-        SUM(CASE WHEN inside_zone THEN 1 ELSE 0 END)::int        AS "insideZone",
-        COALESCE((SELECT SUM(distance_walked_m) FROM ${assignments}
-                  WHERE job_id = ${jobId}), 0)::int              AS "distanceWalkedM"
-      FROM ${drops}
-      WHERE assignment_id IN (
-        SELECT id FROM ${assignments} WHERE job_id = ${jobId}
-      );
+        (SELECT COUNT(*) FROM ${drops} WHERE assignment_id IN (
+          SELECT id FROM ${assignments} WHERE job_id = ${jobId}))::int          AS "totalDrops",
+        (SELECT SUM(CASE WHEN inside_zone THEN 1 ELSE 0 END) FROM ${drops}
+          WHERE assignment_id IN (SELECT id FROM ${assignments} WHERE job_id = ${jobId}))::int
+                                                                                AS "insideZone",
+        GREATEST(
+          COALESCE((SELECT SUM(distance_walked_m) FROM ${assignments}
+                    WHERE job_id = ${jobId}), 0),
+          COALESCE((
+            SELECT SUM(ST_Length(line::geography))::int FROM (
+              SELECT ST_MakeLine(location::geometry ORDER BY recorded_at) AS line
+              FROM dropper_locations l
+              JOIN ${assignments} a ON a.id = l.assignment_id
+              WHERE a.job_id = ${jobId}
+              GROUP BY l.assignment_id
+              HAVING COUNT(*) >= 2
+            ) t
+          ), 0)
+        )::int                                                                  AS "distanceWalkedM"
     `);
 
     const dropperRows = await this.db
