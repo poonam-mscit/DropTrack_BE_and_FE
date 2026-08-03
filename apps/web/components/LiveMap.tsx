@@ -19,6 +19,13 @@ export interface MapRoute {
   points: number;
 }
 
+export interface LiveDropper {
+  assignmentId: string;
+  dropperName: string;
+  lat: number;
+  lng: number;
+}
+
 interface Props {
   /** GeoJSON Polygon — drawn as the zone outline. */
   polygon: GeoJSON.Polygon | null;
@@ -28,6 +35,8 @@ interface Props {
   routes?: MapRoute[];
   /** Highlight the most recent drop (set by parent when a socket event lands). */
   newestDropId?: string | null;
+  /** Latest GPS position per active dropper — rendered as a pulsing indigo dot. */
+  droppers?: LiveDropper[];
 }
 
 /**
@@ -38,10 +47,11 @@ interface Props {
  * - When NEXT_PUBLIC_MAPBOX_TOKEN is missing, falls back to a styled placeholder
  *   that still shows drop coordinates in a list so the page is useful in dev.
  */
-export function LiveMap({ polygon, drops, routes, newestDropId }: Props) {
+export function LiveMap({ polygon, drops, routes, newestDropId, droppers }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<unknown>(null);
   const fittedRef = useRef(false);
+  const focusedOnDropperRef = useRef(false);
   const [mapReady, setMapReady] = useState(false);
 
   // ───────────────────────── init ─────────────────────────
@@ -115,6 +125,48 @@ export function LiveMap({ polygon, drops, routes, newestDropId }: Props) {
             'circle-stroke-width': 2,
           },
         });
+
+        // Live dropper positions — pulsing indigo halo + white-stroked dot on top.
+        map.addSource('droppers', { type: 'geojson', data: emptyFC });
+        map.addLayer({
+          id: 'droppers-pulse',
+          type: 'circle',
+          source: 'droppers',
+          paint: {
+            'circle-radius': 22,
+            'circle-color': '#4F46E5',
+            'circle-opacity': 0.25,
+            'circle-blur': 0.5,
+          },
+        });
+        map.addLayer({
+          id: 'droppers-dot',
+          type: 'circle',
+          source: 'droppers',
+          paint: {
+            'circle-radius': 8,
+            'circle-color': '#4F46E5',
+            'circle-stroke-color': '#FFFFFF',
+            'circle-stroke-width': 3,
+          },
+        });
+        map.addLayer({
+          id: 'droppers-label',
+          type: 'symbol',
+          source: 'droppers',
+          layout: {
+            'text-field': ['get', 'name'],
+            'text-size': 11,
+            'text-offset': [0, 1.4],
+            'text-anchor': 'top',
+            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+          },
+          paint: {
+            'text-color': '#1F2937',
+            'text-halo-color': '#FFFFFF',
+            'text-halo-width': 2,
+          },
+        });
       });
 
       cleanup = () => map.remove();
@@ -157,6 +209,32 @@ export function LiveMap({ polygon, drops, routes, newestDropId }: Props) {
         })),
     });
   }, [routes, mapReady]);
+
+  // ──────────────────── update live dropper positions ───
+  useEffect(() => {
+    if (!MAPBOX_TOKEN || !mapRef.current || !mapReady) return;
+    const map = mapRef.current as MapboxMap;
+    const src = map.getSource('droppers') as MapboxSource | undefined;
+    if (!src) return;
+    const list = droppers ?? [];
+    src.setData({
+      type: 'FeatureCollection',
+      features: list.map((d) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [d.lng, d.lat] },
+        properties: { name: d.dropperName, assignmentId: d.assignmentId },
+      })),
+    });
+
+    // First time we see any dropper, zoom in on them so the admin isn't
+    // staring at the whole zone polygon. Subsequent updates don't re-fly
+    // (avoids fighting the admin's manual pan/zoom).
+    if (!focusedOnDropperRef.current && list.length > 0) {
+      const first = list[0];
+      map.easeTo({ center: [first.lng, first.lat], zoom: 17, duration: 800 });
+      focusedOnDropperRef.current = true;
+    }
+  }, [droppers, mapReady]);
 
   // ──────────────────── update drops ────────────────────
   useEffect(() => {
@@ -219,6 +297,7 @@ interface MapboxSource {
 interface MapboxMap {
   getSource(id: string): MapboxSource | undefined;
   fitBounds(bounds: [[number, number], [number, number]], opts?: object): void;
+  easeTo(opts: { center: [number, number]; zoom?: number; duration?: number }): void;
   remove(): void;
 }
 

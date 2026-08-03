@@ -31,6 +31,24 @@ interface AssignmentRow {
   subZone: { label: string; targetLeaflets: number } | null;
 }
 
+interface LiveStateRow {
+  assignmentId: string;
+  dropperUserId: string;
+  dropperName: string;
+  status: 'pending' | 'started' | 'paused' | 'completed' | 'abandoned';
+  targetLeaflets: number;
+  dropsCompleted: number;
+  startedAt: string | null;
+  lastLocation: { lat: number; lng: number; at: string; heading: number | null; speedMps: number | null } | null;
+}
+
+interface LiveDropperPosition {
+  assignmentId: string;
+  dropperName: string;
+  lat: number;
+  lng: number;
+}
+
 interface FeedEntry {
   id: string;
   kind: 'drop' | 'status' | 'job' | 'fraud';
@@ -56,7 +74,38 @@ export default function AdminLiveTrack() {
   const [newestDropId, setNewestDropId] = useState<string | null>(null);
   const [fraudBanner, setFraudBanner] = useState<RealtimeFraudAlert | null>(null);
   const [rerun, setRerun] = useState<RerunRecommendation | null>(null);
+  const [liveDroppers, setLiveDroppers] = useState<LiveDropperPosition[]>([]);
   const feedRef = useRef<HTMLDivElement>(null);
+
+  // Poll live dropper positions every 5s — pulls each dropper's last GPS ping.
+  // No socket event for location today, so poll is the source of truth.
+  useEffect(() => {
+    if (!jobId) return;
+    let cancelled = false;
+    const pull = () =>
+      api
+        .get<LiveStateRow[]>(`/api/jobs/${jobId}/assignments/live`)
+        .then((rows) => {
+          if (cancelled) return;
+          setLiveDroppers(
+            rows
+              .filter((r) => r.lastLocation && r.status === 'started')
+              .map((r) => ({
+                assignmentId: r.assignmentId,
+                dropperName: r.dropperName,
+                lat: r.lastLocation!.lat,
+                lng: r.lastLocation!.lng,
+              })),
+          );
+        })
+        .catch(() => {/* transient; next tick will retry */});
+    pull();
+    const t = setInterval(pull, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, [jobId]);
 
   // Fetch report whenever job is completed (initial + on live status flip).
   const tryFetchReport = (jId: string) => {
@@ -286,6 +335,7 @@ export default function AdminLiveTrack() {
             drops={mapData?.drops ?? []}
             routes={mapData?.routes ?? []}
             newestDropId={newestDropId}
+            droppers={liveDroppers}
           />
         </div>
 
