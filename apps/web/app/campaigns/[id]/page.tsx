@@ -128,8 +128,8 @@ export default function CampaignDetail() {
       const next = (j as { data?: ApiJob }).data ?? (j as ApiJob);
       setJob(next);
       setMap(m);
-      if (next.status === 'draft') {
-        // Drafts edit, not view.
+      if (next.status === 'draft' && !next.lockedAt) {
+        // Editable drafts land on the wizard; locked drafts stay on view.
         router.replace(`/campaigns/${next.id}/edit`);
       }
     } catch (err) {
