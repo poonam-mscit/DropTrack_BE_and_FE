@@ -89,7 +89,7 @@ export default function AdminLiveTrack() {
           if (cancelled) return;
           setLiveDroppers(
             rows
-              .filter((r) => r.lastLocation && r.status === 'started')
+              .filter((r) => r.lastLocation && (r.status === 'started' || r.status === 'paused'))
               .map((r) => ({
                 assignmentId: r.assignmentId,
                 dropperName: r.dropperName,
