@@ -27,7 +27,7 @@ interface MapData {
   zone: { polygon: { type: 'Polygon'; coordinates: number[][][] }; areaSqm: number; estimatedLetterboxes: number | null } | null;
   subZones: Array<{ id: string; label: string; targetLeaflets: number; dropperUserId: string | null; polygon: { type: 'Polygon'; coordinates: number[][][] } | null }>;
   drops: Array<{ id: string; assignmentId: string; dropperUserId: string; lat: number; lng: number; insideZone: boolean; markedAt: string }>;
-  routes?: Array<{ assignmentId: string; dropperUserId: string; coords: Array<[number, number]>; points: number }>;
+  routes?: Array<{ assignmentId: string; dropperUserId: string; coords: Array<[number, number]>; points: number; firstAt?: string | null; lastAt?: string | null }>;
 }
 
 // Distinct-but-readable palette for per-dropper route colouring. Cycles if
@@ -654,18 +654,46 @@ function deriveStats(job: ApiJob | null, map: MapData | null): Stats {
   const housesReached = dropped;
   const skipped = Math.max(0, dropped - housesReached);
   const distanceKm = totalDistanceKm(map?.routes ?? []);
+  const elapsedMs = totalElapsedMs(map?.routes ?? []);
+  const elapsedHours = elapsedMs / (1000 * 60 * 60);
   return {
     ordered,
     dropped,
     coverage,
     target: 92,
     distanceKm: Math.round(distanceKm * 10) / 10,
-    timeLabel: dropped > 0 ? '—' : '0h',
+    timeLabel: formatDuration(elapsedMs),
     dateRange: job ? `${job.startDate} → ${job.deadline}` : '—',
     housesReached,
     skipped,
-    pacePerHour: 0,
+    pacePerHour: elapsedHours > 0 ? Math.round(dropped / elapsedHours) : 0,
   };
+}
+
+/** Sum the (lastAt - firstAt) window across every dropper's shift, in ms.
+ *  This is walking time on the clock — includes short pauses between pings
+ *  but excludes any period the dropper was fully paused/stopped (no pings). */
+function totalElapsedMs(routes: NonNullable<MapData['routes']>): number {
+  let ms = 0;
+  for (const r of routes) {
+    if (!r.firstAt || !r.lastAt) continue;
+    const start = new Date(r.firstAt).getTime();
+    const end = new Date(r.lastAt).getTime();
+    if (Number.isFinite(start) && Number.isFinite(end) && end > start) {
+      ms += end - start;
+    }
+  }
+  return ms;
+}
+
+function formatDuration(ms: number): string {
+  if (ms <= 0) return '0h';
+  const totalMin = Math.round(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
 }
 
 /** Sum walking distance across every dropper's route, in km. Uses Haversine
