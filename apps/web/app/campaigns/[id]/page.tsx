@@ -653,18 +653,45 @@ function deriveStats(job: ApiJob | null, map: MapData | null): Stats {
   const coverage = ordered > 0 ? Math.min(100, Math.round((dropped / ordered) * 100)) : 0;
   const housesReached = dropped;
   const skipped = Math.max(0, dropped - housesReached);
+  const distanceKm = totalDistanceKm(map?.routes ?? []);
   return {
     ordered,
     dropped,
     coverage,
     target: 92,
-    distanceKm: 0,
+    distanceKm: Math.round(distanceKm * 10) / 10,
     timeLabel: dropped > 0 ? '—' : '0h',
     dateRange: job ? `${job.startDate} → ${job.deadline}` : '—',
     housesReached,
     skipped,
     pacePerHour: 0,
   };
+}
+
+/** Sum walking distance across every dropper's route, in km. Uses Haversine
+ *  on consecutive GPS-ping segments — close enough for city-scale walks. */
+function totalDistanceKm(routes: NonNullable<MapData['routes']>): number {
+  let km = 0;
+  for (const r of routes) {
+    const coords = r.coords ?? [];
+    for (let i = 1; i < coords.length; i++) {
+      km += haversineKm(coords[i - 1], coords[i]);
+    }
+  }
+  return km;
+}
+
+function haversineKm(a: [number, number], b: [number, number]): number {
+  const [lng1, lat1] = a;
+  const [lng2, lat2] = b;
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const s1 = Math.sin(dLat / 2);
+  const s2 = Math.sin(dLng / 2);
+  const c = s1 * s1 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * s2 * s2;
+  return 2 * R * Math.asin(Math.sqrt(c));
 }
 
 interface DropperSplit {
