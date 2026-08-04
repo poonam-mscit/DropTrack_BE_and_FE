@@ -44,6 +44,7 @@ export default function DropperActive() {
   const [busy, setBusy] = useState<'mark' | 'pause' | 'resume' | 'complete' | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
   const [wakeLockOn, setWakeLockOn] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const mapDivRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -90,6 +91,7 @@ export default function DropperActive() {
     if (!MAPBOX_TOKEN || !mapDivRef.current) return;
     let cancelled = false;
     (async () => {
+      try {
       const mapboxgl = (await import('mapbox-gl')).default;
       if (cancelled) return;
       mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -133,6 +135,17 @@ export default function DropperActive() {
         window.removeEventListener('resize', onWin);
         window.removeEventListener('orientationchange', onWin);
       };
+      // Surface Mapbox errors instead of leaving the container blank so we
+      // can diagnose token / style / WebGL / network failures in the wild.
+      map.on('error', (e) => {
+        const msg = e?.error?.message || (e as unknown as { message?: string })?.message || 'Map error';
+        setMapError(msg);
+        console.error('[mapbox-error]', e);
+      });
+      } catch (err) {
+        if (!cancelled) setMapError((err as Error).message ?? 'Map failed to initialise');
+        console.error('[mapbox-init]', err);
+      }
     })();
     return () => {
       cancelled = true;
@@ -378,12 +391,20 @@ export default function DropperActive() {
       {/* Map */}
       <div className="relative w-full h-[45vh] min-h-[280px] rounded-2xl overflow-hidden bg-white/5 border border-white/10 mb-3">
         <div ref={mapDivRef} className="absolute inset-0">
-          {!jobMap && (
+          {!jobMap && !mapError && (
             <div className="flex items-center justify-center h-full text-white/40 text-sm">
               <Loader2 size={18} className="animate-spin mr-2" /> Loading map…
             </div>
           )}
         </div>
+        {mapError && (
+          <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div className="max-w-xs rounded-xl bg-red-500/15 border border-red-500/40 px-3 py-2 text-xs text-red-200 text-center">
+              <div className="font-semibold mb-1">Map couldn&rsquo;t load</div>
+              <div className="opacity-80 break-words">{mapError}</div>
+            </div>
+          </div>
+        )}
         {fix && (
           <button
             onClick={() => {
